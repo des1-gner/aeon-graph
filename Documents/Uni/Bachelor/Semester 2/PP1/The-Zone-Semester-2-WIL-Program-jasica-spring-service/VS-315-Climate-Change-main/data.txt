@@ -1,0 +1,11 @@
+data
+
+Below explains how the data from the API is used, stored, and how to manage its usage.
+
+1. The API is used to search articles using given keywords.
+    - Note that the free version of the API is currently being used and we are limited to articles no more than a month old.
+    - This means that the date being used for the API should be updated respective of the current date.
+
+2. The data is then saved in a .JSON file called 'articles.json'
+
+3. Articles are then displayed from the .JSON file. 
