@@ -20,15 +20,18 @@ public class ArticleController {
     @Autowired
     private ArticleService articleService;
 
-    @GetMapping("/findByUrl")
-    public Mono<ResponseEntity<Article>> findByUrl(@RequestParam String url) {
-        return articleService.findByUrl(url)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+    @GetMapping("/fetch-and-save-articles")
+    public Flux<Article> fetchAndSaveArticles(@RequestParam String query) {
+        return articleService.fetchAndSaveRecentArticles(query);
     }
 
-    @GetMapping("/findRecentUrls")
-    public Flux<String> getRecentUrls(@RequestParam(defaultValue = "70") int limit) {
-        return articleService.getRecentUrls(limit);
+    @GetMapping("/recent-articles")
+    public Flux<Article> fetchArticles(@RequestParam(defaultValue = "100") int limit) {
+        return articleService.fetchRecentArticles(limit);
+    }
+
+    @GetMapping("/recent-urls")
+    public Flux<String> getRecentUrls(@RequestParam(defaultValue = "100") int limit) {
+        return articleService.findRecentUrls(limit);
     }
 }
