@@ -4,6 +4,7 @@ import com.the_zone_sem2_2024.api.entity.Article;
 import com.the_zone_sem2_2024.api.repository.ArticleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -14,6 +15,12 @@ public class ArticleService {
 
     public Mono<Article> findByUrl(String url){
         return articleRepository.findByUrl(url);
+    }
+
+    public Flux<String> getRecentUrls(int limit) {
+        return articleRepository.findAll()
+                .map(Article::getUrl)
+                .take(limit);
     }
 
 }
