@@ -4,11 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
-@Document(collection = "articles")
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Document(collection = "articles")
 public class Article {
 
     @Id
@@ -17,6 +19,7 @@ public class Article {
     private String author;
     private String title;
     private String description;
+    @Indexed(unique = true)
     private String url;
     private String imageUrl;
     private String publishedAt;

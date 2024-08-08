@@ -5,10 +5,10 @@ import com.the_zone_sem2_2024.api.entity.ArticleDto;
 import com.the_zone_sem2_2024.api.entity.NewsApiResponse;
 import com.the_zone_sem2_2024.api.repository.ArticleRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.data.domain.Sort;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -19,6 +19,7 @@ import static org.springframework.data.domain.Sort.Direction.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ArticleService {
     @Autowired
     private ArticleRepository articleRepository;
@@ -27,14 +28,20 @@ public class ArticleService {
     private String apiKey;
     private final WebClient webClient = WebClient.builder().baseUrl(baseUrl).build();
 
-    public Flux<String> findRecentUrls(int limit){
+    public Flux<String> getUrls(int limit){
         return articleRepository
                 .findAll(by(DESC, "publishedAt"))
                 .map(Article::getUrl)
                 .take(limit);
     }
 
-    public Flux<Article> fetchAndSaveRecentArticles(String query) {
+    public Flux<Article> getArticles(int limit){
+        return articleRepository
+                .findAll(by(DESC, "publishedAt"))
+                .take(limit);
+    }
+
+    public Flux<Article> fetchAndSaveApiArticles(String query) {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/everything")
@@ -45,13 +52,13 @@ public class ArticleService {
                 .bodyToMono(NewsApiResponse.class)
                 .flatMapMany(newsApiResponse -> Flux.fromIterable(newsApiResponse.getArticles()))
                 .map(this::convertToArticle)
-                .flatMap(articleRepository::save);
+                .flatMap(this::save)
+                .doOnError(DuplicateKeyException.class, ex -> log.warn("Duplicate article detected: {}", ex.getMessage()));
     }
 
-    public Flux<Article> fetchRecentArticles(int limit){
-        return articleRepository
-                .findAll(by(DESC, "publishedAt"))
-                .take(limit);
+    private Mono<Article> save(Article article) {
+        return articleRepository.save(article)
+                .onErrorResume(DuplicateKeyException.class, ex -> Mono.empty());
     }
 
     private Article convertToArticle(ArticleDto dto) {

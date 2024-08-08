@@ -6,7 +6,4 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
 @Repository
-public interface ArticleRepository extends ReactiveMongoRepository<Article, String> {
-    Mono<Article> findByUrl(String url);
-
-}
+public interface ArticleRepository extends ReactiveMongoRepository<Article, String> {}
