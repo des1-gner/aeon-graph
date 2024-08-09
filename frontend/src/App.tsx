@@ -2,9 +2,11 @@ import SidePanelControl from './components/SidePanelControl';
 
 function App() {
     return (
-        <>
-            <SidePanelControl />
-        </>
+        <div className='h-screen bg-black'>
+            <div className='flex justify-end align-middle p-4'>
+                <SidePanelControl />
+            </div>
+        </div>
     );
 }
 

@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-    background-color: black;
+@layer components {
+    .text-dark {
+        @apply text-neutral-800;
+    }
+
+    .text-light {
+        @apply text-neutral-50;
+    }
+
+    .dark-gradient {
+        @apply bg-gradient-to-b from-neutral-700 from-20% to-neutral-800;
+    }
+
+    .light-gradient {
+        @apply bg-gradient-to-b from-neutral-200 from-20% to-neutral-300;
+    }
+
+    .tz-text-field {
+        @apply text-sm w-full rounded-lg border-[1.5px] p-1.5 shadow-md border-neutral-300 focus:border-neutral-400 focus:outline-none text-dark;
+    }
+
+    .light-card {
+        @apply bg-white shadow-md border-neutral-200 border rounded-lg;
+    }
+}
+
+@layer base {
+    body {
+        @apply text-dark;
+    }
 }
