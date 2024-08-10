@@ -17,7 +17,8 @@ import Slider from 'rc-slider';
 import 'rc-slider/assets/updated-slider.css';
 
 const SidePanelControl = () => {
-    const [isSavedDataSelected, setIsSavedDataSelected] = useState(true);
+    const [dataSourceIndex, setDataSourceIndex] = useState(0);
+    const [dataRangeIndex, setDataRangeIndex] = useState(0);
     const [startDate, setStartDate] = useState<Date | null>();
     const [endDate, setEndDate] = useState<Date | null>();
     const [nodeQty, setNodeQty] = useState<number | number[]>(0);
@@ -31,12 +32,9 @@ const SidePanelControl = () => {
                 </h1>
                 <div>
                     <Toggle
-                        toggleLabel1='Saved data'
-                        toggleLabel2='Live data'
-                        isSelected={isSavedDataSelected}
-                        onClick={() =>
-                            setIsSavedDataSelected(!isSavedDataSelected)
-                        }
+                        toggleLabels={['Saved data', 'Live data', 'Mock data']}
+                        selectedIndex={dataSourceIndex}
+                        onClick={(index) => setDataSourceIndex(index)}
                     />
                 </div>
                 <div className='space-y-2'>
@@ -50,24 +48,31 @@ const SidePanelControl = () => {
                             <CalendarDateRangeIcon className='size-4' />
                             Date range
                         </h2> */}
-                        <div className='flex flex-col gap-2'>
-                            <DatePicker
-                                className='tz-text-field accent-neutral-700'
-                                selected={startDate}
-                                onChange={(date) => setStartDate(date)}
-                                dateFormat={'dd/MM/yyyy'}
-                                placeholderText='Start date'
-                                showTimeInput
-                            />
-                            <DatePicker
-                                className='tz-text-field accent-neutral-700'
-                                selected={endDate}
-                                onChange={(date) => setEndDate(date)}
-                                dateFormat={'dd/MM/yyyy'}
-                                placeholderText='End date'
-                                showTimeInput
-                            />
-                        </div>
+                        <Toggle
+                            toggleLabels={['Day', 'Week', 'Month', 'Custom']}
+                            selectedIndex={dataRangeIndex}
+                            onClick={(index) => setDataRangeIndex(index)}
+                        />
+                        {dataRangeIndex === 3 && (
+                            <div className='flex flex-col gap-2'>
+                                <DatePicker
+                                    className='tz-text-field accent-neutral-700'
+                                    selected={startDate}
+                                    onChange={(date) => setStartDate(date)}
+                                    dateFormat={'dd/MM/yyyy'}
+                                    placeholderText='Start date'
+                                    showTimeInput
+                                />
+                                <DatePicker
+                                    className='tz-text-field accent-neutral-700'
+                                    selected={endDate}
+                                    onChange={(date) => setEndDate(date)}
+                                    dateFormat={'dd/MM/yyyy'}
+                                    placeholderText='End date'
+                                    showTimeInput
+                                />
+                            </div>
+                        )}
                     </div>
                     <Button className='flex items-center gap-2 justify-center'>
                         <MagnifyingGlassIcon className='size-4' />
