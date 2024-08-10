@@ -1,0 +1,61 @@
+version: '3'
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+      - zone-api
+
+  new-frontend:
+    build:
+      context: ./new-frontend
+    ports:
+      - "3001:3000" 
+    volumes:
+      - ./new-frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - backend
+      - zone-api
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/backend-db
+    depends_on:
+      - mongo
+
+  zone-api:
+    build:
+      context: ./zone-api
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/zone-api-db
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
