@@ -6,32 +6,29 @@ import {
     ChartBarIcon,
     DocumentArrowUpIcon,
     FolderIcon,
+    MagnifyingGlassIcon,
     PaintBrushIcon,
     ShareIcon,
 } from '@heroicons/react/24/solid';
 import Button from './Button';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import Slider from 'rc-slider';
+import 'rc-slider/assets/updated-slider.css';
 
 const SidePanelControl = () => {
     const [isSavedDataSelected, setIsSavedDataSelected] = useState(true);
-    const [startDate, setStartDate] = useState<Date | null>(new Date());
-    const [endDate, setEndDate] = useState<Date | null>(new Date());
+    const [startDate, setStartDate] = useState<Date | null>();
+    const [endDate, setEndDate] = useState<Date | null>();
+    const [nodeQty, setNodeQty] = useState<number | number[]>(0);
 
     return (
         <>
             <div className='h-fit w-fit bg-neutral-100 border border-neutral-300 p-4 space-y-8 rounded-lg'>
-                <h1 className='flex gap-2 items-center font-semibold text-lg'>
+                <h1 className='flex gap-2 items-center font-semibold text-lg justify-center'>
                     <AdjustmentsHorizontalIcon className='size-5' />
                     Data controls
                 </h1>
-                <div>
-                    <input
-                        className='tz-text-field'
-                        type='text'
-                        placeholder='Search term'
-                    />
-                </div>
                 <div>
                     <Toggle
                         toggleLabel1='Saved data'
@@ -42,35 +39,49 @@ const SidePanelControl = () => {
                         }
                     />
                 </div>
-                <div>
-                    <h2 className='flex gap-2 items-center font-semibold pb-2'>
-                        <CalendarDateRangeIcon className='size-4' />
-                        Date range
-                    </h2>
-                    <div className='flex flex-col gap-2'>
-                        <DatePicker
-                            className='tz-text-field accent-neutral-700'
-                            selected={startDate}
-                            onChange={(date) => setStartDate(date)}
-                            dateFormat={'dd/MM/yyyy'}
-                            placeholderText='Start'
-                            showTimeInput
-                        />
-                        <DatePicker
-                            className='tz-text-field accent-neutral-700'
-                            selected={endDate}
-                            onChange={(date) => setEndDate(date)}
-                            dateFormat={'dd/MM/yyyy'}
-                            placeholderText='End'
-                            showTimeInput
-                        />
+                <div className='space-y-2'>
+                    <input
+                        className='tz-text-field'
+                        type='text'
+                        placeholder='Search term'
+                    />
+                    <div>
+                        {/* <h2 className='flex gap-2 items-center font-semibold pb-2'>
+                            <CalendarDateRangeIcon className='size-4' />
+                            Date range
+                        </h2> */}
+                        <div className='flex flex-col gap-2'>
+                            <DatePicker
+                                className='tz-text-field accent-neutral-700'
+                                selected={startDate}
+                                onChange={(date) => setStartDate(date)}
+                                dateFormat={'dd/MM/yyyy'}
+                                placeholderText='Start date'
+                                showTimeInput
+                            />
+                            <DatePicker
+                                className='tz-text-field accent-neutral-700'
+                                selected={endDate}
+                                onChange={(date) => setEndDate(date)}
+                                dateFormat={'dd/MM/yyyy'}
+                                placeholderText='End date'
+                                showTimeInput
+                            />
+                        </div>
                     </div>
+                    <Button className='flex items-center gap-2 justify-center'>
+                        <MagnifyingGlassIcon className='size-4' />
+                        Search
+                    </Button>
                 </div>
+
                 <div>
                     <h2 className='flex gap-2 items-center font-semibold'>
                         <ShareIcon className='size-4' />
                         Node limit
                     </h2>
+                    <Slider onChange={(value) => setNodeQty(value)} />
+                    <p>{nodeQty}</p>
                 </div>
                 <div>
                     <p className='flex gap-2 items-center font-semibold pb-1'>

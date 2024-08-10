@@ -14,7 +14,7 @@ const Toggle = ({
     onClick,
 }: ToggleProps) => {
     return (
-        <div className='inline-block select-none rounded-lg py-1 bg-white shadow-md border-neutral-300 border'>
+        <div className='inline-block w-fit select-none rounded-lg py-1 bg-white shadow-md border-neutral-300 border'>
             <div className='mx-2 my-1 flex items-center justify-between gap-2'>
                 <ToggleItem
                     label={toggleLabel1}
