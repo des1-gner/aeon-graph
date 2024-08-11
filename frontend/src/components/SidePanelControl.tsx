@@ -45,15 +45,15 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
         <>
             <div className='bg-white border border-neutral-300 p-4 space-y-6 rounded-lg'>
                 <div className='flex items-center justify-between'>
-                    <XMarkIcon
-                        className='size-5 cursor-pointer flex justify-start'
-                        onClick={onClose}
-                    />
+                    <div />
                     <h1 className='flex gap-2 items-center font-semibold text-lg justify-center'>
                         <AdjustmentsHorizontalIcon className='size-5' />
                         Data controls
                     </h1>
-                    <div />
+                    <XMarkIcon
+                        className='size-5 cursor-pointer flex justify-start'
+                        onClick={onClose}
+                    />
                 </div>
                 <Toggle
                     header={[
