@@ -1,15 +1,34 @@
+import { ReactNode } from 'react';
 import ToggleItem from './ToggleItem';
 
 interface ToggleProps {
+    header?: [string, ReactNode];
+    children?: ReactNode;
     toggleLabels: string[];
     selectedIndex: number;
     onClick: (index: number) => void;
 }
 
-const Toggle = ({ toggleLabels, selectedIndex, onClick }: ToggleProps) => {
+const Toggle = ({
+    header,
+    children,
+    toggleLabels,
+    selectedIndex,
+    onClick,
+}: ToggleProps) => {
     return (
-        <div className='inline-block w-full select-none rounded-lg py-1 bg-white shadow-md border-neutral-300 border'>
-            <div className='mx-2 my-1 flex items-center justify-between gap-2'>
+        <div className='inline-block w-full select-none rounded-lg py-1 bg-neutral-100 shadow border-neutral-300 border'>
+            {header && (
+                <h2 className='flex gap-2 items-center pb-1 pl-2 font-semibold'>
+                    {header[1]}
+                    {header[0]}
+                </h2>
+            )}
+            <div
+                className={`mx-2 my-1 flex gap-2 ${
+                    toggleLabels.length > 2 && 'justify-between'
+                }`}
+            >
                 {toggleLabels.map((label, index) => (
                     <ToggleItem
                         key={index}
@@ -19,6 +38,7 @@ const Toggle = ({ toggleLabels, selectedIndex, onClick }: ToggleProps) => {
                     />
                 ))}
             </div>
+            {children}
         </div>
     );
 };

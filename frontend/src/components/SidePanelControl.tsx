@@ -1,199 +1,216 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Toggle from './Toggle';
 import {
     AdjustmentsHorizontalIcon,
+    ChevronRightIcon,
     CalendarDateRangeIcon,
-    ChartBarIcon,
+    CircleStackIcon,
+    CubeTransparentIcon,
     DocumentArrowUpIcon,
-    FolderIcon,
+    EyeIcon,
     MagnifyingGlassIcon,
-    PaintBrushIcon,
     ShareIcon,
+    XMarkIcon,
 } from '@heroicons/react/24/solid';
 import Button from './Button';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/updated-slider.css';
+import { mockArticles } from '../mock-data';
+import { AnimatePresence, motion } from 'framer-motion';
 
-const SidePanelControl = () => {
+interface SidePanelControlProps {
+    onClose?: () => void;
+}
+
+const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [dataRangeIndex, setDataRangeIndex] = useState(0);
     const [startDate, setStartDate] = useState<Date | null>();
     const [endDate, setEndDate] = useState<Date | null>();
-    const [nodeQty, setNodeQty] = useState<number | number[]>(0);
+    const [nodeLimit, setNodeLimit] = useState<number | number[]>();
+    const [articleCount, setArticleCount] = useState<number>();
+
+    useEffect(() => {
+        const fetchArticles = () => {
+            setArticleCount(mockArticles.length);
+            setNodeLimit(mockArticles.length);
+        };
+
+        fetchArticles();
+    }, []);
 
     return (
         <>
-            <div className='h-fit w-fit bg-neutral-100 border border-neutral-300 p-4 space-y-8 rounded-lg'>
-                <h1 className='flex gap-2 items-center font-semibold text-lg justify-center'>
-                    <AdjustmentsHorizontalIcon className='size-5' />
-                    Data controls
-                </h1>
-                <div>
-                    <Toggle
-                        toggleLabels={['Saved data', 'Live data', 'Mock data']}
-                        selectedIndex={dataSourceIndex}
-                        onClick={(index) => setDataSourceIndex(index)}
+            <div className='bg-white border border-neutral-300 p-4 space-y-6 rounded-lg'>
+                <div className='flex items-center justify-between'>
+                    <XMarkIcon
+                        className='size-5 cursor-pointer flex justify-start'
+                        onClick={onClose}
                     />
+                    <h1 className='flex gap-2 items-center font-semibold text-lg justify-center'>
+                        <AdjustmentsHorizontalIcon className='size-5' />
+                        Data controls
+                    </h1>
+                    <div />
                 </div>
-                <div className='space-y-2'>
+                <Toggle
+                    header={[
+                        'Data source',
+                        <CircleStackIcon className='size-4' />,
+                    ]}
+                    toggleLabels={['Mock data', 'Saved data', 'Live data']}
+                    selectedIndex={dataSourceIndex}
+                    onClick={(index) => setDataSourceIndex(index)}
+                />
+                {/* <div className='light-card p-2 space-y-3'>
+                    <h2 className='flex gap-2 items-center font-semibold'>
+                        <MagnifyingGlassIcon className='size-4' />
+                        Search options
+                    </h2>
                     <input
                         className='tz-text-field'
                         type='text'
                         placeholder='Search term'
                     />
-                    <div>
-                        {/* <h2 className='flex gap-2 items-center font-semibold pb-2'>
-                            <CalendarDateRangeIcon className='size-4' />
-                            Date range
-                        </h2> */}
-                        <Toggle
-                            toggleLabels={['Day', 'Week', 'Month', 'Custom']}
-                            selectedIndex={dataRangeIndex}
-                            onClick={(index) => setDataRangeIndex(index)}
-                        />
-                        {dataRangeIndex === 3 && (
-                            <div className='flex flex-col gap-2'>
-                                <DatePicker
-                                    className='tz-text-field accent-neutral-700'
-                                    selected={startDate}
-                                    onChange={(date) => setStartDate(date)}
-                                    dateFormat={'dd/MM/yyyy'}
-                                    placeholderText='Start date'
-                                    showTimeInput
-                                />
-                                <DatePicker
-                                    className='tz-text-field accent-neutral-700'
-                                    selected={endDate}
-                                    onChange={(date) => setEndDate(date)}
-                                    dateFormat={'dd/MM/yyyy'}
-                                    placeholderText='End date'
-                                    showTimeInput
-                                />
-                            </div>
-                        )}
-                    </div>
-                    <Button className='flex items-center gap-2 justify-center'>
+
+                    <Button
+                        variant='muted'
+                        className='flex items-center gap-2 justify-center'
+                    >
                         <MagnifyingGlassIcon className='size-4' />
                         Search
                     </Button>
+                </div> */}
+                <div>
+                    <Toggle
+                        header={[
+                            'Date range',
+                            <CalendarDateRangeIcon className='size-4' />,
+                        ]}
+                        toggleLabels={['Day', 'Week', 'Month', 'Custom']}
+                        selectedIndex={dataRangeIndex}
+                        onClick={(index) => setDataRangeIndex(index)}
+                    >
+                        <AnimatePresence>
+                            {dataRangeIndex === 3 && (
+                                <motion.div
+                                    initial='collapsed'
+                                    animate='open'
+                                    exit='collapsed'
+                                    variants={{
+                                        open: { opacity: 1, height: 'auto' },
+                                        collapsed: { opacity: 0, height: 0 },
+                                    }}
+                                >
+                                    <div className='flex flex-col p-2 gap-2'>
+                                        <DatePicker
+                                            maxDate={endDate!}
+                                            className='tz-text-field'
+                                            selected={startDate}
+                                            onChange={(date) =>
+                                                setStartDate(date)
+                                            }
+                                            dateFormat={'dd/MM/yyyy'}
+                                            placeholderText='Start date'
+                                            showTimeInput
+                                        />
+                                        <DatePicker
+                                            minDate={startDate!}
+                                            className='tz-text-field'
+                                            selected={endDate}
+                                            onChange={(date) =>
+                                                setEndDate(date)
+                                            }
+                                            dateFormat={'dd/MM/yyyy'}
+                                            placeholderText='End date'
+                                            showTimeInput
+                                        />
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </Toggle>
+                </div>
+                <div>
+                    <Button>
+                        <p className='flex gap-2 justify-center items-center'>
+                            {articleCount} articles found
+                            <ChevronRightIcon className='size-4' />
+                        </p>
+                    </Button>
                 </div>
 
-                <div>
-                    <h2 className='flex gap-2 items-center font-semibold'>
+                <div className='light-card p-2 space-y-1'>
+                    <p className='flex gap-2 items-center pb-1 font-semibold'>
                         <ShareIcon className='size-4' />
                         Node limit
-                    </h2>
-                    <Slider onChange={(value) => setNodeQty(value)} />
-                    <p>{nodeQty}</p>
-                </div>
-                <div>
-                    <p className='flex gap-2 items-center font-semibold pb-1'>
-                        <FolderIcon className='size-4' />
-                        Data orginisation
                     </p>
-                    <div className='light-card p-2 space-y-2'>
-                        <div className='flex justify-between items-center'>
-                            <label
-                                htmlFor='linksBetweenPages'
-                                className='text-sm'
-                            >
-                                Links between pages
-                            </label>
-                            <input
-                                type='checkbox'
-                                id='linksBetweenPages'
-                                className='accent-neutral-700 size-4'
-                            />
-                        </div>
-                        <div className='flex justify-between items-center'>
-                            <label
-                                htmlFor='linksBetweenPages'
-                                className='text-sm'
-                            >
-                                Sentiment
-                            </label>
-                            <input
-                                type='checkbox'
-                                id='linksBetweenPages'
-                                className='accent-neutral-700 size-4'
-                            />
-                        </div>
-                        <div className='flex justify-between items-center'>
-                            <label
-                                htmlFor='linksBetweenPages'
-                                className='text-sm'
-                            >
-                                User access journey
-                            </label>
-                            <input
-                                type='checkbox'
-                                id='linksBetweenPages'
-                                className='accent-neutral-700 size-4'
-                            />
-                        </div>
-                        <div className='flex justify-between items-center'>
-                            <label
-                                htmlFor='linksBetweenPages'
-                                className='text-sm'
-                            >
-                                User profile comparison
-                            </label>
-                            <input
-                                type='checkbox'
-                                id='linksBetweenPages'
-                                className='accent-neutral-700 size-4'
-                            />
-                        </div>
+                    <div className='flex items-center px-1 gap-3 z-0'>
+                        <Slider
+                            onChange={(value) => setNodeLimit(value)}
+                            value={nodeLimit}
+                            max={articleCount}
+                        />
+                        {nodeLimit}
                     </div>
                 </div>
-                <div>
-                    <p className='flex gap-2 items-center font-semibold pb-1'>
-                        <ChartBarIcon className='size-4' />
-                        Graph options
+
+                <div className='light-card p-2 space-y-1'>
+                    <p className='flex gap-2 items-center pb-1 font-semibold'>
+                        <EyeIcon className='size-4' />
+                        Visualisation options
                     </p>
-                    <div className='light-card p-2 space-y-2'>
-                        <div className='flex justify-between items-center'>
-                            <label
-                                htmlFor='linksBetweenPages'
-                                className='text-sm'
-                            >
-                                Image scraping
-                            </label>
-                            <input
-                                type='checkbox'
-                                id='linksBetweenPages'
-                                className='accent-neutral-700 size-4'
-                            />
-                        </div>
-                        <div className='flex justify-between items-center'>
-                            <label
-                                htmlFor='linksBetweenPages'
-                                className='text-sm'
-                            >
-                                3D
-                            </label>
-                            <input
-                                type='checkbox'
-                                id='linksBetweenPages'
-                                className='accent-neutral-700 size-4'
-                            />
-                        </div>
+                    <div className='flex justify-between items-center'>
+                        <label htmlFor='linksBetweenPages' className='text-sm'>
+                            Links between pages
+                        </label>
+                        <input
+                            type='checkbox'
+                            defaultChecked
+                            id='linksBetweenPages'
+                            className='accent-neutral-700 size-4'
+                        />
+                    </div>
+                    <div className='flex justify-between items-center'>
+                        <label htmlFor='linksBetweenPages' className='text-sm'>
+                            3D map
+                        </label>
+                        <input
+                            type='checkbox'
+                            id='linksBetweenPages'
+                            className='accent-neutral-700 size-4'
+                        />
+                    </div>
+                    <div className='flex justify-between items-center'>
+                        <label htmlFor='linksBetweenPages' className='text-sm'>
+                            Sentiment
+                        </label>
+                        <input
+                            type='checkbox'
+                            id='linksBetweenPages'
+                            className='accent-neutral-700 size-4'
+                        />
                     </div>
                 </div>
+
                 <div className='space-y-2'>
-                    <Button className='flex items-center gap-2 justify-center'>
-                        <PaintBrushIcon className='size-4' />
-                        Customise design
-                    </Button>
                     <Button
+                        variant='action'
+                        onClick={onClose}
+                        className='flex items-center gap-2 justify-center'
+                    >
+                        <CubeTransparentIcon className='size-4' />
+                        Start visualisation
+                    </Button>
+                    {/* <Button
                         variant='secondary'
                         className='flex items-center gap-2 justify-center'
                     >
                         <DocumentArrowUpIcon className='size-4' />
-                        Export
-                    </Button>
+                        Export to report
+                    </Button> */}
                 </div>
             </div>
         </>
