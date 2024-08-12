@@ -89,12 +89,12 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                             'Date range',
                             <CalendarDateRangeIcon className='size-4' />,
                         ]}
-                        toggleLabels={['Day', 'Week', 'Month', 'Custom']}
+                        toggleLabels={['All', 'Day', 'Week', 'Month', 'Custom']}
                         selectedIndex={dataRangeIndex}
                         onClick={(index) => setDataRangeIndex(index)}
                     >
                         <AnimatePresence>
-                            {dataRangeIndex === 3 && (
+                            {dataRangeIndex === 4 && (
                                 <motion.div
                                     initial='collapsed'
                                     animate='open'
