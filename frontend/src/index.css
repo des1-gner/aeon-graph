@@ -2,6 +2,42 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-    background-color: black;
+@layer components {
+    .text-dark {
+        @apply text-neutral-800;
+    }
+
+    .text-light {
+        @apply text-neutral-50;
+    }
+
+    .dark-gradient {
+        @apply bg-gradient-to-b from-neutral-700 from-20% to-neutral-800;
+    }
+
+    .light-gradient {
+        @apply bg-gradient-to-b from-neutral-200 from-20% to-neutral-300;
+    }
+
+    .green-gradient {
+        @apply bg-gradient-to-b from-green-300 from-20% to-green-400;
+    }
+
+    .tz-text-field {
+        @apply text-sm w-full rounded-lg border p-1.5 shadow-lg border-neutral-300 focus:border-neutral-400 focus:outline-none text-dark;
+    }
+
+    .light-card {
+        @apply bg-neutral-100 shadow border-neutral-300 border rounded-lg;
+    }
+
+    .dark-card {
+        @apply bg-neutral-700 shadow border-neutral-900 border rounded-lg;
+    }
+}
+
+@layer base {
+    body {
+        @apply text-dark;
+    }
 }
