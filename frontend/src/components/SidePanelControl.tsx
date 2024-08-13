@@ -16,7 +16,7 @@ import Button from './Button';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Slider from 'rc-slider';
-import 'rc-slider/assets/updated-slider.css';
+import '../styles/updated-slider.css';
 import { mockArticles } from '../mock-data';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -197,7 +197,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
 
                 <div className='space-y-2'>
                     <Button
-                        variant='action'
+                        variant='primary'
                         onClick={onClose}
                         className='flex items-center gap-2 justify-center'
                     >

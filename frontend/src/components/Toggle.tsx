@@ -24,11 +24,7 @@ const Toggle = ({
                     {header[0]}
                 </h2>
             )}
-            <div
-                className={`mx-2 my-1 flex gap-2 ${
-                    toggleLabels.length > 2 && 'justify-between'
-                }`}
-            >
+            <div className='mx-2 my-1 flex gap-2'>
                 {toggleLabels.map((label, index) => (
                     <ToggleItem
                         key={index}

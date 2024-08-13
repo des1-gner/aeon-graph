@@ -3,7 +3,7 @@ import SidePanelControl from './components/SidePanelControl';
 import { AnimatePresence, motion } from 'framer-motion';
 
 function App() {
-    const [showControls, setShowControls] = useState(false);
+    const [showControls, setShowControls] = useState(true);
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
