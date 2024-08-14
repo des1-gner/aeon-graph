@@ -12,7 +12,7 @@
     }
 
     .dark-gradient {
-        @apply bg-gradient-to-b from-neutral-700 from-20% to-neutral-800;
+        @apply bg-gradient-to-b from-neutral-700 to-5% to-neutral-800;
     }
 
     .light-gradient {
@@ -20,11 +20,15 @@
     }
 
     .green-gradient {
-        @apply bg-gradient-to-b from-green-300 from-20% to-green-400;
+        @apply bg-gradient-to-b from-green-300 to-50% to-green-400;
     }
 
-    .tz-text-field {
+    .light-text-field {
         @apply text-sm w-full rounded-lg border p-1.5 shadow-lg border-neutral-300 focus:border-neutral-400 focus:outline-none text-dark;
+    }
+
+    .dark-text-field {
+        @apply text-sm w-full rounded-lg border p-1.5 bg-neutral-900 border-neutral-600 focus:border-neutral-300 focus:outline-none text-light;
     }
 
     .light-card {
@@ -32,7 +36,7 @@
     }
 
     .dark-card {
-        @apply bg-neutral-700 shadow border-neutral-900 border rounded-lg;
+        @apply dark-gradient border-neutral-700 border rounded-lg;
     }
 }
 

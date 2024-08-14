@@ -8,11 +8,11 @@ const ToggleItem = ({ label, isSelected, onClick }: ToggleItemProps) => {
     return (
         <button
             onClick={onClick}
-            className={`group bg-white flex items-center rounded-lg px-3 py-1 transition duration-150 ease-in hover:cursor-pointer hover:shadow-inner border-neutral-300 border ${
-                isSelected && 'dark-gradient'
+            className={`group dark-gradient flex items-center rounded-lg px-3 py-1 transition duration-150 ease-in hover:cursor-pointer border-neutral-700 border ${
+                isSelected && 'green-gradient border-green-400'
             }`}
         >
-            <p className={`text-sm text-dark ${isSelected && 'text-light'}`}>
+            <p className={`text-sm ${isSelected ? 'text-dark' : 'text-light'}`}>
                 {label}
             </p>
         </button>

@@ -43,15 +43,15 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
 
     return (
         <>
-            <div className='bg-white border border-neutral-300 p-4 space-y-6 rounded-lg'>
+            <div className='bg-neutral-900 border-neutral-700 border p-4 space-y-8 rounded-lg'>
                 <div className='flex items-center justify-between'>
                     <div />
-                    <h1 className='flex gap-2 items-center font-semibold text-lg justify-center'>
+                    <h1 className='flex gap-2 items-center font-semibold text-lg justify-center text-light'>
                         <AdjustmentsHorizontalIcon className='size-5' />
                         Data controls
                     </h1>
                     <XMarkIcon
-                        className='size-5 cursor-pointer flex justify-start'
+                        className='size-5 text-light cursor-pointer flex justify-start'
                         onClick={onClose}
                     />
                 </div>
@@ -64,77 +64,88 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     selectedIndex={dataSourceIndex}
                     onClick={(index) => setDataSourceIndex(index)}
                 />
-                {/* <div className='light-card p-2 space-y-3'>
-                    <h2 className='flex gap-2 items-center font-semibold'>
+                <div className='space-y-3'>
+                    <h2 className='flex gap-2 items-center font-semibold text-light'>
                         <MagnifyingGlassIcon className='size-4' />
                         Search options
                     </h2>
                     <input
-                        className='tz-text-field'
+                        className='dark-text-field'
                         type='text'
-                        placeholder='Search term'
+                        placeholder='Search for keywords'
                     />
-
+                    <div>
+                        <Toggle
+                            header={[
+                                'Date range',
+                                <CalendarDateRangeIcon className='size-4' />,
+                            ]}
+                            toggleLabels={[
+                                'All',
+                                'Day',
+                                'Week',
+                                'Month',
+                                'Custom',
+                            ]}
+                            selectedIndex={dataRangeIndex}
+                            onClick={(index) => setDataRangeIndex(index)}
+                        >
+                            <AnimatePresence>
+                                {dataRangeIndex === 4 && (
+                                    <motion.div
+                                        initial='collapsed'
+                                        animate='open'
+                                        exit='collapsed'
+                                        variants={{
+                                            open: {
+                                                opacity: 1,
+                                                height: 'auto',
+                                            },
+                                            collapsed: {
+                                                opacity: 0,
+                                                height: 0,
+                                            },
+                                        }}
+                                    >
+                                        <div className='flex flex-col p-2 gap-2'>
+                                            <DatePicker
+                                                maxDate={endDate!}
+                                                className='dark-text-field'
+                                                selected={startDate}
+                                                onChange={(date) =>
+                                                    setStartDate(date)
+                                                }
+                                                dateFormat={'dd/MM/yyyy'}
+                                                placeholderText='Start date'
+                                                showTimeInput
+                                            />
+                                            <DatePicker
+                                                minDate={startDate!}
+                                                className='dark-text-field'
+                                                selected={endDate}
+                                                onChange={(date) =>
+                                                    setEndDate(date)
+                                                }
+                                                dateFormat={'dd/MM/yyyy'}
+                                                placeholderText='End date'
+                                                showTimeInput
+                                            />
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </Toggle>
+                    </div>
                     <Button
-                        variant='muted'
-                        className='flex items-center gap-2 justify-center'
+                        variant='secondary'
+                        className='flex items-center gap-2 justify-center w-full'
                     >
                         <MagnifyingGlassIcon className='size-4' />
                         Search
                     </Button>
-                </div> */}
-                <div>
-                    <Toggle
-                        header={[
-                            'Date range',
-                            <CalendarDateRangeIcon className='size-4' />,
-                        ]}
-                        toggleLabels={['All', 'Day', 'Week', 'Month', 'Custom']}
-                        selectedIndex={dataRangeIndex}
-                        onClick={(index) => setDataRangeIndex(index)}
-                    >
-                        <AnimatePresence>
-                            {dataRangeIndex === 4 && (
-                                <motion.div
-                                    initial='collapsed'
-                                    animate='open'
-                                    exit='collapsed'
-                                    variants={{
-                                        open: { opacity: 1, height: 'auto' },
-                                        collapsed: { opacity: 0, height: 0 },
-                                    }}
-                                >
-                                    <div className='flex flex-col p-2 gap-2'>
-                                        <DatePicker
-                                            maxDate={endDate!}
-                                            className='tz-text-field'
-                                            selected={startDate}
-                                            onChange={(date) =>
-                                                setStartDate(date)
-                                            }
-                                            dateFormat={'dd/MM/yyyy'}
-                                            placeholderText='Start date'
-                                            showTimeInput
-                                        />
-                                        <DatePicker
-                                            minDate={startDate!}
-                                            className='tz-text-field'
-                                            selected={endDate}
-                                            onChange={(date) =>
-                                                setEndDate(date)
-                                            }
-                                            dateFormat={'dd/MM/yyyy'}
-                                            placeholderText='End date'
-                                            showTimeInput
-                                        />
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </Toggle>
                 </div>
-                <div>
-                    <Button>
+                <div className='flex justify-center'>
+                    <Button variant='rounded'>
                         <p className='flex gap-2 justify-center items-center'>
                             {articleCount} articles found
                             <ChevronRightIcon className='size-4' />
@@ -142,12 +153,12 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </Button>
                 </div>
 
-                <div className='light-card p-2 space-y-1'>
-                    <p className='flex gap-2 items-center pb-1 font-semibold'>
+                <div className='dark-card p-2 space-y-1 text-light'>
+                    <p className='flex gap-2 items-center pb-1 font-semibold '>
                         <ShareIcon className='size-4' />
                         Node limit
                     </p>
-                    <div className='flex items-center px-1 gap-3 z-0'>
+                    <div className='flex items-center px-1 gap-3'>
                         <Slider
                             onChange={(value) => setNodeLimit(value)}
                             value={nodeLimit}
@@ -157,7 +168,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </div>
                 </div>
 
-                <div className='light-card p-2 space-y-1'>
+                <div className='dark-card p-2 space-y-1 text-light'>
                     <p className='flex gap-2 items-center pb-1 font-semibold'>
                         <EyeIcon className='size-4' />
                         Visualisation options
@@ -170,7 +181,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                             type='checkbox'
                             defaultChecked
                             id='linksBetweenPages'
-                            className='accent-neutral-700 size-4'
+                            className='accent-green-300 size-4'
                         />
                     </div>
                     <div className='flex justify-between items-center'>
@@ -180,7 +191,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         <input
                             type='checkbox'
                             id='linksBetweenPages'
-                            className='accent-neutral-700 size-4'
+                            className='accent-green-300 size-4'
                         />
                     </div>
                     <div className='flex justify-between items-center'>
@@ -190,27 +201,27 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         <input
                             type='checkbox'
                             id='linksBetweenPages'
-                            className='accent-neutral-700 size-4'
+                            className='accent-green-300 size-4'
                         />
                     </div>
                 </div>
 
                 <div className='space-y-2'>
                     <Button
-                        variant='primary'
+                        variant='action'
                         onClick={onClose}
-                        className='flex items-center gap-2 justify-center'
+                        className='flex items-center gap-2 justify-center w-full'
                     >
                         <CubeTransparentIcon className='size-4' />
                         Start visualisation
                     </Button>
-                    {/* <Button
+                    <Button
                         variant='secondary'
-                        className='flex items-center gap-2 justify-center'
+                        className='flex items-center gap-2 justify-center w-full'
                     >
                         <DocumentArrowUpIcon className='size-4' />
                         Export to report
-                    </Button> */}
+                    </Button>
                 </div>
             </div>
         </>

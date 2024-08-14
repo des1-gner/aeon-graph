@@ -12,13 +12,12 @@ interface ButtonProps {
 }
 
 const variantClasses = {
-    action: 'green-gradient text-dark border border-green-500 rounded-lg hover:shadow hover:shadow-neutral-500 w-full',
+    action: 'green-gradient text-dark border border-green-500 rounded-lg hover:shadow hover:shadow-neutral-500',
     primary:
-        'dark-gradient text-light border border-neutral-900 rounded-lg hover:shadow hover:shadow-neutral-500 w-full',
+        'dark-gradient text-light rounded-lg border border-neutral-700 hover:shadow hover:shadow-neutral-500',
     secondary:
-        'light-gradient border border-neutral-300 rounded-lg hover:shadow hover:shadow-neutral-500 w-full',
-    rounded:
-        'dark-gradient text-light border border-neutral-900 rounded-full w-fit',
+        'light-gradient border border-neutral-300 rounded-lg hover:shadow hover:shadow-neutral-500',
+    rounded: 'dark-gradient text-light border border-neutral-900 rounded-full',
 };
 
 const Button = ({
@@ -32,11 +31,11 @@ const Button = ({
 
     return (
         <button
-            className={`${variantClass} ${className} transition duration-200 ease-in active:scale-[.98]  cursor-pointer  px-3 py-1 `}
+            className={`${variantClass} ${className} transition duration-200 ease-in active:scale-[.98] cursor-pointer px-3 py-1`}
             onClick={onClick}
         >
             {isLoading ? (
-                <EllipsisHorizontalIcon className='size-4 animate-pulse' />
+                <EllipsisHorizontalIcon className='size-5 animate-pulse leading-none' />
             ) : (
                 children
             )}
