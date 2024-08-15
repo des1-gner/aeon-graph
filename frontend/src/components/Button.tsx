@@ -4,7 +4,7 @@ import { EllipsisHorizontalIcon } from '@heroicons/react/24/solid';
 interface ButtonProps {
     children: ReactNode;
     className?: string;
-    variant?: 'primary' | 'secondary' | 'action' | 'rounded';
+    variant?: 'primary' | 'secondary' | 'action' | 'rounded' | 'delete';
     isLoading?: boolean;
     onClick?: (
         event: React.MouseEvent<HTMLButtonElement> | FormEvent<HTMLFormElement>
@@ -12,12 +12,14 @@ interface ButtonProps {
 }
 
 const variantClasses = {
-    action: 'green-gradient text-dark border border-green-500 rounded-lg hover:shadow hover:shadow-neutral-500',
+    action: 'green-gradient text-dark border border-green-500 rounded-lg hover:shadow hover:shadow-neutral-600',
     primary:
-        'dark-gradient text-light rounded-lg border border-neutral-700 hover:shadow hover:shadow-neutral-500',
+        'dark-gradient text-light rounded-lg border border-neutral-700 hover:shadow hover:shadow-neutral-600',
     secondary:
-        'light-gradient border border-neutral-300 rounded-lg hover:shadow hover:shadow-neutral-500',
-    rounded: 'dark-gradient text-light border border-neutral-900 rounded-full',
+        'light-gradient border border-neutral-300 rounded-lg hover:shadow hover:shadow-neutral-600',
+    rounded:
+        'dark-gradient text-light border border-neutral-900 rounded-full hover:shadow hover:shadow-neutral-600',
+    delete: 'rounded-full !p-2 bg-gradient-to-br from-red-400 to-red-500 border-red-500',
 };
 
 const Button = ({
