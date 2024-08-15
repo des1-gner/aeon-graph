@@ -7,7 +7,7 @@ import {
     CircleStackIcon,
     CubeTransparentIcon,
     DocumentArrowUpIcon,
-    EyeIcon,
+    PaintBrushIcon,
     MagnifyingGlassIcon,
     ShareIcon,
     XMarkIcon,
@@ -175,7 +175,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
 
                 <div className='dark-card p-2 space-y-1 text-light'>
                     <p className='flex gap-2 items-center pb-1 font-semibold'>
-                        <EyeIcon className='size-4' />
+                        <PaintBrushIcon className='size-4' />
                         Visualisation options
                     </p>
                     <div className='flex justify-between items-center'>
