@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import Toggle from './Toggle';
 import {
     AdjustmentsHorizontalIcon,
-    ChevronRightIcon,
+    ArrowUpRightIcon,
     CalendarDateRangeIcon,
     CircleStackIcon,
     CubeTransparentIcon,
     DocumentArrowUpIcon,
-    EyeIcon,
+    PaintBrushIcon,
     MagnifyingGlassIcon,
     ShareIcon,
     XMarkIcon,
@@ -17,8 +17,9 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import Slider from 'rc-slider';
 import '../styles/updated-slider.css';
-import { mockArticles } from '../mock-data';
 import { AnimatePresence, motion } from 'framer-motion';
+import { mockArticles } from '../types/raw-article';
+import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
 
 interface SidePanelControlProps {
     onClose?: () => void;
@@ -31,6 +32,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [endDate, setEndDate] = useState<Date | null>();
     const [nodeLimit, setNodeLimit] = useState<number | number[]>();
     const [articleCount, setArticleCount] = useState<number>();
+    const [showArticleModal, setShowArticleModal] = useState(false);
 
     useEffect(() => {
         const fetchArticles = () => {
@@ -43,7 +45,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
 
     return (
         <>
-            <div className='bg-neutral-900 border-neutral-700 border p-4 space-y-8 rounded-lg'>
+            <div className='bg-neutral-950 border-neutral-700 border p-4 space-y-8 rounded-lg z-10'>
                 <div className='flex items-center justify-between'>
                     <div />
                     <h1 className='flex gap-2 items-center font-semibold text-lg justify-center text-light'>
@@ -137,7 +139,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         </Toggle>
                     </div>
                     <Button
-                        variant='secondary'
+                        variant='primary'
                         className='flex items-center gap-2 justify-center w-full'
                     >
                         <MagnifyingGlassIcon className='size-4' />
@@ -145,10 +147,13 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </Button>
                 </div>
                 <div className='flex justify-center'>
-                    <Button variant='rounded'>
+                    <Button
+                        variant='rounded'
+                        onClick={() => setShowArticleModal(true)}
+                    >
                         <p className='flex gap-2 justify-center items-center'>
                             {articleCount} articles found
-                            <ChevronRightIcon className='size-4' />
+                            <ArrowUpRightIcon className='size-4' />
                         </p>
                     </Button>
                 </div>
@@ -170,7 +175,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
 
                 <div className='dark-card p-2 space-y-1 text-light'>
                     <p className='flex gap-2 items-center pb-1 font-semibold'>
-                        <EyeIcon className='size-4' />
+                        <PaintBrushIcon className='size-4' />
                         Visualisation options
                     </p>
                     <div className='flex justify-between items-center'>
@@ -216,7 +221,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         Start visualisation
                     </Button>
                     <Button
-                        variant='secondary'
+                        variant='primary'
                         className='flex items-center gap-2 justify-center w-full'
                     >
                         <DocumentArrowUpIcon className='size-4' />
@@ -224,6 +229,12 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </Button>
                 </div>
             </div>
+            {showArticleModal && (
+                <ViewAllArticlesModal
+                    articleData={mockArticles}
+                    onClose={() => setShowArticleModal(false)}
+                />
+            )}
         </>
     );
 };

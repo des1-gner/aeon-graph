@@ -1,3 +1,11 @@
+export interface RawArticle {
+    headline: string;
+    publication: string;
+    author: string;
+    publishDate: string;
+    content: string;
+}
+
 export const mockArticles = [
     {
         headline: 'Plankton could be the key to saving the climate',
