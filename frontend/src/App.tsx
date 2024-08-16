@@ -5,7 +5,7 @@ import SidePanelControl from './components/SidePanelControl';
 
 function App() {
     const [showSideControls, setShowSideControls] = useState(true); //changed to Show/setSideControls
-    const [showBottomControls, setShowBottomControls] = useState(false);
+    const [showBottomControls, setShowBottomControls] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -48,7 +48,7 @@ function App() {
         //Hovering about a certain point allows the bottom panel to pop up
         const handleMouseLeave = (e: MouseEvent) => {
             if (e.clientY < window.innerHeight - 50) {
-                setShowBottomControls(false);
+                setShowBottomControls(true);
             }
         };
 
