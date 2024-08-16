@@ -1,15 +1,21 @@
 version: 0.2
 
 phases:
-  pre_build:
+  install:
+    runtime-versions:
+      nodejs: 14  # Specify Node.js version
+      python: 3.8  # Specify Python version if you need it
     commands:
+      - echo "Installing frontend dependencies"
+      - cd frontend
       - npm install
   build:
     commands:
+      - echo "Building frontend"
       - npm run build
 
 artifacts:
   files:
     - '**/*'
   discard-paths: no
-  base-directory: build
+  base-directory: frontend/build
