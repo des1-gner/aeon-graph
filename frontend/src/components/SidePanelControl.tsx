@@ -15,8 +15,6 @@ import {
 import Button from './Button';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import Slider from 'rc-slider';
-import '../styles/updated-slider.css';
 import { AnimatePresence, motion } from 'framer-motion';
 import { mockArticles } from '../types/raw-article';
 import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
@@ -30,7 +28,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [dataRangeIndex, setDataRangeIndex] = useState(0);
     const [startDate, setStartDate] = useState<Date | null>();
     const [endDate, setEndDate] = useState<Date | null>();
-    const [nodeLimit, setNodeLimit] = useState<number | number[]>();
+    const [nodeLimit, setNodeLimit] = useState<number>();
     const [articleCount, setArticleCount] = useState<number>();
     const [showArticleModal, setShowArticleModal] = useState(false);
 
@@ -109,7 +107,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                             },
                                         }}
                                     >
-                                        <div className='flex flex-col p-2 gap-2'>
+                                        {/* <div className='flex flex-col p-2 gap-2'>
                                             <DatePicker
                                                 maxDate={endDate!}
                                                 className='dark-text-field'
@@ -131,6 +129,18 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                                 dateFormat={'dd/MM/yyyy'}
                                                 placeholderText='End date'
                                                 showTimeInput
+                                            />
+                                        </div> */}
+                                        <div className='flex justify-around p-2'>
+                                            <input
+                                                type='date'
+                                                placeholder='Start date'
+                                                className='bg-neutral-700 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300 accent-green-300'
+                                            />
+                                            <input
+                                                type='date'
+                                                placeholder='Start date'
+                                                className='bg-neutral-700 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300 accent-green-300'
                                             />
                                         </div>
                                     </motion.div>
@@ -164,10 +174,14 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         Node limit
                     </p>
                     <div className='flex items-center px-1 gap-3'>
-                        <Slider
-                            onChange={(value) => setNodeLimit(value)}
-                            value={nodeLimit}
+                        <input
+                            type='range'
+                            className='w-full accent-green-300'
                             max={articleCount}
+                            value={nodeLimit}
+                            onChange={(e) =>
+                                setNodeLimit(Number(e.target.value))
+                            }
                         />
                         {nodeLimit}
                     </div>
