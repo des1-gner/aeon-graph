@@ -15,8 +15,6 @@ import {
 import Button from './Button';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import Slider from 'rc-slider';
-import '../styles/updated-slider.css';
 import { AnimatePresence, motion } from 'framer-motion';
 import { mockArticles } from '../types/raw-article';
 import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
@@ -28,9 +26,9 @@ interface SidePanelControlProps {
 const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [dataRangeIndex, setDataRangeIndex] = useState(0);
-    const [startDate, setStartDate] = useState<Date | null>();
-    const [endDate, setEndDate] = useState<Date | null>();
-    const [nodeLimit, setNodeLimit] = useState<number | number[]>();
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [nodeLimit, setNodeLimit] = useState<number>();
     const [articleCount, setArticleCount] = useState<number>();
     const [showArticleModal, setShowArticleModal] = useState(false);
 
@@ -109,29 +107,38 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                             },
                                         }}
                                     >
-                                        <div className='flex flex-col p-2 gap-2'>
-                                            <DatePicker
-                                                maxDate={endDate!}
-                                                className='dark-text-field'
-                                                selected={startDate}
-                                                onChange={(date) =>
-                                                    setStartDate(date)
-                                                }
-                                                dateFormat={'dd/MM/yyyy'}
-                                                placeholderText='Start date'
-                                                showTimeInput
-                                            />
-                                            <DatePicker
-                                                minDate={startDate!}
-                                                className='dark-text-field'
-                                                selected={endDate}
-                                                onChange={(date) =>
-                                                    setEndDate(date)
-                                                }
-                                                dateFormat={'dd/MM/yyyy'}
-                                                placeholderText='End date'
-                                                showTimeInput
-                                            />
+                                        <div className='flex justify-around p-2'>
+                                            <div className='space-y-1'>
+                                                <p className='text-light pl-1 text-sm'>
+                                                    Start date
+                                                </p>
+                                                <input
+                                                    type='date'
+                                                    value={startDate}
+                                                    onChange={(e) =>
+                                                        setStartDate(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300'
+                                                />
+                                            </div>
+
+                                            <div className='space-y-1'>
+                                                <p className='text-light pl-1 text-sm'>
+                                                    End date
+                                                </p>
+                                                <input
+                                                    type='date'
+                                                    value={endDate}
+                                                    onChange={(e) =>
+                                                        setEndDate(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300 accent-green-300'
+                                                />
+                                            </div>
                                         </div>
                                     </motion.div>
                                 )}
@@ -164,10 +171,14 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         Node limit
                     </p>
                     <div className='flex items-center px-1 gap-3'>
-                        <Slider
-                            onChange={(value) => setNodeLimit(value)}
-                            value={nodeLimit}
+                        <input
+                            type='range'
+                            className='w-full accent-green-300'
                             max={articleCount}
+                            value={nodeLimit}
+                            onChange={(e) =>
+                                setNodeLimit(Number(e.target.value))
+                            }
                         />
                         {nodeLimit}
                     </div>
