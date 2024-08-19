@@ -1,0 +1,19 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - cd frontend
+      - yarn install --frozen-lockfile
+
+  build:
+    commands:
+      - npm run build  # Build the production-ready files
+
+artifacts:
+  files:
+    - '**/*'
+  base-directory: frontend/build
+  discard-paths: no
