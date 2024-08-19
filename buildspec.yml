@@ -3,19 +3,17 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 14  # Specify Node.js version
-      python: 3.8  # Specify Python version if you need it
+      nodejs: 20
     commands:
-      - echo "Installing frontend dependencies"
       - cd frontend
-      - npm install
+      - yarn install --frozen-lockfile
+
   build:
     commands:
-      - echo "Building frontend"
-      - npm run build
+      - npm run build  # Build the production-ready files
 
 artifacts:
   files:
     - '**/*'
-  discard-paths: no
   base-directory: frontend/build
+  discard-paths: no
