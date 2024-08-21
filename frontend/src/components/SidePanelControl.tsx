@@ -13,11 +13,11 @@ import {
     XMarkIcon,
 } from '@heroicons/react/24/solid';
 import Button from './Button';
-import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { AnimatePresence, motion } from 'framer-motion';
-import { mockArticles } from '../types/raw-article';
 import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
+import { getNews } from '../api';
+import { NewsArticle } from '../types/news-article';
 
 interface SidePanelControlProps {
     onClose?: () => void;
@@ -29,15 +29,22 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [nodeLimit, setNodeLimit] = useState<number>();
-    const [articleCount, setArticleCount] = useState<number>();
+    const [articles, setArticles] = useState<NewsArticle[]>();
     const [showArticleModal, setShowArticleModal] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        const fetchArticles = () => {
-            setArticleCount(mockArticles.length);
-            setNodeLimit(mockArticles.length);
+        const fetchArticles = async () => {
+            setIsLoading(true);
+            try {
+                const response = await getNews('apple', '2024-08-19');
+                setArticles(response.articles);
+            } catch (err: any) {
+                console.error('Error fetching articles:', err);
+            } finally {
+                setIsLoading(false);
+            }
         };
-
         fetchArticles();
     }, []);
 
@@ -65,15 +72,6 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     onClick={(index) => setDataSourceIndex(index)}
                 />
                 <div className='space-y-3'>
-                    <h2 className='flex gap-2 items-center font-semibold text-light'>
-                        <MagnifyingGlassIcon className='size-4' />
-                        Search options
-                    </h2>
-                    <input
-                        className='dark-text-field'
-                        type='text'
-                        placeholder='Search for keywords'
-                    />
                     <div>
                         <Toggle
                             header={[
@@ -148,6 +146,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     <Button
                         variant='primary'
                         className='flex items-center gap-2 justify-center w-full'
+                        isLoading={isLoading}
                     >
                         <MagnifyingGlassIcon className='size-4' />
                         Search
@@ -157,10 +156,11 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     <Button
                         variant='rounded'
                         onClick={() => setShowArticleModal(true)}
+                        isLoading={isLoading}
                     >
                         <p className='flex gap-2 justify-center items-center'>
-                            {articleCount} articles found
-                            <ArrowUpRightIcon className='size-4' />
+                            {articles?.length} articles found
+                            <ArrowUpRightIcon className='w-4 h-4' />
                         </p>
                     </Button>
                 </div>
@@ -174,7 +174,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         <input
                             type='range'
                             className='w-full accent-green-300'
-                            max={articleCount}
+                            max={articles?.length}
                             value={nodeLimit}
                             onChange={(e) =>
                                 setNodeLimit(Number(e.target.value))
@@ -240,9 +240,9 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </Button>
                 </div>
             </div>
-            {showArticleModal && (
+            {showArticleModal && articles && (
                 <ViewAllArticlesModal
-                    articleData={mockArticles}
+                    articleData={articles}
                     onClose={() => setShowArticleModal(false)}
                 />
             )}

@@ -1,9 +1,9 @@
 import { ArrowUpRightIcon, TrashIcon } from '@heroicons/react/24/solid';
-import { RawArticle } from '../types/raw-article';
 import Button from './Button';
+import { NewsArticle } from '../types/news-article';
 
 interface ArticleTableProps {
-    articleData: RawArticle[];
+    articleData: NewsArticle[];
 }
 
 const ArticleTable = ({ articleData }: ArticleTableProps) => {
@@ -32,16 +32,16 @@ const ArticleTable = ({ articleData }: ArticleTableProps) => {
                 {articleData.map((article, index) => (
                     <tr key={index}>
                         <td className='border border-neutral-800 px-4 py-2'>
-                            {article.headline}
+                            {article.title}
                         </td>
                         <td className='border border-neutral-800 px-4 py-2'>
                             {article.author}
                         </td>
                         <td className='border border-neutral-800 px-4 py-2'>
-                            {article.publication}
+                            {article.source.name}
                         </td>
                         <td className='border border-neutral-800 px-4 py-2'>
-                            {article.publishDate}
+                            {article.publishedAt}
                         </td>
                         <td className='border border-neutral-800 px-4 py-2 space-x-3'>
                             <Button variant='rounded'>
@@ -50,7 +50,10 @@ const ArticleTable = ({ articleData }: ArticleTableProps) => {
                                     <ArrowUpRightIcon className='size-4' />
                                 </p>
                             </Button>
-                            <Button variant='delete'>
+                            <Button
+                                variant='delete'
+                                onClick={() => delete articleData[index]}
+                            >
                                 <TrashIcon className='size-4' />
                             </Button>
                         </td>

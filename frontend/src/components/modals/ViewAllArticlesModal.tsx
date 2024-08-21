@@ -1,11 +1,11 @@
 import BaseModal from './BaseModal';
-import { RawArticle } from '../../types/raw-article';
 import ArticleTable from '../ArticleTable';
 import { XMarkIcon } from '@heroicons/react/24/solid';
 import Button from '../Button';
+import { NewsArticle } from '../../types/news-article';
 
 interface ViewAllArticlesModalProps {
-    articleData: RawArticle[];
+    articleData: NewsArticle[];
     onClose: () => void;
 }
 
