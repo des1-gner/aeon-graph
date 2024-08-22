@@ -71,7 +71,7 @@ function App() {
                         initial={{ opacity: 0, x: '-100%' }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: '-100%' }}
-                        transition={{ duration: 0.8 }}
+                        transition={{ duration: 1 }}
                     >
                         <div className='flex justify-start align-middle p-4'>
                             <SidePanelControl
@@ -87,7 +87,7 @@ function App() {
                         initial={{ opacity: 0, y: '100%' }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: '100%' }}
-                        transition={{ duration: 0.8 }}
+                        transition={{ duration: 1 }}
                         className='fixed bottom-0 left-0 right-0 flex justify-center'
                     >
                         <div className='p-4'>
@@ -96,7 +96,7 @@ function App() {
                                 isPlaying={isPlaying}
                                 toggleMusic={toggleMusic}
                                 toggleFullScreen={toggleFullScreen}
-                                isFullScreen={isFullScreen} // Pass it here
+                                isFullScreen={isFullScreen}
                             />
                         </div>
                     </motion.div>

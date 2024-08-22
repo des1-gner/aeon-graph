@@ -15,28 +15,34 @@ import {
 import Button from './Button';
 import { AnimatePresence, motion } from 'framer-motion';
 import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
-import { getNews } from '../api';
+import { getArticles, getNews } from '../api';
 import { NewsArticle } from '../types/news-article';
+import { useCachedArticles } from '../contexts/CachedArticleContext';
 
 interface SidePanelControlProps {
     onClose?: () => void;
 }
 
 const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
+    const { cachedArticles, cacheArticles } = useCachedArticles();
+    const [articles, setArticles] = useState<NewsArticle[] | undefined>(
+        cachedArticles
+    );
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [dataRangeIndex, setDataRangeIndex] = useState(0);
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
     const [nodeLimit, setNodeLimit] = useState<number>();
-    const [articles, setArticles] = useState<NewsArticle[]>();
+
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('climate');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const handleSearch = async () => {
         setIsLoading(true);
         try {
-            const response = await getNews(searchQuery, fromDate);
+            const query = searchQuery || 'climate';
+            const response = await getNews(query, fromDate);
             setArticles(response.articles);
         } catch (err: any) {
             console.error('Error fetching articles:', err);
@@ -44,6 +50,29 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
             setIsLoading(false);
         }
     };
+
+    const handleStartVisualisation = () => {
+        cacheArticles(articles!);
+    };
+
+    useEffect(() => {
+        if (cachedArticles) {
+            setArticles(cachedArticles);
+        }
+    }, [cachedArticles]);
+    console.log('ARTICLES', articles);
+
+    // const handleLambda = async () => {
+    //     setIsLoading(true);
+    //     try {
+    //         const response = await getArticles(fromDate, toDate);
+    //         setArticles(response.articles);
+    //     } catch (err: any) {
+    //         console.error('Error fetching articles:', err);
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
 
     useEffect(() => {
         setNodeLimit(articles?.length);
@@ -124,7 +153,9 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                                 </p>
                                                 <input
                                                     type='date'
-                                                    value={fromDate}
+                                                    value={
+                                                        fromDate.split('T')[0]
+                                                    }
                                                     onChange={(e) =>
                                                         setFromDate(
                                                             e.target.value +
@@ -141,7 +172,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                                 </p>
                                                 <input
                                                     type='date'
-                                                    value={toDate}
+                                                    value={toDate.split('T')[0]}
                                                     onChange={(e) =>
                                                         setToDate(
                                                             e.target.value +
@@ -167,18 +198,21 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         Search
                     </Button>
                 </div>
-                <div className='flex justify-center'>
-                    <Button
-                        variant='rounded'
-                        onClick={() => setShowArticleModal(true)}
-                        isLoading={isLoading}
-                    >
-                        <p className='flex gap-2 justify-center items-center'>
-                            {articles?.length} articles found
-                            <ArrowUpRightIcon className='w-4 h-4' />
-                        </p>
-                    </Button>
-                </div>
+
+                {articles?.length! > 0 && (
+                    <div className='flex justify-center'>
+                        <Button
+                            variant='rounded'
+                            onClick={() => setShowArticleModal(true)}
+                            isLoading={isLoading}
+                        >
+                            <p className='flex gap-2 justify-center items-center'>
+                                {articles?.length} articles found
+                                <ArrowUpRightIcon className='w-4 h-4' />
+                            </p>
+                        </Button>
+                    </div>
+                )}
 
                 {nodeLimit! > 0 && (
                     <div className='dark-card p-2 space-y-1 text-light'>
@@ -189,7 +223,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         <div className='flex items-center px-1 gap-3'>
                             <input
                                 type='range'
-                                className='w-full accent-green-300'
+                                className='w-full accent-neutral-300'
                                 max={articles?.length}
                                 min={1}
                                 value={nodeLimit}
@@ -215,7 +249,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                             type='checkbox'
                             defaultChecked
                             id='linksBetweenPages'
-                            className='accent-green-300 size-4'
+                            className='accent-neutral-300 size-4'
                         />
                     </div>
                     <div className='flex justify-between items-center'>
@@ -225,7 +259,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         <input
                             type='checkbox'
                             id='linksBetweenPages'
-                            className='accent-green-300 size-4'
+                            className='accent-neutral-300 size-4'
                         />
                     </div>
                     <div className='flex justify-between items-center'>
@@ -235,15 +269,15 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         <input
                             type='checkbox'
                             id='linksBetweenPages'
-                            className='accent-green-300 size-4'
+                            className='accent-neutral-300 size-4'
                         />
                     </div>
                 </div>
 
                 <div className='space-y-2'>
                     <Button
-                        variant='action'
-                        onClick={onClose}
+                        variant='secondary'
+                        onClick={handleStartVisualisation}
                         className='flex items-center gap-2 justify-center w-full'
                     >
                         <CubeTransparentIcon className='size-4' />
