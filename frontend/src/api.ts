@@ -16,8 +16,12 @@ import axios from 'axios';
 //         });
 // };
 
-export const getNews = async (query: string, fromDate: string) => {
-    const url = `https://newsapi.org/v2/everything?q=${query}&from=${fromDate}&apiKey=${process.env.REACT_APP_NEWS_API}`;
+export const getNews = async (
+    query: string,
+    fromDate: string,
+    toDate: string = new Date().toISOString()
+) => {
+    const url = `https://newsapi.org/v2/everything?q=${query}&from=${fromDate}&language=en&apiKey=${process.env.REACT_APP_NEWS_API}`;
     try {
         const response = axios.get(url);
         return (await response).data;

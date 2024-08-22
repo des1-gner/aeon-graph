@@ -28,7 +28,7 @@ const ViewAllArticlesModal = ({
                         onClick={onClose}
                     />
                 </div>
-                <div className='h-[800px] overflow-auto'>
+                <div className='max-h-[800px] overflow-auto'>
                     <ArticleTable articleData={articleData} />
                 </div>
             </div>

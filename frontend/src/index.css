@@ -38,6 +38,10 @@
     .dark-card {
         @apply dark-gradient border-neutral-700 border rounded-lg;
     }
+
+    ::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+    }
 }
 
 @layer base {

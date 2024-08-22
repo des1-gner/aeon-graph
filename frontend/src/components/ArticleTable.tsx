@@ -14,7 +14,7 @@ const ArticleTable = ({ articleData }: ArticleTableProps) => {
                     <th className='bg-neutral-950 sticky top-0 px-4 py-2'>
                         Headline
                     </th>
-                    <th className='bg-neutral-950 sticky top-0 px-4 py-2'>
+                    <th className='bg-neutral-950 sticky top-0 px-4 py-2 w-[200px]'>
                         Author
                     </th>
                     <th className='bg-neutral-950 sticky top-0 px-4 py-2'>
@@ -23,7 +23,7 @@ const ArticleTable = ({ articleData }: ArticleTableProps) => {
                     <th className='bg-neutral-950 sticky top-0 px-4 py-2'>
                         Publish Date
                     </th>
-                    <th className='bg-neutral-950 sticky top-0 px-4 py-2'>
+                    <th className='bg-neutral-950 sticky top-0 px-4 py-2 w-[220px]'>
                         Actions
                     </th>
                 </tr>
@@ -31,7 +31,7 @@ const ArticleTable = ({ articleData }: ArticleTableProps) => {
             <tbody>
                 {articleData.map((article, index) => (
                     <tr key={index}>
-                        <td className='border border-neutral-800 px-4 py-2'>
+                        <td className='border border-neutral-800 px-4 py-2 w-[400px]'>
                             {article.title}
                         </td>
                         <td className='border border-neutral-800 px-4 py-2'>

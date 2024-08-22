@@ -13,7 +13,6 @@ import {
     XMarkIcon,
 } from '@heroicons/react/24/solid';
 import Button from './Button';
-import 'react-datepicker/dist/react-datepicker.css';
 import { AnimatePresence, motion } from 'framer-motion';
 import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
 import { getNews } from '../api';
@@ -26,27 +25,29 @@ interface SidePanelControlProps {
 const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [dataRangeIndex, setDataRangeIndex] = useState(0);
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
     const [nodeLimit, setNodeLimit] = useState<number>();
     const [articles, setArticles] = useState<NewsArticle[]>();
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('climate');
+
+    const handleSearch = async () => {
+        setIsLoading(true);
+        try {
+            const response = await getNews(searchQuery, fromDate);
+            setArticles(response.articles);
+        } catch (err: any) {
+            console.error('Error fetching articles:', err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchArticles = async () => {
-            setIsLoading(true);
-            try {
-                const response = await getNews('apple', '2024-08-19');
-                setArticles(response.articles);
-            } catch (err: any) {
-                console.error('Error fetching articles:', err);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchArticles();
-    }, []);
+        setNodeLimit(articles?.length);
+    }, [articles]);
 
     return (
         <>
@@ -71,6 +72,17 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     selectedIndex={dataSourceIndex}
                     onClick={(index) => setDataSourceIndex(index)}
                 />
+
+                <div>
+                    <input
+                        type='text'
+                        value={searchQuery}
+                        placeholder='Search query'
+                        className='dark-text-field'
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+
                 <div className='space-y-3'>
                     <div>
                         <Toggle
@@ -108,33 +120,35 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                         <div className='flex justify-around p-2'>
                                             <div className='space-y-1'>
                                                 <p className='text-light pl-1 text-sm'>
-                                                    Start date
+                                                    From date
                                                 </p>
                                                 <input
                                                     type='date'
-                                                    value={startDate}
+                                                    value={fromDate}
                                                     onChange={(e) =>
-                                                        setStartDate(
-                                                            e.target.value
+                                                        setFromDate(
+                                                            e.target.value +
+                                                                'T00:00:00Z'
                                                         )
                                                     }
-                                                    className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300'
+                                                    className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none accent-white focus:border-neutral-300'
                                                 />
                                             </div>
 
                                             <div className='space-y-1'>
                                                 <p className='text-light pl-1 text-sm'>
-                                                    End date
+                                                    To date
                                                 </p>
                                                 <input
                                                     type='date'
-                                                    value={endDate}
+                                                    value={toDate}
                                                     onChange={(e) =>
-                                                        setEndDate(
-                                                            e.target.value
+                                                        setToDate(
+                                                            e.target.value +
+                                                                'T00:00:00Z'
                                                         )
                                                     }
-                                                    className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300 accent-green-300'
+                                                    className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300'
                                                 />
                                             </div>
                                         </div>
@@ -147,6 +161,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         variant='primary'
                         className='flex items-center gap-2 justify-center w-full'
                         isLoading={isLoading}
+                        onClick={handleSearch}
                     >
                         <MagnifyingGlassIcon className='size-4' />
                         Search
@@ -165,24 +180,27 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </Button>
                 </div>
 
-                <div className='dark-card p-2 space-y-1 text-light'>
-                    <p className='flex gap-2 items-center pb-1 font-semibold '>
-                        <ShareIcon className='size-4' />
-                        Node limit
-                    </p>
-                    <div className='flex items-center px-1 gap-3'>
-                        <input
-                            type='range'
-                            className='w-full accent-green-300'
-                            max={articles?.length}
-                            value={nodeLimit}
-                            onChange={(e) =>
-                                setNodeLimit(Number(e.target.value))
-                            }
-                        />
-                        {nodeLimit}
+                {nodeLimit! > 0 && (
+                    <div className='dark-card p-2 space-y-1 text-light'>
+                        <p className='flex gap-2 items-center pb-1 font-semibold '>
+                            <ShareIcon className='size-4' />
+                            Node limit
+                        </p>
+                        <div className='flex items-center px-1 gap-3'>
+                            <input
+                                type='range'
+                                className='w-full accent-green-300'
+                                max={articles?.length}
+                                min={1}
+                                value={nodeLimit}
+                                onChange={(e) =>
+                                    setNodeLimit(Number(e.target.value))
+                                }
+                            />
+                            {nodeLimit}
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className='dark-card p-2 space-y-1 text-light'>
                     <p className='flex gap-2 items-center pb-1 font-semibold'>
