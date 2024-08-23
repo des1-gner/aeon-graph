@@ -1,29 +1,40 @@
-import { createContext, ReactNode, useContext, useState } from 'react';
+import {
+    createContext,
+    ReactNode,
+    useContext,
+    useEffect,
+    useState,
+} from 'react';
 import { NewsArticle } from '../types/news-article';
 
 const CACHED_ARTICLES_KEY = 'cached_articles';
 
-interface CachedArticleProviderProps {
+interface CachedArticlesProviderProps {
     children: ReactNode;
 }
 
-interface CachedArticleContextProps {
+interface CachedArticlesContextProps {
     cachedArticles: NewsArticle[] | undefined;
-    cacheArticles: (articles: NewsArticle[]) => void;
+    saveArticlesToCache: (articles: NewsArticle[]) => void;
     deleteCachedArticle: (article: NewsArticle) => void;
     clearCachedArticles: () => void;
 }
 
-const CachedArticleContext = createContext({} as CachedArticleContextProps);
+const CachedArticleContext = createContext({} as CachedArticlesContextProps);
 
 export const CachedArticleProvider = ({
     children,
-}: CachedArticleProviderProps) => {
+}: CachedArticlesProviderProps) => {
     const [cachedArticles, setCachedArticles] = useState<NewsArticle[]>();
 
-    const cacheArticles = (articles: NewsArticle[]) => {
-        setCachedArticles(articles);
-        if (articles) {
+    const getCachedArticles = (): NewsArticle[] | undefined => {
+        const cachedArticles = localStorage.getItem(CACHED_ARTICLES_KEY);
+        return cachedArticles ? JSON.parse(cachedArticles) : undefined;
+    };
+
+    const saveArticlesToCache = (articles: NewsArticle[]) => {
+        if (articles.length > 0) {
+            setCachedArticles(articles);
             localStorage.setItem(CACHED_ARTICLES_KEY, JSON.stringify(articles));
         }
     };
@@ -35,11 +46,19 @@ export const CachedArticleProvider = ({
         localStorage.removeItem(CACHED_ARTICLES_KEY);
     };
 
+    useEffect(() => {
+        setCachedArticles(getCachedArticles());
+    }, []);
+
+    useEffect(() => {
+        console.log('CACHED CONTEXT', cachedArticles);
+    }, [cachedArticles]);
+
     return (
         <CachedArticleContext.Provider
             value={{
                 cachedArticles,
-                cacheArticles,
+                saveArticlesToCache,
                 clearCachedArticles,
                 deleteCachedArticle,
             }}

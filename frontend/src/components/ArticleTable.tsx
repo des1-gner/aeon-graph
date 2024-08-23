@@ -23,7 +23,7 @@ const ArticleTable = ({ articleData }: ArticleTableProps) => {
                     <th className='bg-neutral-950 sticky top-0 px-4 py-2'>
                         Publish Date
                     </th>
-                    <th className='bg-neutral-950 sticky top-0 px-4 py-2 w-[220px]'>
+                    <th className='bg-neutral-950 sticky top-0 px-4 py-2'>
                         Actions
                     </th>
                 </tr>
@@ -44,14 +44,19 @@ const ArticleTable = ({ articleData }: ArticleTableProps) => {
                             {article.publishedAt}
                         </td>
                         <td className='border border-neutral-800 px-4 py-2 space-x-3'>
-                            <Button variant='rounded'>
+                            <Button
+                                variant='rounded'
+                                onClick={() =>
+                                    window.open(article.url, '_blank')
+                                }
+                            >
                                 <p className='flex gap-2 justify-center items-center'>
                                     View article
                                     <ArrowUpRightIcon className='size-4' />
                                 </p>
                             </Button>
                             <Button
-                                variant='delete'
+                                variant='circle'
                                 onClick={() => delete articleData[index]}
                             >
                                 <TrashIcon className='size-4' />

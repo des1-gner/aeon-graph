@@ -72,6 +72,7 @@ function App() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: '-100%' }}
                         transition={{ duration: 1 }}
+                        className='fixed top-0 left-0'
                     >
                         <div className='flex justify-start align-middle p-4'>
                             <SidePanelControl
