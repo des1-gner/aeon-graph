@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-export const getArticles = async (startDate: string, endDate: string) => {
+export const getLambda = async () => {
     const params = {
-        queryStringParameters: {
+        queryStringParameter: {
             startDate: '2024-08-10T00:00:00Z',
             endDate: '2024-08-23T23:59:59Z',
         },

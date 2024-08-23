@@ -3,16 +3,16 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { CachedArticleProvider } from './contexts/CachedArticlesContext';
+import { ArticleProvider } from './contexts/ArticlesContext';
 
 const root = ReactDOM.createRoot(
     document.getElementById('root') as HTMLElement
 );
 root.render(
     <React.StrictMode>
-        <CachedArticleProvider>
+        <ArticleProvider>
             <App />
-        </CachedArticleProvider>
+        </ArticleProvider>
     </React.StrictMode>
 );
 

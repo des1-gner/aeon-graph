@@ -22,7 +22,7 @@ const BottomPanelControl = ({
     isFullScreen,
 }: BottomPanelControlProps) => {
     return (
-        <div className='bg-neutral-950 border border-neutral-700 p-4 rounded-xl shadow-lg max-w-3xl mx-auto'>
+        <div className='bg-neutral-950 border border-neutral-700 p-4 rounded-lg shadow-lg w-fit z-10'>
             <div className='flex items-center justify-between'>
                 <h1 className='text-base font-semibold text-light'>
                     Playback Controls
@@ -39,7 +39,9 @@ const BottomPanelControl = ({
                 {/* Left: Loop Playback and Toggle Playback */}
                 <div className='flex space-x-4'>
                     <div className='flex flex-col items-center'>
-                        <span className='text-gray-400 text-sm mb-1'>Loop Playback</span>
+                        <span className='text-gray-400 text-sm mb-1'>
+                            Loop Playback
+                        </span>
                         <div className='relative inline-block w-10'>
                             <input
                                 type='checkbox'
@@ -55,7 +57,9 @@ const BottomPanelControl = ({
                     </div>
 
                     <div className='flex flex-col items-center'>
-                        <span className='text-gray-400 text-sm mb-1'>Toggle Playback</span>
+                        <span className='text-gray-400 text-sm mb-1'>
+                            Toggle Playback
+                        </span>
                         <div className='relative inline-block w-10'>
                             <input
                                 type='checkbox'
@@ -73,7 +77,9 @@ const BottomPanelControl = ({
 
                 {/* Center: Playback Speed Slider */}
                 <div className='flex flex-col items-center mx-4'>
-                    <span className='text-gray-400 text-sm mb-2'>Playback Speed</span>
+                    <span className='text-gray-400 text-sm mb-2'>
+                        Playback Speed
+                    </span>
                     <div className='flex items-center'>
                         <span className='text-sm'>🐢</span>
                         <input
@@ -90,7 +96,9 @@ const BottomPanelControl = ({
                 {/* Right: Music and Fullscreen Buttons */}
                 <div className='flex space-x-4'>
                     <div className='flex flex-col items-center'>
-                        <span className='text-gray-400 mb-2 text-sm'>Music</span>
+                        <span className='text-gray-400 mb-2 text-sm'>
+                            Music
+                        </span>
                         <button
                             onClick={toggleMusic}
                             className='flex items-center justify-center w-10 h-10 border-2 border-neutral-700 bg-neutral-950 rounded-lg hover:border-neutral-500 hover:bg-neutral-900'
@@ -104,7 +112,9 @@ const BottomPanelControl = ({
                     </div>
 
                     <div className='flex flex-col items-center'>
-                        <span className='text-gray-400 mb-2 text-sm'>Fullscreen</span>
+                        <span className='text-gray-400 mb-2 text-sm'>
+                            Fullscreen
+                        </span>
                         <button
                             onClick={toggleFullScreen}
                             className='flex items-center justify-center w-10 h-10 border-2 border-neutral-700 bg-neutral-950 rounded-lg hover:border-neutral-500 hover:bg-neutral-900'

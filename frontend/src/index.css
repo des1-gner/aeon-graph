@@ -39,6 +39,14 @@
         @apply dark-gradient border-neutral-700 border rounded-lg;
     }
 
+    .light-label {
+        @apply light-gradient text-dark border border-neutral-300 rounded-full px-3 py-1;
+    }
+
+    .dark-label {
+        @apply dark-gradient text-light border border-neutral-900 rounded-full px-3 py-1;
+    }
+
     ::-webkit-calendar-picker-indicator {
         filter: invert(1);
     }

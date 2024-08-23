@@ -6,28 +6,23 @@ import {
     CalendarDateRangeIcon,
     CircleStackIcon,
     CubeTransparentIcon,
-    DocumentArrowUpIcon,
     PaintBrushIcon,
     MagnifyingGlassIcon,
     ShareIcon,
     XMarkIcon,
-    TrashIcon,
 } from '@heroicons/react/24/solid';
 import Button from './Button';
 import { AnimatePresence, motion } from 'framer-motion';
 import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
-import { getNews } from '../api';
-import { NewsArticle } from '../types/news-article';
-import { useCachedArticles } from '../contexts/CachedArticlesContext';
+import { getLambda, getNews } from '../api';
+import { useArticles } from '../contexts/ArticlesContext';
 
 interface SidePanelControlProps {
     onClose?: () => void;
 }
 
 const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
-    const { cachedArticles, saveArticlesToCache, clearCachedArticles } =
-        useCachedArticles();
-    const [articles, setArticles] = useState<NewsArticle[] | undefined>();
+    const { articles, setArticles } = useArticles();
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [dataRangeIndex, setDataRangeIndex] = useState(0);
     const [fromDate, setFromDate] = useState('');
@@ -50,28 +45,46 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
         }
     };
 
-    const handleStartVisualisation = () => {
-        if (articles) {
-            saveArticlesToCache(articles);
-            console.log('ARTICLES', articles);
-        }
-    };
-
-    const handleClearCachedArticles = () => {
-        clearCachedArticles();
-        setNodeLimit(0);
-    };
-
     useEffect(() => {
-        if (cachedArticles) {
-            setArticles(cachedArticles);
-            setNodeLimit(cachedArticles?.length);
-        }
-    }, [cachedArticles]);
+        const handleLambda = async () => {
+            const response = await getLambda();
+            console.log(response);
+        };
+        handleLambda();
+    }, []);
 
     useEffect(() => {
         setNodeLimit(articles?.length);
     }, [articles]);
+
+    const handleDateRangeToggle = (index: number) => {
+        setDataRangeIndex(index);
+        const now = new Date();
+        let from = new Date();
+
+        switch (index) {
+            case 0:
+                setFromDate('');
+                break;
+            case 1:
+                from.setDate(now.getDate() - 1);
+                break;
+            case 2:
+                from.setDate(now.getDate() - 7);
+                break;
+            case 3:
+                from.setMonth(now.getMonth() - 1);
+                break;
+            case 4:
+                return;
+            default:
+                setFromDate('');
+                return;
+        }
+
+        setFromDate(from.toISOString().split('T')[0] + 'T00:00:00Z');
+        setToDate(now.toISOString().split('T')[0] + 'T23:59:59Z');
+    };
 
     return (
         <>
@@ -124,7 +137,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                     'Custom',
                                 ]}
                                 selectedIndex={dataRangeIndex}
-                                onClick={(index) => setDataRangeIndex(index)}
+                                onClick={handleDateRangeToggle}
                             >
                                 <AnimatePresence>
                                     {dataRangeIndex === 4 && (
@@ -201,7 +214,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </div>
                 </div>
 
-                {articles && (
+                {articles?.length! > 0 && (
                     <div className='flex justify-center'>
                         <Button
                             variant='rounded'
@@ -216,7 +229,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </div>
                 )}
 
-                {nodeLimit && (
+                {articles?.length! > 0 && (
                     <div className='dark-card p-2 space-y-1 text-light'>
                         <p className='flex gap-2 items-center pb-1 font-semibold '>
                             <ShareIcon className='size-4' />
@@ -238,7 +251,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </div>
                 )}
 
-                <div className='dark-card p-2 space-y-1 text-light'>
+                {/* <div className='dark-card p-2 space-y-1 text-light'>
                     <p className='flex gap-2 items-center pb-1 font-semibold'>
                         <PaintBrushIcon className='size-4' />
                         Visualisation options
@@ -274,32 +287,20 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                             className='accent-neutral-300 size-4'
                         />
                     </div>
-                </div>
+                </div> */}
 
                 <div className='space-y-2'>
                     <Button
                         variant='action'
-                        onClick={handleStartVisualisation}
                         className='flex items-center gap-2 justify-center w-full'
                     >
                         <CubeTransparentIcon className='size-4' />
                         Start visualisation
                     </Button>
-                    {cachedArticles && (
-                        <Button
-                            variant='delete'
-                            className='flex items-center gap-2 justify-center w-full'
-                            onClick={handleClearCachedArticles}
-                        >
-                            <TrashIcon className='size-4' />
-                            Clear cached articles
-                        </Button>
-                    )}
                 </div>
             </div>
             {showArticleModal && articles && (
                 <ViewAllArticlesModal
-                    articleData={articles}
                     onClose={() => setShowArticleModal(false)}
                 />
             )}

@@ -1,24 +1,27 @@
 import BaseModal from './BaseModal';
 import ArticleTable from '../ArticleTable';
-import { XMarkIcon } from '@heroicons/react/24/solid';
+import { TrashIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import Button from '../Button';
-import { NewsArticle } from '../../types/news-article';
+import { useArticles } from '../../contexts/ArticlesContext';
 
 interface ViewAllArticlesModalProps {
-    articleData: NewsArticle[];
     onClose: () => void;
 }
 
-const ViewAllArticlesModal = ({
-    articleData,
-    onClose,
-}: ViewAllArticlesModalProps) => {
+const ViewAllArticlesModal = ({ onClose }: ViewAllArticlesModalProps) => {
+    const { articles, clearAllArticles } = useArticles();
+
     return (
         <BaseModal onClose={onClose}>
-            <div className='border-neutral-700 border rounded-lg'>
+            <div className='border-neutral-700 border rounded-lg z-50'>
                 <div className='p-5 bg-neutral-950 rounded-t-lg flex justify-between'>
-                    <Button variant='rounded'>
-                        {articleData.length} articles
+                    <Button
+                        variant='delete'
+                        className='dark-label flex gap-1 items-center'
+                        onClick={() => clearAllArticles()}
+                    >
+                        <TrashIcon className='size-4' />
+                        {`Delete all (${articles!.length} articles)`}
                     </Button>
                     <p className='text-light font-semibold text-2xl text-center'>
                         Articles
@@ -29,7 +32,7 @@ const ViewAllArticlesModal = ({
                     />
                 </div>
                 <div className='max-h-[800px] overflow-auto'>
-                    <ArticleTable articleData={articleData} />
+                    <ArticleTable />
                 </div>
             </div>
         </BaseModal>

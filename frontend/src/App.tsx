@@ -71,10 +71,10 @@ function App() {
                         initial={{ opacity: 0, x: '-100%' }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: '-100%' }}
-                        transition={{ duration: 1 }}
-                        className='fixed top-0 left-0'
+                        transition={{ duration: 0.8 }}
+                        className='fixed top-0 left-0 z-10'
                     >
-                        <div className='flex justify-start align-middle p-4'>
+                        <div className='p-4'>
                             <SidePanelControl
                                 onClose={() => setShowSideControls(false)}
                             />
@@ -88,8 +88,8 @@ function App() {
                         initial={{ opacity: 0, y: '100%' }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: '100%' }}
-                        transition={{ duration: 1 }}
-                        className='fixed bottom-0 left-0 right-0 flex justify-center'
+                        transition={{ duration: 0.8 }}
+                        className='fixed bottom-0 flex justify-center left-0 right-0'
                     >
                         <div className='p-4'>
                             <BottomPanelControl

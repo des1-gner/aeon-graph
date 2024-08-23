@@ -25,7 +25,7 @@ const variantClasses = {
         'light-gradient border border-neutral-300 rounded-lg hover:shadow hover:shadow-neutral-600',
     rounded:
         'dark-gradient text-light border border-neutral-900 rounded-full hover:shadow hover:shadow-neutral-600',
-    delete: 'rounded-lg bg-gradient-to-br from-red-400 to-red-500 border-red-500',
+    delete: 'rounded-lg bg-gradient-to-b from-red-400 from-5% to-red-500 border-red-600',
     circle: 'rounded-full !p-2 bg-gradient-to-br from-red-400 to-red-500 border-red-500',
 };
 
