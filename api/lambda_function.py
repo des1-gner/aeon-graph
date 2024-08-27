@@ -1,81 +1,70 @@
-import json
 import boto3
-from boto3.dynamodb.conditions import Attr, And
+from boto3.dynamodb.conditions import Attr
+from botocore.exceptions import ClientError
 
-# Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
 table_name = 'lazone'
 table = dynamodb.Table(table_name)
 
+def create_response(status_code, body):
+    return {
+        'statusCode': status_code,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+            'Access-Control-Allow-Methods': 'OPTIONS,GET,POST'
+        },
+        'body': body
+    }
+
 def lambda_handler(event, context):
-    # Get query parameters from the event
-    query_params = event.get('queryStringParameters', {})
+    print(f"Received event: {event}")
+   
+    # Handle API Gateway request
+    if event.get('requestContext', {}).get('http', {}).get('method') == 'OPTIONS':
+        return create_response(200, {})
+
+    # Extract query parameters from API Gateway event
+    query_params = event.get('queryStringParameters', {}) or {}
     
     start_date = query_params.get('startDate')
     end_date = query_params.get('endDate')
-    author = query_params.get('author')
-    keyword = query_params.get('keyword')
-    source_name = query_params.get('sourceName')
     
     try:
-        # Build the filter expression dynamically
-        filter_expression = None
+        node_limit = int(query_params.get('nodeLimit', 32))
+    except ValueError:
+        node_limit = 32 
         
-        # Date filtering conditions
+    print(f"Start Date: {start_date}")
+    print(f"End Date: {end_date}")
+    print(f"Node Limit: {node_limit}")
+
+    try:
+        filter_expression = None
         if start_date and end_date:
             filter_expression = Attr('publishedAt').between(start_date, end_date)
         elif start_date:
             filter_expression = Attr('publishedAt').gte(start_date)
         elif end_date:
             filter_expression = Attr('publishedAt').lte(end_date)
-        
-        # Filtering by author
-        if author:
-            author_condition = Attr('author').eq(author)
-            filter_expression = And(filter_expression, author_condition) if filter_expression else author_condition
-        
-        # Filtering by keyword in title, content, or description
-        if keyword:
-            keyword_condition = (
-                Attr('title').contains(keyword) |
-                Attr('content').contains(keyword) |
-                Attr('description').contains(keyword)
-            )
-            filter_expression = And(filter_expression, keyword_condition) if filter_expression else keyword_condition
-        
-        # Filtering by source name
-        if source_name:
-            source_name_condition = Attr('sourceName').eq(source_name)
-            filter_expression = And(filter_expression, source_name_condition) if filter_expression else source_name_condition
-        
-        # Filtering for non-null urlToImage
-        url_image_condition = Attr('urlToImage').exists()
-        filter_expression = And(filter_expression, url_image_condition) if filter_expression else url_image_condition
-        
-        # Perform the scan with the dynamically built filter expression
-        scan_args = {'Limit': 64}  # Adjust limit as needed
+
+        scan_params = {
+            'Limit': node_limit
+        }
         if filter_expression:
-            scan_args['FilterExpression'] = filter_expression
+            scan_params['FilterExpression'] = filter_expression
+
+        response = table.scan(**scan_params)
         
-        response = table.scan(**scan_args)
         items = response.get('Items', [])
         
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'  # Allow cross-origin requests
-            },
-            'body': json.dumps(items)
-        }
+        print(f"Number of Items Returned: {len(items)}")
+        return create_response(200, items)
         
+    except ClientError as e:
+        print(f"DynamoDB ClientError: {str(e)}")
+        return create_response(500, {'error': 'Database operation failed'})
     except Exception as e:
-        # Handle any errors that may occur during scanning
-        return {
-            'statusCode': 500,
-            'headers': {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'  # Allow cross-origin requests
-            },
-            'body': json.dumps({'error': str(e)})
-        }
+        print(f"Unexpected error: {str(e)}")
+        return create_response(500, {'error': 'An unexpected error occurred'})
