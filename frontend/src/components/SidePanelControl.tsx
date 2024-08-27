@@ -226,7 +226,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                     setNodeLimit(Number(e.target.value))
                                 }
                             />
-                            {nodeLimit}
+                            <p className='w-5'>{nodeLimit}</p>
                         </div>
                     </div>
                 )}

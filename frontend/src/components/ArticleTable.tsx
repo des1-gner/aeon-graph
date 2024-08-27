@@ -33,7 +33,7 @@ const ArticleTable = () => {
                 </tr>
             </thead>
             <tbody>
-                {articles!.map((article, index) => (
+                {articles?.map((article, index) => (
                     <tr key={index}>
                         <td className='border border-neutral-800 px-4 py-2'>
                             <p className='text-center'>{index + 1}</p>
