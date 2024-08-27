@@ -5,7 +5,8 @@ import {
     useEffect,
     useState,
 } from 'react';
-import { NewsArticle } from '../types/news-article';
+
+import { Article } from '../types/article';
 
 const CACHED_ARTICLES_KEY = 'cached_articles';
 
@@ -14,16 +15,16 @@ interface ArticlesProviderProps {
 }
 
 interface ArticlesContextProps {
-    articles: NewsArticle[] | undefined;
-    setArticles: (articles: NewsArticle[]) => void;
-    deleteArticle: (article: NewsArticle) => void;
+    articles: Article[] | undefined;
+    setArticles: (articles: Article[]) => void;
+    deleteArticle: (article: Article) => void;
     clearAllArticles: () => void;
 }
 
 const ArticleContext = createContext({} as ArticlesContextProps);
 
 export const ArticleProvider = ({ children }: ArticlesProviderProps) => {
-    const [articles, setArticles] = useState<NewsArticle[] | undefined>();
+    const [articles, setArticles] = useState<Article[] | undefined>();
 
     useEffect(() => {
         const cachedArticles = localStorage.getItem(CACHED_ARTICLES_KEY);
@@ -38,7 +39,7 @@ export const ArticleProvider = ({ children }: ArticlesProviderProps) => {
         }
     }, [articles]);
 
-    const deleteArticle = (articleToDelete: NewsArticle) => {
+    const deleteArticle = (articleToDelete: Article) => {
         if (articles) {
             const updatedArticles = articles.filter(
                 (article) => article.title !== articleToDelete.title

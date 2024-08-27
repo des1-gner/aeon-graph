@@ -1,13 +1,13 @@
 import { ReactNode } from 'react';
 import ToggleItem from './ToggleItem';
 
-interface ToggleProps {
+type ToggleProps = {
     header?: [string, ReactNode];
     children?: ReactNode;
     toggleLabels: string[];
     selectedIndex: number;
     onClick: (index: number) => void;
-}
+};
 
 const Toggle = ({
     header,

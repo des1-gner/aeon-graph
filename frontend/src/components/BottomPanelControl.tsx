@@ -6,13 +6,13 @@ import {
     XMarkIcon, // Import the XMarkIcon for the close button
 } from '@heroicons/react/24/solid';
 
-interface BottomPanelControlProps {
+type BottomPanelControlProps = {
     onClose?: () => void;
     isPlaying: boolean;
     toggleMusic: () => void;
     toggleFullScreen: () => void;
     isFullScreen: boolean;
-}
+};
 
 const BottomPanelControl = ({
     onClose,

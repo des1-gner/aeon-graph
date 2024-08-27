@@ -4,13 +4,13 @@ import BottomPanelControl from './components/BottomPanelControl';
 import SidePanelControl from './components/SidePanelControl';
 
 function App() {
-    const [showSideControls, setShowSideControls] = useState(true); //changed to Show/setSideControls
+    const [showSideControls, setShowSideControls] = useState(true);
     const [showBottomControls, setShowBottomControls] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    //Bottom Panel Fullscreen
+    // Bottom Panel Fullscreen
     const toggleFullScreen = () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch((err) => {
@@ -24,7 +24,7 @@ function App() {
         setIsFullScreen(!isFullScreen);
     };
 
-    //Bottom Panel Music
+    // Bottom Panel Music
     const toggleMusic = () => {
         if (audioRef.current) {
             if (isPlaying) {
@@ -37,8 +37,9 @@ function App() {
     };
 
     useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            if (e.x < 100 && e.y < 100) {
+        const handleSidePanelMouseMove = (e: MouseEvent) => {
+            // Changed to detect top right corner
+            if (e.clientX > window.innerWidth - 100 && e.clientY < 100) {
                 setShowSideControls(true);
             }
 
@@ -47,18 +48,18 @@ function App() {
             }
         };
 
-        //Hovering about a certain point allows the bottom panel to pop up
+        // Hovering about a certain point allows the bottom panel to pop up
         const handleMouseLeave = (e: MouseEvent) => {
             if (e.clientY < window.innerHeight - 50) {
                 setShowBottomControls(true);
             }
         };
 
-        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('mousemove', handleSidePanelMouseMove);
         window.addEventListener('mouseleave', handleMouseLeave);
 
         return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
+            window.removeEventListener('mousemove', handleSidePanelMouseMove);
             window.removeEventListener('mouseleave', handleMouseLeave);
         };
     }, []);
@@ -68,11 +69,11 @@ function App() {
             <AnimatePresence>
                 {showSideControls && (
                     <motion.div
-                        initial={{ opacity: 0, x: '-100%' }}
+                        initial={{ opacity: 0, x: '100%' }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: '-100%' }}
+                        exit={{ opacity: 0, x: '100%' }}
                         transition={{ duration: 0.8 }}
-                        className='fixed top-0 left-0 z-10'
+                        className='fixed top-0 right-0 z-10'
                     >
                         <div className='p-4'>
                             <SidePanelControl

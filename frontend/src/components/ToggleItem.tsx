@@ -1,8 +1,8 @@
-interface ToggleItemProps {
+type ToggleItemProps = {
     label: string;
     isSelected: boolean;
     onClick: () => void;
-}
+};
 
 const ToggleItem = ({ label, isSelected, onClick }: ToggleItemProps) => {
     return (
