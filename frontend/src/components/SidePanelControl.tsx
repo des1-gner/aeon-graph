@@ -16,6 +16,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
 import { getLambda } from '../api';
 import { useArticles } from '../contexts/ArticlesContext';
+import { Article } from '../types/article';
 
 type SidePanelControlProps = {
     onClose?: () => void;
@@ -23,11 +24,12 @@ type SidePanelControlProps = {
 
 const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const { articles, setArticles } = useArticles();
+    const [updatedNodeArray, setUpdatedNodeArray] = useState<Article[]>();
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [dataRangeIndex, setDataRangeIndex] = useState(0);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
-    const [nodeLimit, setNodeLimit] = useState<number | undefined>(0);
+    const [nodeQty, setNodeQty] = useState<number | undefined>(0);
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     // const [searchQuery, setSearchQuery] = useState('');
@@ -44,8 +46,20 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
         }
     };
 
+    const createUpdatedNodeArray = () => {
+        if (nodeQty !== articles?.length) {
+            const updatedArray = articles?.slice(0, nodeQty);
+            setUpdatedNodeArray(updatedArray);
+            console.log(updatedArray?.length);
+        }
+    };
+
+    const handleStartVisualisation = () => {
+        createUpdatedNodeArray();
+    };
+
     useEffect(() => {
-        setNodeLimit(articles?.length);
+        setNodeQty(articles?.length);
     }, [articles]);
 
     const handleDateRangeToggle = (index: number) => {
@@ -213,7 +227,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     <div className='dark-card p-2 space-y-1 text-light'>
                         <p className='flex gap-2 items-center pb-1 font-semibold '>
                             <ShareIcon className='size-4' />
-                            Node limit
+                            Node quantity
                         </p>
                         <div className='flex items-center px-1 gap-3'>
                             <input
@@ -221,12 +235,12 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                 className='w-full accent-neutral-300'
                                 max={articles?.length}
                                 min={1}
-                                value={nodeLimit}
+                                value={nodeQty}
                                 onChange={(e) =>
-                                    setNodeLimit(Number(e.target.value))
+                                    setNodeQty(Number(e.target.value))
                                 }
                             />
-                            {nodeLimit}
+                            {nodeQty}
                         </div>
                     </div>
                 )}
@@ -273,6 +287,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     <Button
                         variant='action'
                         className='flex items-center gap-2 justify-center w-full'
+                        onClick={handleStartVisualisation}
                     >
                         <CubeTransparentIcon className='size-4' />
                         Start visualisation
