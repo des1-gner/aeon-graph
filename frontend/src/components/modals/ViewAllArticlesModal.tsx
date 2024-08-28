@@ -13,7 +13,7 @@ const ViewAllArticlesModal = ({ onClose }: ViewAllArticlesModalProps) => {
 
     return (
         <BaseModal onClose={onClose}>
-            <div className='border-neutral-700 border rounded-lg'>
+            <div className='border-neutral-700 border rounded-lg mx-10'>
                 <div className='p-5 bg-neutral-950 rounded-t-lg grid grid-cols-3 items-center'>
                     <XMarkIcon
                         className='size-5 text-light cursor-pointer justify-self-start'

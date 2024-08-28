@@ -16,7 +16,7 @@ interface ArticlesProviderProps {
 
 interface ArticlesContextProps {
     articles: Article[] | undefined;
-    setArticles: (articles: Article[]) => void;
+    setArticles: (articles: Article[] | undefined) => void;
     deleteArticle: (article: Article) => void;
     clearAllArticles: () => void;
 }
