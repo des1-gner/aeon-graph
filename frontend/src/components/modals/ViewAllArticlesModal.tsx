@@ -28,7 +28,7 @@ const ViewAllArticlesModal = ({ onClose }: ViewAllArticlesModalProps) => {
                         onClick={() => clearAllArticles()}
                     >
                         <TrashIcon className='size-4' />
-                        {`Delete all (${articles!.length} articles)`}
+                        {`Delete all (${articles?.length} articles)`}
                     </Button>
                 </div>
                 <div className='h-[800px] overflow-auto'>

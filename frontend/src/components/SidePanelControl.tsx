@@ -240,7 +240,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                     setNodeQty(Number(e.target.value))
                                 }
                             />
-                            {nodeQty}
+                            <p className='w-5'>{nodeQty}</p>
                         </div>
                     </div>
                 )}
