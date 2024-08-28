@@ -14,21 +14,21 @@ const ViewAllArticlesModal = ({ onClose }: ViewAllArticlesModalProps) => {
     return (
         <BaseModal onClose={onClose}>
             <div className='border-neutral-700 border rounded-lg mx-10'>
-                <div className='p-5 bg-neutral-950 rounded-t-lg grid grid-cols-3 items-center'>
+                <div className='p-5 bg-neutral-900 rounded-t-lg grid grid-cols-3 items-center'>
                     <XMarkIcon
                         className='size-5 text-light cursor-pointer justify-self-start'
                         onClick={onClose}
                     />
-                    <p className='text-light font-semibold text-2xl text-center'>
-                        Articles
+                    <p className='text-light font-semibold text-xl text-center'>
+                        {`Articles - ${articles?.length}`}
                     </p>
                     <Button
                         variant='delete'
                         className='dark-label flex gap-1 items-center justify-self-end'
                         onClick={() => clearAllArticles()}
                     >
-                        <TrashIcon className='size-4' />
-                        {`Delete all (${articles?.length} articles)`}
+                        <TrashIcon className='size-3' />
+                        <p className='text-sm'>Delete all</p>
                     </Button>
                 </div>
                 <div className='h-[800px] overflow-auto'>

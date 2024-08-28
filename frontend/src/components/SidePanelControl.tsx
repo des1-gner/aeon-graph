@@ -16,20 +16,20 @@ import { AnimatePresence, motion } from 'framer-motion';
 import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
 import { getLambda } from '../api';
 import { useArticles } from '../contexts/ArticlesContext';
-import { Article } from '../types/article';
+import { Article, demoData } from '../types/article';
 
 type SidePanelControlProps = {
     onClose?: () => void;
 };
 
 const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
-    const { articles, setArticles } = useArticles();
-    const [updatedNodeArray, setUpdatedNodeArray] = useState<Article[]>();
+    const { articles, setArticles, clearAllArticles } = useArticles();
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
-    const [dataRangeIndex, setDataRangeIndex] = useState(0);
+    const [dateRangeIndex, setDateRangeIndex] = useState(0);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [nodeQty, setNodeQty] = useState<number | undefined>(0);
+    const [updatedNodeArray, setUpdatedNodeArray] = useState<Article[]>();
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     // const [searchQuery, setSearchQuery] = useState('');
@@ -46,6 +46,13 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
         }
     };
 
+    const handleDataSourceChange = (index: number) => {
+        setDataSourceIndex(index);
+        if (index === 1) {
+            setArticles(demoData);
+        }
+    };
+
     const createUpdatedNodeArray = () => {
         if (nodeQty !== articles?.length) {
             const updatedArray = articles?.slice(0, nodeQty);
@@ -56,6 +63,13 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
 
     const handleStartVisualisation = () => {
         createUpdatedNodeArray();
+
+        // how i'm thinking starting playback will work - not created yet
+        // if (updatedNodeArray) {
+        //     startPlayback(updatedNodeArray)
+        // } else {
+        //     startPlayback(articles);
+        // }
     };
 
     useEffect(() => {
@@ -63,7 +77,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     }, [articles]);
 
     const handleDateRangeToggle = (index: number) => {
-        setDataRangeIndex(index);
+        setDateRangeIndex(index);
         const now = new Date();
         let from = new Date();
 
@@ -93,7 +107,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
 
     return (
         <>
-            <div className='bg-neutral-950 border-neutral-700 border p-4 space-y-8 rounded-lg z-10'>
+            <div className='bg-neutral-950 border-neutral-700 border p-4 space-y-8 rounded-lg z-10 min-w-[385px]'>
                 <div className='flex items-center justify-between'>
                     <XMarkIcon
                         className='size-5 text-light cursor-pointer flex justify-start'
@@ -113,7 +127,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     ]}
                     toggleLabels={['Database', 'Demo data']}
                     selectedIndex={dataSourceIndex}
-                    onClick={(index) => setDataSourceIndex(index)}
+                    onClick={(index) => handleDataSourceChange(index)}
                 />
 
                 {/* <div className='dark-card p-2 space-y-3'>
@@ -129,99 +143,112 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
                     </div> */}
+                {dataSourceIndex === 0 && (
+                    <div>
+                        <Toggle
+                            header={[
+                                'Date range',
+                                <CalendarDateRangeIcon className='size-4' />,
+                            ]}
+                            toggleLabels={[
+                                'All',
+                                'Day',
+                                'Week',
+                                'Month',
+                                'Custom',
+                            ]}
+                            selectedIndex={dateRangeIndex}
+                            onClick={handleDateRangeToggle}
+                        >
+                            <AnimatePresence>
+                                {dateRangeIndex === 4 && (
+                                    <motion.div
+                                        initial='collapsed'
+                                        animate='open'
+                                        exit='collapsed'
+                                        variants={{
+                                            open: {
+                                                opacity: 1,
+                                                height: 'auto',
+                                            },
+                                            collapsed: {
+                                                opacity: 0,
+                                                height: 0,
+                                            },
+                                        }}
+                                    >
+                                        <div className='flex justify-around p-2'>
+                                            <div className='space-y-1'>
+                                                <p className='text-light pl-1 text-sm'>
+                                                    Start date
+                                                </p>
+                                                <input
+                                                    type='date'
+                                                    value={
+                                                        startDate.split('T')[0]
+                                                    }
+                                                    onChange={(e) =>
+                                                        setStartDate(
+                                                            e.target.value +
+                                                                'T00:00:00Z'
+                                                        )
+                                                    }
+                                                    className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none accent-white focus:border-neutral-300'
+                                                />
+                                            </div>
 
-                <div>
-                    <Toggle
-                        header={[
-                            'Date range',
-                            <CalendarDateRangeIcon className='size-4' />,
-                        ]}
-                        toggleLabels={['All', 'Day', 'Week', 'Month', 'Custom']}
-                        selectedIndex={dataRangeIndex}
-                        onClick={handleDateRangeToggle}
-                    >
-                        <AnimatePresence>
-                            {dataRangeIndex === 4 && (
-                                <motion.div
-                                    initial='collapsed'
-                                    animate='open'
-                                    exit='collapsed'
-                                    variants={{
-                                        open: {
-                                            opacity: 1,
-                                            height: 'auto',
-                                        },
-                                        collapsed: {
-                                            opacity: 0,
-                                            height: 0,
-                                        },
-                                    }}
-                                >
-                                    <div className='flex justify-around p-2'>
-                                        <div className='space-y-1'>
-                                            <p className='text-light pl-1 text-sm'>
-                                                Start date
-                                            </p>
-                                            <input
-                                                type='date'
-                                                value={startDate.split('T')[0]}
-                                                onChange={(e) =>
-                                                    setStartDate(
-                                                        e.target.value +
-                                                            'T00:00:00Z'
-                                                    )
-                                                }
-                                                className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none accent-white focus:border-neutral-300'
-                                            />
+                                            <div className='space-y-1'>
+                                                <p className='text-light pl-1 text-sm'>
+                                                    End date
+                                                </p>
+                                                <input
+                                                    type='date'
+                                                    value={
+                                                        endDate.split('T')[0]
+                                                    }
+                                                    onChange={(e) =>
+                                                        setEndDate(
+                                                            e.target.value +
+                                                                'T00:00:00Z'
+                                                        )
+                                                    }
+                                                    className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300'
+                                                />
+                                            </div>
                                         </div>
-
-                                        <div className='space-y-1'>
-                                            <p className='text-light pl-1 text-sm'>
-                                                End date
-                                            </p>
-                                            <input
-                                                type='date'
-                                                value={endDate.split('T')[0]}
-                                                onChange={(e) =>
-                                                    setEndDate(
-                                                        e.target.value +
-                                                            'T00:00:00Z'
-                                                    )
-                                                }
-                                                className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300'
-                                            />
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                        <div className='p-2'>
-                            <Button
-                                variant='secondary'
-                                className='flex items-center gap-2 justify-center w-full'
-                                isLoading={isLoading}
-                                onClick={handleSearch}
-                            >
-                                <MagnifyingGlassIcon className='size-4' />
-                                Search
-                            </Button>
-                        </div>
-                        {articles?.length! > 0 && (
-                            <div className='flex justify-center py-4'>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                            <div className='p-2'>
                                 <Button
-                                    variant='rounded'
-                                    onClick={() => setShowArticleModal(true)}
+                                    variant='secondary'
+                                    className='flex items-center gap-2 justify-center w-full'
                                     isLoading={isLoading}
+                                    onClick={handleSearch}
                                 >
-                                    <p className='flex gap-2 justify-center items-center'>
-                                        {articles?.length} articles found
-                                        <ArrowUpRightIcon className='w-4 h-4' />
-                                    </p>
+                                    <MagnifyingGlassIcon className='size-4' />
+                                    Search
                                 </Button>
                             </div>
-                        )}
-                    </Toggle>
-                </div>
+                        </Toggle>
+                    </div>
+                )}
+
+                {articles?.length! > 0 && (
+                    <div className='flex justify-center'>
+                        <Button
+                            variant='rounded'
+                            className='dark-gradient text-light border border-neutral-700 bg-neutral-900'
+                            onClick={() => setShowArticleModal(true)}
+                            isLoading={isLoading}
+                        >
+                            <p className='flex gap-2 justify-center items-center'>
+                                {articles?.length} articles found
+                                <ArrowUpRightIcon className='w-4 h-4' />
+                            </p>
+                        </Button>
+                    </div>
+                )}
 
                 {articles?.length! > 0 && (
                     <div className='dark-card p-2 space-y-1 text-light'>

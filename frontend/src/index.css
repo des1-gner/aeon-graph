@@ -16,7 +16,7 @@
     }
 
     .light-gradient {
-        @apply bg-gradient-to-b from-neutral-200 from-5% to-neutral-300;
+        @apply bg-gradient-to-b from-neutral-200 to-20% to-neutral-300;
     }
 
     .green-gradient {
