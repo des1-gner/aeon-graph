@@ -20,7 +20,7 @@ const ViewAllArticlesModal = ({ onClose }: ViewAllArticlesModalProps) => {
                         onClick={onClose}
                     />
                     <p className='text-light font-semibold text-xl text-center'>
-                        {`Articles - ${articles?.length}`}
+                        {`Articles (${articles?.length})`}
                     </p>
                     <Button
                         variant='delete'

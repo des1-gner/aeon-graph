@@ -23,13 +23,13 @@ type SidePanelControlProps = {
 };
 
 const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
-    const { articles, setArticles, clearAllArticles } = useArticles();
+    const { articles, setArticles } = useArticles();
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [dateRangeIndex, setDateRangeIndex] = useState(0);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [nodeQty, setNodeQty] = useState<number | undefined>(0);
-    const [updatedNodeArray, setUpdatedNodeArray] = useState<Article[]>();
+    const [presentationData, setPresentationData] = useState<Article[]>();
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     // const [searchQuery, setSearchQuery] = useState('');
@@ -53,20 +53,20 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
         }
     };
 
-    const createUpdatedNodeArray = () => {
+    const createPresentationData = () => {
         if (nodeQty !== articles?.length) {
             const updatedArray = articles?.slice(0, nodeQty);
-            setUpdatedNodeArray(updatedArray);
+            setPresentationData(updatedArray);
             console.log(updatedArray?.length);
         }
     };
 
     const handleStartVisualisation = () => {
-        createUpdatedNodeArray();
+        createPresentationData();
 
         // how i'm thinking starting playback will work - not created yet
-        // if (updatedNodeArray) {
-        //     startPlayback(updatedNodeArray)
+        // if (presentationData) {
+        //     startPlayback(presentationData)
         // } else {
         //     startPlayback(articles);
         // }

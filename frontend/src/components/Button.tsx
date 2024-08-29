@@ -39,7 +39,7 @@ const Button = ({
 
     return (
         <button
-            className={`${variantClass} ${className}  transition duration-200 whitespace-nowrap ease-in active:scale-[.98] cursor-pointer px-3 py-1 hover:bg-none`}
+            className={`${variantClass} ${className} transition duration-200 whitespace-nowrap ease-in active:scale-[.98] cursor-pointer px-3 py-1 hover:bg-none`}
             onClick={onClick}
         >
             {isLoading ? (
