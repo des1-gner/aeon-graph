@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import BottomPanelControl from './components/BottomPanelControl';
 import SidePanelControl from './components/SidePanelControl';
+import ParticleSwarm from './three.js/ParticleSwarm';
 
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
@@ -66,6 +67,7 @@ function App() {
 
     return (
         <div className='bg-black min-h-screen'>
+            <ParticleSwarm />
             <AnimatePresence>
                 {showSideControls && (
                     <motion.div
@@ -104,7 +106,6 @@ function App() {
                     </motion.div>
                 )}
             </AnimatePresence>
-
             <audio ref={audioRef} src='/music/ambient-spring-forest.mp3' loop />
         </div>
     );
