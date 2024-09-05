@@ -34,10 +34,29 @@ const ParticleSwarm: React.FC = () => {
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         mountRef.current.appendChild(renderer.domElement);
-        const colors: number[] = [0xffffff, 0x30f8ff, 0x73ff72, 0xff8624];
+
+        const colors: number[] = [0xffffff, 0x30f8ff, 0xff8624, 0x73ff72];
+        const categories = ['Air', 'Water', 'Fire', 'Earth'];
         const particles: ParticleData[] = [];
         const particleSystem = new THREE.Group();
+        const textSprites: THREE.Sprite[] = [];
 
+        const getCornerPosition = (colorIndex: number): THREE.Vector3 => {
+            switch (colorIndex) {
+                case 0:
+                    return new THREE.Vector3(-4, 4, 0);
+                case 1:
+                    return new THREE.Vector3(4, 4, 0);
+                case 2:
+                    return new THREE.Vector3(-4, -4, 0);
+                case 3:
+                    return new THREE.Vector3(4, -4, 0);
+                default:
+                    return new THREE.Vector3(0, 0, 0);
+            }
+        };
+
+        // Create particles
         for (let i = 0; i < 2000; i++) {
             const geometry = new THREE.SphereGeometry(0.02, 16, 16);
             const material = new THREE.MeshBasicMaterial({
@@ -70,20 +89,36 @@ const ParticleSwarm: React.FC = () => {
         scene.add(particleSystem);
         camera.position.z = 10;
 
-        const getCornerPosition = (colorIndex: number): THREE.Vector3 => {
-            switch (colorIndex) {
-                case 0:
-                    return new THREE.Vector3(-4, 4, 0);
-                case 1:
-                    return new THREE.Vector3(4, 4, 0);
-                case 2:
-                    return new THREE.Vector3(-4, -4, 0);
-                case 3:
-                    return new THREE.Vector3(4, -4, 0);
-                default:
-                    return new THREE.Vector3(0, 0, 0);
+        // Create text sprites using a standard font
+        categories.forEach((category, index) => {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 512;
+            canvas.height = 512;
+
+            if (context) {
+                context.font = 'Bold 120px Arial, Helvetica, sans-serif';
+                context.fillStyle = `#${colors[index]
+                    .toString(16)
+                    .padStart(6, '0')}`;
+                context.textAlign = 'center';
+                context.fillText(category, 256, 256);
             }
-        };
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMaterial = new THREE.SpriteMaterial({
+                map: texture,
+                transparent: true,
+                opacity: 0,
+            });
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(4, 2, 1);
+            sprite.position.copy(getCornerPosition(index));
+            scene.add(sprite);
+            textSprites.push(sprite);
+        });
+
+        const textAvoidanceRadius = 1.5; // Adjust this value to change the size of the text "bubble"
 
         const animate = () => {
             requestAnimationFrame(animate);
@@ -105,6 +140,27 @@ const ParticleSwarm: React.FC = () => {
                         0.05
                     );
 
+                    // Apply text avoidance
+                    const textPosition = getCornerPosition(
+                        particle.userData.colorIndex
+                    );
+                    const distanceToText =
+                        particle.position.distanceTo(textPosition);
+                    if (distanceToText < textAvoidanceRadius) {
+                        const avoidanceForce = particle.position
+                            .clone()
+                            .sub(textPosition)
+                            .normalize();
+                        const avoidanceStrength =
+                            (textAvoidanceRadius - distanceToText) /
+                            textAvoidanceRadius;
+                        particle.position.add(
+                            avoidanceForce.multiplyScalar(
+                                avoidanceStrength * 0.9
+                            )
+                        );
+                    }
+
                     particle.position.x +=
                         Math.sin(
                             Date.now() * 0.001 + particle.userData.colorIndex
@@ -124,6 +180,21 @@ const ParticleSwarm: React.FC = () => {
                         particle.userData.velocity.z *= -1;
 
                     particle.userData.basePosition.set(0, 0, 0);
+                }
+            });
+
+            // Fade in/out text sprites
+            textSprites.forEach((sprite) => {
+                if (organised) {
+                    sprite.material.opacity = Math.min(
+                        sprite.material.opacity + 0.01,
+                        1
+                    );
+                } else {
+                    sprite.material.opacity = Math.max(
+                        sprite.material.opacity - 0.01,
+                        0
+                    );
                 }
             });
 
