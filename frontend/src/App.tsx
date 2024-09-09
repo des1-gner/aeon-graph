@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import BottomPanelControl from './components/BottomPanelControl';
 import SidePanelControl from './components/SidePanelControl';
 import ParticleSwarm from './three.js/ParticleSwarm';
+import GravitySwarm from './three.js/GravitySwarm';
 
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
@@ -67,7 +68,7 @@ function App() {
 
     return (
         <div className='bg-black min-h-screen'>
-            <ParticleSwarm />
+            <GravitySwarm particleColor='#72F088' />
             <AnimatePresence>
                 {showSideControls && (
                     <motion.div

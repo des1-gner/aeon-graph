@@ -237,4 +237,7 @@ const ParticleSwarm: React.FC = () => {
     );
 };
 
+{
+}
+
 export default ParticleSwarm;
