@@ -4,6 +4,8 @@ import BottomPanelControl from './components/BottomPanelControl';
 import SidePanelControl from './components/SidePanelControl';
 import ParticleSwarm from './three.js/ParticleSwarm';
 import GravitySwarm from './three.js/GravitySwarm';
+import { dummyAnalysedArticles } from './types/analysedArticle';
+import ArticleVisualizer from './three.js/ArticleVisualiser';
 
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
@@ -68,7 +70,8 @@ function App() {
 
     return (
         <div className='bg-black min-h-screen'>
-            <GravitySwarm particleColor='#72F088' />
+            {/* <GravitySwarm /> */}
+            <ArticleVisualizer articles={dummyAnalysedArticles} />
             <AnimatePresence>
                 {showSideControls && (
                     <motion.div
