@@ -1,14 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
-
-export type AnalysedArticle = {
-    date: string;
-    headline: string;
-    published: string;
-    url: string;
-    content: string;
-    tags: 'tag1' | 'tag2' | 'tag3';
-};
+import { AnalysedArticle } from '../types/analysedArticle';
 
 interface ArticleVisualizerProps {
     articles: AnalysedArticle[];
@@ -48,7 +40,7 @@ const ArticleVisualizer: React.FC<ArticleVisualizerProps> = ({ articles }) => {
         const positions = new Float32Array(particleCount * 3);
         const colors = new Float32Array(particleCount * 3);
         const velocities = new Float32Array(particleCount * 3);
-        const homes = new Float32Array(particleCount * 3);
+        const homes = new Float32Array(particleCount * 6); // Store two home bases
 
         const colorMap = {
             tag1: new THREE.Color(0xff0000), // Red
@@ -64,23 +56,36 @@ const ArticleVisualizer: React.FC<ArticleVisualizerProps> = ({ articles }) => {
 
         articles.forEach((article, i) => {
             const index = i * 3;
-            const homeBase = homeBases[article.tags];
-            const color = colorMap[article.tags];
+            const homeIndex = i * 6;
 
-            // Set initial position near home base
-            positions[index] = homeBase.x + (Math.random() - 0.5) * 2;
-            positions[index + 1] = homeBase.y + (Math.random() - 0.5) * 2;
-            positions[index + 2] = homeBase.z + (Math.random() - 0.5) * 2;
+            // Handle multiple tags
+            const tag1 = article.tags[0];
+            const tag2 = article.tags[1];
+            const homeBase1 = homeBases[tag1];
+            const homeBase2 = tag2 ? homeBases[tag2] : homeBase1;
 
-            // Set color
-            colors[index] = color.r;
-            colors[index + 1] = color.g;
-            colors[index + 2] = color.b;
+            // Set initial position between home bases
+            positions[index] =
+                (homeBase1.x + homeBase2.x) / 2 + (Math.random() - 0.5) * 2;
+            positions[index + 1] =
+                (homeBase1.y + homeBase2.y) / 2 + (Math.random() - 0.5) * 2;
+            positions[index + 2] =
+                (homeBase1.z + homeBase2.z) / 2 + (Math.random() - 0.5) * 2;
 
-            // Set home base
-            homes[index] = homeBase.x;
-            homes[index + 1] = homeBase.y;
-            homes[index + 2] = homeBase.z;
+            // Set color (blend if two tags)
+            const color1 = colorMap[tag1];
+            const color2 = tag2 ? colorMap[tag2] : color1;
+            colors[index] = (color1.r + color2.r) / 2;
+            colors[index + 1] = (color1.g + color2.g) / 2;
+            colors[index + 2] = (color1.b + color2.b) / 2;
+
+            // Set home bases
+            homes[homeIndex] = homeBase1.x;
+            homes[homeIndex + 1] = homeBase1.y;
+            homes[homeIndex + 2] = homeBase1.z;
+            homes[homeIndex + 3] = homeBase2.x;
+            homes[homeIndex + 4] = homeBase2.y;
+            homes[homeIndex + 5] = homeBase2.z;
 
             // Initialize velocity
             velocities[index] = 0;
@@ -115,28 +120,44 @@ const ArticleVisualizer: React.FC<ArticleVisualizerProps> = ({ articles }) => {
 
             for (let i = 0; i < particleCount; i++) {
                 const index = i * 3;
+                const homeIndex = i * 6;
                 const x = positions[index];
                 const y = positions[index + 1];
                 const z = positions[index + 2];
 
-                // Gravitational force towards home base
-                const homeX = homes[index];
-                const homeY = homes[index + 1];
-                const homeZ = homes[index + 2];
+                // Gravitational force towards home bases
+                const homeX1 = homes[homeIndex];
+                const homeY1 = homes[homeIndex + 1];
+                const homeZ1 = homes[homeIndex + 2];
+                const homeX2 = homes[homeIndex + 3];
+                const homeY2 = homes[homeIndex + 4];
+                const homeZ2 = homes[homeIndex + 5];
 
-                const dx = homeX - x;
-                const dy = homeY - y;
-                const dz = homeZ - z;
-                const distanceToHome = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                // Calculate forces for both home bases
+                const calculateForce = (hx: number, hy: number, hz: number) => {
+                    const dx = hx - x;
+                    const dy = hy - y;
+                    const dz = hz - z;
+                    const distanceToHome = Math.sqrt(
+                        dx * dx + dy * dy + dz * dz
+                    );
+                    const gravityStrength = 0.005;
+                    return {
+                        fx: (dx * gravityStrength) / distanceToHome,
+                        fy: (dy * gravityStrength) / distanceToHome,
+                        fz: (dz * gravityStrength) / distanceToHome,
+                    };
+                };
 
-                const gravityStrength = 0.01;
-                velocities[index] += (dx * gravityStrength) / distanceToHome;
-                velocities[index + 1] +=
-                    (dy * gravityStrength) / distanceToHome;
-                velocities[index + 2] +=
-                    (dz * gravityStrength) / distanceToHome;
+                const force1 = calculateForce(homeX1, homeY1, homeZ1);
+                const force2 = calculateForce(homeX2, homeY2, homeZ2);
 
-                // Mouse repulsion
+                // Apply combined forces
+                velocities[index] += (force1.fx + force2.fx) / 2;
+                velocities[index + 1] += (force1.fy + force2.fy) / 2;
+                velocities[index + 2] += (force1.fz + force2.fz) / 2;
+
+                // Mouse repulsion (unchanged)
                 const mouseX = mouseRef.current.x * 10;
                 const mouseY = mouseRef.current.y * 10;
                 const dxMouse = x - mouseX;
