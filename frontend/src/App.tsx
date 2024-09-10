@@ -1,6 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import BottomPanelControl from './components/BottomPanelControl';
+import DisclaimerPopup from './components/DisclaimerPopup'; //Imported DisclaimerPopup component 
+import HomePage from './components/HomePage'; // Imported HomePage component
 import SidePanelControl from './components/SidePanelControl';
 
 function App() {
@@ -8,7 +10,19 @@ function App() {
     const [showBottomControls, setShowBottomControls] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
+    const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false); // Controls disclaimer visibility
+    const [showHomePage, setShowHomePage] = useState(false); // Controls home page visibility
     const audioRef = useRef<HTMLAudioElement | null>(null);
+
+ const handleEnterSite = () => {
+        setShowHomePage(false); // Hide home page to show main content
+    };
+
+    const handleDisclaimerAccept = () => {
+        setIsDisclaimerAccepted(true); // Hide disclaimer
+        setShowHomePage(true); // Show home page after disclaimer is accepted
+    };
+
 
     // Bottom Panel Fullscreen
     const toggleFullScreen = () => {
@@ -63,6 +77,17 @@ function App() {
             window.removeEventListener('mouseleave', handleMouseLeave);
         };
     }, []);
+
+  // Render DisclaimerPopup first if it has not been accepted yet
+    if (!isDisclaimerAccepted) {
+        return <DisclaimerPopup onAccept={handleDisclaimerAccept} />;
+    }
+
+    // Render HomePage if the disclaimer has been accepted but the home page is not yet dismissed
+    if (showHomePage) {
+        return <HomePage onEnter={handleEnterSite} />;
+    }
+
 
     return (
         <div className='bg-black min-h-screen'>
