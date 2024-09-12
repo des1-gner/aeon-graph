@@ -72,7 +72,7 @@ function App() {
         <div className='bg-black min-h-screen'>
             {/* <GravitySwarm /> */}
             <ArticleVisualizer articles={dummyAnalysedArticles} />
-            <AnimatePresence>
+            {/* <AnimatePresence>
                 {showSideControls && (
                     <motion.div
                         initial={{ opacity: 0, x: '100%' }}
@@ -109,7 +109,7 @@ function App() {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence> */}
             <audio ref={audioRef} src='/music/ambient-spring-forest.mp3' loop />
         </div>
     );

@@ -100,7 +100,7 @@ const ArticleVisualizer: React.FC<ArticleVisualizerProps> = ({ articles }) => {
         geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
         const material = new THREE.PointsMaterial({
-            size: 0.1,
+            size: 0.3,
             vertexColors: true,
             blending: THREE.AdditiveBlending,
             transparent: true,
