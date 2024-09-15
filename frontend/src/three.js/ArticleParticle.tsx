@@ -8,22 +8,23 @@ type AnalysedArticle = {
     published: string;
     url: string;
     content: string;
-    tags: Array<'tag1' | 'tag2' | 'tag3'>;
+    mainClaim: 'main 1' | 'main 2' | 'main 3';
+    subClaim: Array<'sub1' | 'sub2' | 'sub3'>;
 };
 
-const TAG_POSITIONS = {
-    tag1: new THREE.Vector3(-5, 0, 0),
-    tag2: new THREE.Vector3(0, 5, 0),
-    tag3: new THREE.Vector3(5, 0, 0),
+const SUB_POSITIONS = {
+    sub1: new THREE.Vector3(-5, 0, 0),
+    sub2: new THREE.Vector3(0, 5, 0),
+    sub3: new THREE.Vector3(5, 0, 0),
 };
 
-const TAG_COLORS = {
-    tag1: new THREE.Color(1, 0, 0), // Red
-    tag2: new THREE.Color(1, 0.5, 0), // Orange
-    tag3: new THREE.Color(0.5, 0, 0.5), // Purple
-    tag4: new THREE.Color(1, 1, 0), // Yellow
-    tag5: new THREE.Color(0.5, 0.5, 0.5), // Gray
-    tag6: new THREE.Color(0, 0, 1), // Blue
+const SUB_COLORS = {
+    sub1: new THREE.Color(1, 0, 0), // Red
+    sub2: new THREE.Color(1, 0.5, 0), // Orange
+    sub3: new THREE.Color(0.5, 0, 0.5), // Purple
+    sub4: new THREE.Color(1, 1, 0), // Yellow
+    sub5: new THREE.Color(0.5, 0.5, 0.5), // Gray
+    sub6: new THREE.Color(0, 0, 1), // Blue
 };
 
 const Particle = ({
@@ -100,10 +101,10 @@ const Swarm = ({
             // Calculate color based on tags
             const article = articles[i];
             const averageColor = new THREE.Color(0, 0, 0);
-            article.tags.forEach((tag) => {
-                averageColor.add(TAG_COLORS[tag]);
+            article.subClaim.forEach((sub) => {
+                averageColor.add(SUB_COLORS[sub]);
             });
-            averageColor.multiplyScalar(1 / article.tags.length);
+            averageColor.multiplyScalar(1 / article.subClaim.length);
             colorsRef.current[i] = averageColor;
         }
     }, [articles]);
@@ -112,8 +113,8 @@ const Swarm = ({
         if (isOrdered) {
             for (let i = 0; i < articles.length; i++) {
                 const article = articles[i];
-                const tagPositions = article.tags.map(
-                    (tag) => TAG_POSITIONS[tag]
+                const tagPositions = article.subClaim.map(
+                    (sub) => SUB_POSITIONS[sub]
                 );
                 const averagePosition = new THREE.Vector3();
                 tagPositions.forEach((pos) => averagePosition.add(pos));

@@ -2,10 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import BottomPanelControl from './components/BottomPanelControl';
 import SidePanelControl from './components/SidePanelControl';
-import ParticleSwarm from './three.js/ParticleSwarm';
-import GravitySwarm from './three.js/GravitySwarm';
 import { dummyAnalysedArticles } from './types/analysedArticle';
-import ArticleVisualizer from './three.js/ArticleVisualiser';
 import ArticleParticle from './three.js/ArticleParticle';
 
 function App() {
