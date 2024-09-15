@@ -8,9 +8,11 @@ type AnalysedArticle = {
     published: string;
     url: string;
     content: string;
-    mainClaim: 'main 1' | 'main 2' | 'main 3';
+    mainClaim?: 'main 1' | 'main 2' | 'main 3';
     subClaim: Array<'sub1' | 'sub2' | 'sub3'>;
 };
+
+type ViewMode = 'chaos' | 'main' | 'sub';
 
 const SUB_POSITIONS = {
     sub1: new THREE.Vector3(-5, 0, 0),
@@ -22,9 +24,32 @@ const SUB_COLORS = {
     sub1: new THREE.Color(1, 0, 0), // Red
     sub2: new THREE.Color(1, 0.5, 0), // Orange
     sub3: new THREE.Color(0.5, 0, 0.5), // Purple
-    sub4: new THREE.Color(1, 1, 0), // Yellow
-    sub5: new THREE.Color(0.5, 0.5, 0.5), // Gray
-    sub6: new THREE.Color(0, 0, 1), // Blue
+};
+
+const generateCirclePositions = (
+    centerX: number,
+    centerY: number,
+    radius: number,
+    count: number
+) => {
+    const positions = [];
+    for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2;
+        positions.push(
+            new THREE.Vector3(
+                centerX + Math.cos(angle) * radius,
+                centerY + Math.sin(angle) * radius,
+                0
+            )
+        );
+    }
+    return positions;
+};
+
+const MAIN_POSITIONS = {
+    'main 1': generateCirclePositions(-5, 5, 2, 20),
+    'main 2': generateCirclePositions(5, 5, 2, 20),
+    'main 3': generateCirclePositions(0, -5, 2, 20),
 };
 
 const Particle = ({
@@ -32,14 +57,14 @@ const Particle = ({
     positions,
     velocities,
     articles,
-    isOrdered,
+    viewMode,
     color,
 }: {
     index: number;
     positions: Float32Array;
     velocities: Float32Array;
     articles: AnalysedArticle[];
-    isOrdered: boolean;
+    viewMode: ViewMode;
     color: THREE.Color;
 }) => {
     const meshRef = useRef<THREE.InstancedMesh>(null);
@@ -71,10 +96,10 @@ const Particle = ({
 
 const Swarm = ({
     articles,
-    isOrdered,
+    viewMode,
 }: {
     articles: AnalysedArticle[];
-    isOrdered: boolean;
+    viewMode: ViewMode;
 }) => {
     const positionsRef = useRef<Float32Array>(
         new Float32Array(articles.length * 3)
@@ -91,14 +116,14 @@ const Swarm = ({
 
     useMemo(() => {
         for (let i = 0; i < articles.length; i++) {
-            positionsRef.current[i * 3] = (Math.random() - 0.5) * 10;
-            positionsRef.current[i * 3 + 1] = (Math.random() - 0.5) * 10;
-            positionsRef.current[i * 3 + 2] = (Math.random() - 0.5) * 10;
-            velocitiesRef.current[i * 3] = (Math.random() - 0.5) * 0.02;
-            velocitiesRef.current[i * 3 + 1] = (Math.random() - 0.5) * 0.02;
-            velocitiesRef.current[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
+            positionsRef.current[i * 3] = (Math.random() - 0.5) * 20; // Expanded range
+            positionsRef.current[i * 3 + 1] = (Math.random() - 0.5) * 20; // Expanded range
+            positionsRef.current[i * 3 + 2] = (Math.random() - 0.5) * 20; // Expanded range
+            velocitiesRef.current[i * 3] = (Math.random() - 0.5) * 0.1; // Increased initial velocity
+            velocitiesRef.current[i * 3 + 1] = (Math.random() - 0.5) * 0.1; // Increased initial velocity
+            velocitiesRef.current[i * 3 + 2] = (Math.random() - 0.5) * 0.1; // Increased initial velocity
 
-            // Calculate color based on tags
+            // Calculate color based on subClaims
             const article = articles[i];
             const averageColor = new THREE.Color(0, 0, 0);
             article.subClaim.forEach((sub) => {
@@ -110,26 +135,52 @@ const Swarm = ({
     }, [articles]);
 
     useEffect(() => {
-        if (isOrdered) {
-            for (let i = 0; i < articles.length; i++) {
-                const article = articles[i];
-                const tagPositions = article.subClaim.map(
-                    (sub) => SUB_POSITIONS[sub]
-                );
-                const averagePosition = new THREE.Vector3();
-                tagPositions.forEach((pos) => averagePosition.add(pos));
-                averagePosition.divideScalar(tagPositions.length);
+        if (viewMode !== 'chaos') {
+            const counts = {} as Record<string, number>;
+            articles.forEach((article) => {
+                if (viewMode === 'main' && article.mainClaim) {
+                    counts[article.mainClaim] =
+                        (counts[article.mainClaim] || 0) + 1;
+                } else if (viewMode === 'sub') {
+                    article.subClaim.forEach((sub) => {
+                        counts[sub] = (counts[sub] || 0) + 1;
+                    });
+                }
+            });
 
-                targetPositionsRef.current[i * 3] = averagePosition.x;
-                targetPositionsRef.current[i * 3 + 1] = averagePosition.y;
-                targetPositionsRef.current[i * 3 + 2] = averagePosition.z;
-            }
+            articles.forEach((article, i) => {
+                let targetPosition: THREE.Vector3;
+                if (viewMode === 'main' && article.mainClaim) {
+                    const positions = MAIN_POSITIONS[article.mainClaim];
+                    const index = counts[article.mainClaim] % positions.length;
+                    counts[article.mainClaim]--;
+                    targetPosition = positions[index];
+                } else if (viewMode === 'sub') {
+                    const subPositions = article.subClaim.map((sub) => {
+                        return SUB_POSITIONS[sub];
+                    });
+                    targetPosition = new THREE.Vector3();
+                    subPositions.forEach((pos) => targetPosition.add(pos));
+                    targetPosition.divideScalar(subPositions.length);
+                } else {
+                    targetPosition = new THREE.Vector3(
+                        (Math.random() - 0.5) * 20,
+                        (Math.random() - 0.5) * 20,
+                        (Math.random() - 0.5) * 20
+                    );
+                }
+
+                targetPositionsRef.current[i * 3] = targetPosition.x;
+                targetPositionsRef.current[i * 3 + 1] = targetPosition.y;
+                targetPositionsRef.current[i * 3 + 2] = targetPosition.z;
+            });
+
             isTransitioningRef.current = true;
             transitionProgressRef.current = 0;
         } else {
             isTransitioningRef.current = false;
         }
-    }, [isOrdered, articles]);
+    }, [viewMode, articles]);
 
     useFrame(() => {
         const positions = positionsRef.current;
@@ -145,7 +196,7 @@ const Swarm = ({
         }
 
         for (let i = 0; i < articles.length; i++) {
-            if (isOrdered) {
+            if (viewMode !== 'chaos') {
                 const targetX = targetPositions[i * 3];
                 const targetY = targetPositions[i * 3 + 1];
                 const targetZ = targetPositions[i * 3 + 2];
@@ -197,9 +248,9 @@ const Swarm = ({
                     positions[i * 3 + 1] += velocities[i * 3 + 1];
                     positions[i * 3 + 2] += velocities[i * 3 + 2];
 
-                    // Contain within a sphere around the target
-                    if (distanceToTarget > 2) {
-                        const factor = 2 / distanceToTarget;
+                    // Contain within a circle around the target
+                    if (distanceToTarget > 1) {
+                        const factor = 1 / distanceToTarget;
                         positions[i * 3] =
                             targetX + (positions[i * 3] - targetX) * factor;
                         positions[i * 3 + 1] =
@@ -209,33 +260,36 @@ const Swarm = ({
                     }
                 }
             } else {
-                // Chaotic movement (unchanged)
+                // Chaotic movement (updated for full screen coverage)
                 positions[i * 3] += velocities[i * 3];
                 positions[i * 3 + 1] += velocities[i * 3 + 1];
                 positions[i * 3 + 2] += velocities[i * 3 + 2];
 
-                // Simple boundary check
+                // Boundary check for full screen
                 for (let j = 0; j < 3; j++) {
-                    if (Math.abs(positions[i * 3 + j]) > 5) {
+                    if (Math.abs(positions[i * 3 + j]) > 10) {
+                        positions[i * 3 + j] =
+                            Math.sign(positions[i * 3 + j]) * 10;
                         velocities[i * 3 + j] *= -1;
                     }
                 }
 
-                // Add small random acceleration
-                velocities[i * 3] += (Math.random() - 0.5) * 0.01;
-                velocities[i * 3 + 1] += (Math.random() - 0.5) * 0.01;
-                velocities[i * 3 + 2] += (Math.random() - 0.5) * 0.01;
+                // Add larger random acceleration
+                velocities[i * 3] += (Math.random() - 0.5) * 0.03;
+                velocities[i * 3 + 1] += (Math.random() - 0.5) * 0.03;
+                velocities[i * 3 + 2] += (Math.random() - 0.5) * 0.03;
 
-                // Limit velocity
+                // Increased max speed for more dynamic movement
                 const speed = Math.sqrt(
                     velocities[i * 3] ** 2 +
                         velocities[i * 3 + 1] ** 2 +
                         velocities[i * 3 + 2] ** 2
                 );
-                if (speed > 0.1) {
-                    velocities[i * 3] *= 0.1 / speed;
-                    velocities[i * 3 + 1] *= 0.1 / speed;
-                    velocities[i * 3 + 2] *= 0.1 / speed;
+                const maxSpeed = 0.2;
+                if (speed > maxSpeed) {
+                    velocities[i * 3] *= maxSpeed / speed;
+                    velocities[i * 3 + 1] *= maxSpeed / speed;
+                    velocities[i * 3 + 2] *= maxSpeed / speed;
                 }
             }
         }
@@ -250,7 +304,7 @@ const Swarm = ({
                     positions={positionsRef.current}
                     velocities={velocitiesRef.current}
                     articles={articles}
-                    isOrdered={isOrdered}
+                    viewMode={viewMode}
                     color={colorsRef.current[index]}
                 />
             ))}
@@ -259,19 +313,28 @@ const Swarm = ({
 };
 
 const ArticleParticle = ({ articles }: { articles: AnalysedArticle[] }) => {
-    const [isOrdered, setIsOrdered] = useState(false);
+    const [viewMode, setViewMode] = useState<ViewMode>('chaos');
 
     const handleToggle = () => {
-        setIsOrdered(!isOrdered);
+        setViewMode((current) => {
+            switch (current) {
+                case 'chaos':
+                    return 'main';
+                case 'main':
+                    return 'sub';
+                case 'sub':
+                    return 'chaos';
+            }
+        });
     };
 
     return (
         <div style={{ width: '100vw', height: '100vh' }}>
-            <Canvas camera={{ position: [0, 0, 10], fov: 75 }}>
+            <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
                 <color attach='background' args={['black']} />
                 <ambientLight intensity={0.5} />
                 <pointLight position={[10, 10, 10]} />
-                <Swarm articles={articles} isOrdered={isOrdered} />
+                <Swarm articles={articles} viewMode={viewMode} />
             </Canvas>
             <button
                 onClick={handleToggle}
@@ -283,7 +346,7 @@ const ArticleParticle = ({ articles }: { articles: AnalysedArticle[] }) => {
                     fontSize: '16px',
                 }}
             >
-                {isOrdered ? 'Chaos' : 'Order'}
+                {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
             </button>
         </div>
     );
