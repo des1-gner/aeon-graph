@@ -6,6 +6,7 @@ import ParticleSwarm from './three.js/ParticleSwarm';
 import GravitySwarm from './three.js/GravitySwarm';
 import { dummyAnalysedArticles } from './types/analysedArticle';
 import ArticleVisualizer from './three.js/ArticleVisualiser';
+import ArticleParticle from './three.js/ArticleParticle';
 
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
@@ -71,7 +72,8 @@ function App() {
     return (
         <div className='bg-black min-h-screen'>
             {/* <GravitySwarm /> */}
-            <ArticleVisualizer articles={dummyAnalysedArticles} />
+            {/* <ArticleVisualizer articles={dummyAnalysedArticles} /> */}
+            <ArticleParticle articles={dummyAnalysedArticles} />
             {/* <AnimatePresence>
                 {showSideControls && (
                     <motion.div
