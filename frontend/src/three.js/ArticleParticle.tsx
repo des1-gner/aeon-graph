@@ -17,18 +17,26 @@ const TAG_POSITIONS = {
     tag3: new THREE.Vector3(5, 0, 0),
 };
 
+const TAG_COLORS = {
+    tag1: new THREE.Color(1, 1, 0), // Yellow
+    tag2: new THREE.Color(1, 0, 0), // Red
+    tag3: new THREE.Color(0, 0, 1), // Blue
+};
+
 const Particle = ({
     index,
     positions,
     velocities,
     articles,
     isOrdered,
+    color,
 }: {
     index: number;
     positions: Float32Array;
     velocities: Float32Array;
     articles: AnalysedArticle[];
     isOrdered: boolean;
+    color: THREE.Color;
 }) => {
     const meshRef = useRef<THREE.InstancedMesh>(null);
 
@@ -52,7 +60,7 @@ const Particle = ({
     return (
         <instancedMesh ref={meshRef} args={[undefined, undefined, 1]}>
             <sphereGeometry args={[0.05, 16, 16]} />
-            <meshStandardMaterial color='white' />
+            <meshStandardMaterial color={color} />
         </instancedMesh>
     );
 };
@@ -73,6 +81,7 @@ const Swarm = ({
     const targetPositionsRef = useRef<Float32Array>(
         new Float32Array(articles.length * 3)
     );
+    const colorsRef = useRef<THREE.Color[]>([]);
     const transitionProgressRef = useRef<number>(0);
     const isTransitioningRef = useRef<boolean>(false);
 
@@ -84,6 +93,15 @@ const Swarm = ({
             velocitiesRef.current[i * 3] = (Math.random() - 0.5) * 0.02;
             velocitiesRef.current[i * 3 + 1] = (Math.random() - 0.5) * 0.02;
             velocitiesRef.current[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
+
+            // Calculate color based on tags
+            const article = articles[i];
+            const averageColor = new THREE.Color(0, 0, 0);
+            article.tags.forEach((tag) => {
+                averageColor.add(TAG_COLORS[tag]);
+            });
+            averageColor.multiplyScalar(1 / article.tags.length);
+            colorsRef.current[i] = averageColor;
         }
     }, [articles]);
 
@@ -229,6 +247,7 @@ const Swarm = ({
                     velocities={velocitiesRef.current}
                     articles={articles}
                     isOrdered={isOrdered}
+                    color={colorsRef.current[index]}
                 />
             ))}
         </>
