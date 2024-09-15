@@ -21,9 +21,9 @@ const SUB_POSITIONS = {
 };
 
 const SUB_COLORS = {
-    sub1: new THREE.Color(1, 0, 0), // Red
-    sub2: new THREE.Color(1, 0.5, 0), // Orange
-    sub3: new THREE.Color(0.5, 0, 0.5), // Purple
+    sub1: new THREE.Color(1, 1, 0), // Yellow
+    sub2: new THREE.Color(0, 1, 1), // Cyan
+    sub3: new THREE.Color(1, 0, 1), // Magenta
 };
 
 const generateCirclePositions = (
@@ -116,14 +116,13 @@ const Swarm = ({
 
     useMemo(() => {
         for (let i = 0; i < articles.length; i++) {
-            positionsRef.current[i * 3] = (Math.random() - 0.5) * 20; // Expanded range
-            positionsRef.current[i * 3 + 1] = (Math.random() - 0.5) * 20; // Expanded range
-            positionsRef.current[i * 3 + 2] = (Math.random() - 0.5) * 20; // Expanded range
-            velocitiesRef.current[i * 3] = (Math.random() - 0.5) * 0.1; // Increased initial velocity
-            velocitiesRef.current[i * 3 + 1] = (Math.random() - 0.5) * 0.1; // Increased initial velocity
-            velocitiesRef.current[i * 3 + 2] = (Math.random() - 0.5) * 0.1; // Increased initial velocity
+            positionsRef.current[i * 3] = (Math.random() - 0.5) * 20;
+            positionsRef.current[i * 3 + 1] = (Math.random() - 0.5) * 20;
+            positionsRef.current[i * 3 + 2] = (Math.random() - 0.5) * 20;
+            velocitiesRef.current[i * 3] = (Math.random() - 0.5) * 0.1;
+            velocitiesRef.current[i * 3 + 1] = (Math.random() - 0.5) * 0.1;
+            velocitiesRef.current[i * 3 + 2] = (Math.random() - 0.5) * 0.1;
 
-            // Calculate color based on subClaims
             const article = articles[i];
             const averageColor = new THREE.Color(0, 0, 0);
             article.subClaim.forEach((sub) => {
@@ -201,22 +200,17 @@ const Swarm = ({
                 const targetY = targetPositions[i * 3 + 1];
                 const targetZ = targetPositions[i * 3 + 2];
 
-                // Calculate direction to target
                 const dx = targetX - positions[i * 3];
                 const dy = targetY - positions[i * 3 + 1];
                 const dz = targetZ - positions[i * 3 + 2];
 
-                // Calculate distance to target
                 const distanceToTarget = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
                 if (isTransitioningRef.current) {
-                    // Smooth transition to target position
                     positions[i * 3] += dx * 0.05;
                     positions[i * 3 + 1] += dy * 0.05;
                     positions[i * 3 + 2] += dz * 0.05;
                 } else {
-                    // Grouped state behavior
-                    // Adjust velocity based on distance to target
                     const attractionStrength = Math.min(
                         0.01,
                         distanceToTarget * 0.01
@@ -225,12 +219,10 @@ const Swarm = ({
                     velocities[i * 3 + 1] += dy * attractionStrength;
                     velocities[i * 3 + 2] += dz * attractionStrength;
 
-                    // Add some randomness to velocity
                     velocities[i * 3] += (Math.random() - 0.5) * 0.005;
                     velocities[i * 3 + 1] += (Math.random() - 0.5) * 0.005;
                     velocities[i * 3 + 2] += (Math.random() - 0.5) * 0.005;
 
-                    // Limit velocity
                     const speed = Math.sqrt(
                         velocities[i * 3] ** 2 +
                             velocities[i * 3 + 1] ** 2 +
@@ -243,12 +235,10 @@ const Swarm = ({
                         velocities[i * 3 + 2] *= maxSpeed / speed;
                     }
 
-                    // Update position
                     positions[i * 3] += velocities[i * 3];
                     positions[i * 3 + 1] += velocities[i * 3 + 1];
                     positions[i * 3 + 2] += velocities[i * 3 + 2];
 
-                    // Contain within a circle around the target
                     if (distanceToTarget > 1) {
                         const factor = 1 / distanceToTarget;
                         positions[i * 3] =
@@ -260,37 +250,82 @@ const Swarm = ({
                     }
                 }
             } else {
-                // Chaotic movement (updated for full screen coverage)
-                positions[i * 3] += velocities[i * 3];
-                positions[i * 3 + 1] += velocities[i * 3 + 1];
-                positions[i * 3 + 2] += velocities[i * 3 + 2];
+                // Enhanced chaotic movement with collisions and repulsion
+                const particlePosition = new THREE.Vector3(
+                    positions[i * 3],
+                    positions[i * 3 + 1],
+                    positions[i * 3 + 2]
+                );
+                const particleVelocity = new THREE.Vector3(
+                    velocities[i * 3],
+                    velocities[i * 3 + 1],
+                    velocities[i * 3 + 2]
+                );
 
-                // Boundary check for full screen
-                for (let j = 0; j < 3; j++) {
-                    if (Math.abs(positions[i * 3 + j]) > 10) {
-                        positions[i * 3 + j] =
-                            Math.sign(positions[i * 3 + j]) * 10;
-                        velocities[i * 3 + j] *= -1;
+                // Apply repulsion forces from other particles
+                for (let j = 0; j < articles.length; j++) {
+                    if (i !== j) {
+                        const otherPosition = new THREE.Vector3(
+                            positions[j * 3],
+                            positions[j * 3 + 1],
+                            positions[j * 3 + 2]
+                        );
+                        const direction = particlePosition
+                            .clone()
+                            .sub(otherPosition);
+                        const distance = direction.length();
+
+                        if (distance < 0.5) {
+                            // Repulsion radius
+                            const repulsionForce = direction
+                                .normalize()
+                                .multiplyScalar(0.01 / (distance * distance));
+                            particleVelocity.add(repulsionForce);
+                        }
                     }
                 }
 
-                // Add larger random acceleration
-                velocities[i * 3] += (Math.random() - 0.5) * 0.03;
-                velocities[i * 3 + 1] += (Math.random() - 0.5) * 0.03;
-                velocities[i * 3 + 2] += (Math.random() - 0.5) * 0.03;
+                // Update position
+                particlePosition.add(particleVelocity);
 
-                // Increased max speed for more dynamic movement
-                const speed = Math.sqrt(
-                    velocities[i * 3] ** 2 +
-                        velocities[i * 3 + 1] ** 2 +
-                        velocities[i * 3 + 2] ** 2
-                );
-                const maxSpeed = 0.2;
-                if (speed > maxSpeed) {
-                    velocities[i * 3] *= maxSpeed / speed;
-                    velocities[i * 3 + 1] *= maxSpeed / speed;
-                    velocities[i * 3 + 2] *= maxSpeed / speed;
+                // Boundary check and bounce
+                const bounceStrength = 0.8;
+                for (let axis = 0; axis < 3; axis++) {
+                    if (Math.abs(particlePosition.getComponent(axis)) > 10) {
+                        particlePosition.setComponent(
+                            axis,
+                            Math.sign(particlePosition.getComponent(axis)) * 10
+                        );
+                        particleVelocity.setComponent(
+                            axis,
+                            -particleVelocity.getComponent(axis) *
+                                bounceStrength
+                        );
+                    }
                 }
+
+                // Add random acceleration
+                particleVelocity.add(
+                    new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.03,
+                        (Math.random() - 0.5) * 0.03,
+                        (Math.random() - 0.5) * 0.03
+                    )
+                );
+
+                // Limit speed
+                const maxSpeed = 0.2;
+                if (particleVelocity.length() > maxSpeed) {
+                    particleVelocity.normalize().multiplyScalar(maxSpeed);
+                }
+
+                // Update position and velocity arrays
+                positions[i * 3] = particlePosition.x;
+                positions[i * 3 + 1] = particlePosition.y;
+                positions[i * 3 + 2] = particlePosition.z;
+                velocities[i * 3] = particleVelocity.x;
+                velocities[i * 3 + 1] = particleVelocity.y;
+                velocities[i * 3 + 2] = particleVelocity.z;
             }
         }
     });
