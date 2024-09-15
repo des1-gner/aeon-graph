@@ -18,9 +18,12 @@ const TAG_POSITIONS = {
 };
 
 const TAG_COLORS = {
-    tag1: new THREE.Color(1, 1, 0), // Yellow
-    tag2: new THREE.Color(1, 0, 0), // Red
-    tag3: new THREE.Color(0, 0, 1), // Blue
+    tag1: new THREE.Color(1, 0, 0), // Red
+    tag2: new THREE.Color(1, 0.5, 0), // Orange
+    tag3: new THREE.Color(0.5, 0, 0.5), // Purple
+    tag4: new THREE.Color(1, 1, 0), // Yellow
+    tag5: new THREE.Color(0.5, 0.5, 0.5), // Gray
+    tag6: new THREE.Color(0, 0, 1), // Blue
 };
 
 const Particle = ({
