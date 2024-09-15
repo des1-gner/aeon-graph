@@ -73,6 +73,8 @@ const Swarm = ({
     const targetPositionsRef = useRef<Float32Array>(
         new Float32Array(articles.length * 3)
     );
+    const transitionProgressRef = useRef<number>(0);
+    const isTransitioningRef = useRef<boolean>(false);
 
     useMemo(() => {
         for (let i = 0; i < articles.length; i++) {
@@ -100,6 +102,10 @@ const Swarm = ({
                 targetPositionsRef.current[i * 3 + 1] = averagePosition.y;
                 targetPositionsRef.current[i * 3 + 2] = averagePosition.z;
             }
+            isTransitioningRef.current = true;
+            transitionProgressRef.current = 0;
+        } else {
+            isTransitioningRef.current = false;
         }
     }, [isOrdered, articles]);
 
@@ -107,6 +113,14 @@ const Swarm = ({
         const positions = positionsRef.current;
         const velocities = velocitiesRef.current;
         const targetPositions = targetPositionsRef.current;
+
+        if (isTransitioningRef.current) {
+            transitionProgressRef.current += 0.01;
+            if (transitionProgressRef.current >= 1) {
+                isTransitioningRef.current = false;
+                transitionProgressRef.current = 1;
+            }
+        }
 
         for (let i = 0; i < articles.length; i++) {
             if (isOrdered) {
@@ -122,47 +136,55 @@ const Swarm = ({
                 // Calculate distance to target
                 const distanceToTarget = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-                // Adjust velocity based on distance to target
-                const attractionStrength = Math.min(
-                    0.01,
-                    distanceToTarget * 0.01
-                );
-                velocities[i * 3] += dx * attractionStrength;
-                velocities[i * 3 + 1] += dy * attractionStrength;
-                velocities[i * 3 + 2] += dz * attractionStrength;
+                if (isTransitioningRef.current) {
+                    // Smooth transition to target position
+                    positions[i * 3] += dx * 0.05;
+                    positions[i * 3 + 1] += dy * 0.05;
+                    positions[i * 3 + 2] += dz * 0.05;
+                } else {
+                    // Grouped state behavior
+                    // Adjust velocity based on distance to target
+                    const attractionStrength = Math.min(
+                        0.01,
+                        distanceToTarget * 0.01
+                    );
+                    velocities[i * 3] += dx * attractionStrength;
+                    velocities[i * 3 + 1] += dy * attractionStrength;
+                    velocities[i * 3 + 2] += dz * attractionStrength;
 
-                // Add some randomness to velocity
-                velocities[i * 3] += (Math.random() - 0.5) * 0.005;
-                velocities[i * 3 + 1] += (Math.random() - 0.5) * 0.005;
-                velocities[i * 3 + 2] += (Math.random() - 0.5) * 0.005;
+                    // Add some randomness to velocity
+                    velocities[i * 3] += (Math.random() - 0.5) * 0.005;
+                    velocities[i * 3 + 1] += (Math.random() - 0.5) * 0.005;
+                    velocities[i * 3 + 2] += (Math.random() - 0.5) * 0.005;
 
-                // Limit velocity
-                const speed = Math.sqrt(
-                    velocities[i * 3] ** 2 +
-                        velocities[i * 3 + 1] ** 2 +
-                        velocities[i * 3 + 2] ** 2
-                );
-                const maxSpeed = 0.05;
-                if (speed > maxSpeed) {
-                    velocities[i * 3] *= maxSpeed / speed;
-                    velocities[i * 3 + 1] *= maxSpeed / speed;
-                    velocities[i * 3 + 2] *= maxSpeed / speed;
-                }
+                    // Limit velocity
+                    const speed = Math.sqrt(
+                        velocities[i * 3] ** 2 +
+                            velocities[i * 3 + 1] ** 2 +
+                            velocities[i * 3 + 2] ** 2
+                    );
+                    const maxSpeed = 0.05;
+                    if (speed > maxSpeed) {
+                        velocities[i * 3] *= maxSpeed / speed;
+                        velocities[i * 3 + 1] *= maxSpeed / speed;
+                        velocities[i * 3 + 2] *= maxSpeed / speed;
+                    }
 
-                // Update position
-                positions[i * 3] += velocities[i * 3];
-                positions[i * 3 + 1] += velocities[i * 3 + 1];
-                positions[i * 3 + 2] += velocities[i * 3 + 2];
+                    // Update position
+                    positions[i * 3] += velocities[i * 3];
+                    positions[i * 3 + 1] += velocities[i * 3 + 1];
+                    positions[i * 3 + 2] += velocities[i * 3 + 2];
 
-                // Contain within a sphere around the target
-                if (distanceToTarget > 2) {
-                    const factor = 2 / distanceToTarget;
-                    positions[i * 3] =
-                        targetX + (positions[i * 3] - targetX) * factor;
-                    positions[i * 3 + 1] =
-                        targetY + (positions[i * 3 + 1] - targetY) * factor;
-                    positions[i * 3 + 2] =
-                        targetZ + (positions[i * 3 + 2] - targetZ) * factor;
+                    // Contain within a sphere around the target
+                    if (distanceToTarget > 2) {
+                        const factor = 2 / distanceToTarget;
+                        positions[i * 3] =
+                            targetX + (positions[i * 3] - targetX) * factor;
+                        positions[i * 3 + 1] =
+                            targetY + (positions[i * 3 + 1] - targetY) * factor;
+                        positions[i * 3 + 2] =
+                            targetZ + (positions[i * 3 + 2] - targetZ) * factor;
+                    }
                 }
             } else {
                 // Chaotic movement (unchanged)
