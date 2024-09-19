@@ -1,6 +1,7 @@
 import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import Button from '../components/Button';
 
 type AnalysedArticle = {
     date: string;
@@ -88,7 +89,7 @@ const Particle = ({
 
     return (
         <instancedMesh ref={meshRef} args={[undefined, undefined, 1]}>
-            <sphereGeometry args={[0.05, 16, 16]} />
+            <sphereGeometry args={[0.15, 16, 16]} />
             <meshStandardMaterial color={color} />
         </instancedMesh>
     );
@@ -371,18 +372,12 @@ const ArticleParticle = ({ articles }: { articles: AnalysedArticle[] }) => {
                 <pointLight position={[10, 10, 10]} />
                 <Swarm articles={articles} viewMode={viewMode} />
             </Canvas>
-            <button
+            <Button
                 onClick={handleToggle}
-                style={{
-                    position: 'absolute',
-                    top: '10px',
-                    left: '10px',
-                    padding: '10px',
-                    fontSize: '16px',
-                }}
+                className='absolute top-10 left-10 p-10 text-xl text-white font-semibold'
             >
                 {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
-            </button>
+            </Button>
         </div>
     );
 };
