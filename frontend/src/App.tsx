@@ -2,12 +2,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import BottomPanelControl from './components/BottomPanelControl';
 import SidePanelControl from './components/SidePanelControl';
-import { dummyAnalysedArticles } from './types/analysedArticle';
-import ArticleParticle from './three.js/ArticleParticle';
+import { BroadClaimVisualiser } from './three.js/BroadClaimVisualiser';
+import { dummyDbArticles } from './types/dbArticle';
+import { useArticles } from './contexts/ArticlesContext';
 
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
     const [showBottomControls, setShowBottomControls] = useState(true);
+    const { articles, setArticles } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -68,10 +70,8 @@ function App() {
 
     return (
         <div className='bg-black min-h-screen'>
-            {/* <GravitySwarm /> */}
-            {/* <ArticleVisualizer articles={dummyAnalysedArticles} /> */}
-            <ArticleParticle articles={dummyAnalysedArticles} />
-            {/* <AnimatePresence>
+            <BroadClaimVisualiser articles={articles!} />
+            <AnimatePresence>
                 {showSideControls && (
                     <motion.div
                         initial={{ opacity: 0, x: '100%' }}
@@ -108,7 +108,7 @@ function App() {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence> */}
+            </AnimatePresence>
             <audio ref={audioRef} src='/music/ambient-spring-forest.mp3' loop />
         </div>
     );

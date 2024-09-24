@@ -38,7 +38,7 @@ const ArticleTable = () => {
                         <td className='border border-neutral-800 px-4 py-2'>
                             <p className='text-center'>{index + 1}</p>
                         </td>
-                        <td className='border border-neutral-800 px-4 py-2'>
+                        <td className='border border-neutral-800 px-4 py-2 capitalize'>
                             {article.title}
                         </td>
                         <td className='border border-neutral-800 px-4 py-2 break-words'>

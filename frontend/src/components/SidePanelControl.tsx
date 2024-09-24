@@ -17,6 +17,7 @@ import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
 import { getLambda } from '../api';
 import { useArticles } from '../contexts/ArticlesContext';
 import { Article, demoData } from '../types/article';
+import { DBArticle, dummyDbArticles } from '../types/dbArticle';
 
 type SidePanelControlProps = {
     onClose?: () => void;
@@ -29,16 +30,16 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [nodeQty, setNodeQty] = useState<number | undefined>(0);
-    const [presentationData, setPresentationData] = useState<Article[]>();
+    const [presentationData, setPresentationData] = useState<DBArticle[]>();
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    // const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
     const handleSearch = async () => {
         setIsLoading(true);
         try {
-            const response = await getLambda();
-            setArticles(response.body);
+            const response = await getLambda(startDate, endDate);
+            setArticles(response);
         } catch (err: any) {
             console.error('Error fetching articles:', err);
         } finally {
@@ -49,7 +50,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const handleDataSourceChange = (index: number) => {
         setDataSourceIndex(index);
         if (index === 1) {
-            setArticles(demoData);
+            setArticles(dummyDbArticles);
         }
     };
 
@@ -100,14 +101,13 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                 setStartDate('');
                 return;
         }
-
         setStartDate(from.toISOString().split('T')[0] + 'T00:00:00Z');
         setEndDate(now.toISOString().split('T')[0] + 'T23:59:59Z');
     };
 
     return (
         <>
-            <div className='bg-neutral-950 border-neutral-700 border p-4 space-y-8 rounded-lg z-10 min-w-[385px]'>
+            <div className='backdrop-blur-xl border-neutral-700 border p-4 space-y-8 rounded-lg z-10 min-w-[385px]'>
                 <div className='flex items-center justify-between'>
                     <XMarkIcon
                         className='size-5 text-light cursor-pointer flex justify-start'
@@ -131,18 +131,19 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                 />
 
                 {/* <div className='dark-card p-2 space-y-3'>
-                        <h2 className='flex gap-2 items-center font-semibold text-light'>
-                            <MagnifyingGlassIcon className='size-4' />
-                            Search options
-                        </h2>
-                        <input
-                            type='text'
-                            value={searchQuery}
-                            placeholder='Search query'
-                            className='dark-text-field'
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div> */}
+                    <h2 className='flex gap-2 items-center font-semibold text-light'>
+                        <MagnifyingGlassIcon className='size-4' />
+                        Search options
+                    </h2>
+                    <input
+                        type='text'
+                        value={searchQuery}
+                        placeholder='Search query'
+                        className='dark-text-field'
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div> */}
+
                 {dataSourceIndex === 0 && (
                     <div>
                         <Toggle

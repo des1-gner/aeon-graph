@@ -7,7 +7,7 @@ export const getLambda = async (startDate?: string, endDate?: string) => {
     };
     return axios
         .get(
-            'https://wr2lb9oak8.execute-api.ap-southeast-2.amazonaws.com/prod',
+            'https://ynicn27cgg.execute-api.ap-southeast-2.amazonaws.com/prod',
             { params }
         )
         .then((res) => res.data)
