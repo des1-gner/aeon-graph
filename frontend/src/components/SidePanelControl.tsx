@@ -16,8 +16,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
 import { getLambda } from '../api';
 import { useArticles } from '../contexts/ArticlesContext';
-import { Article, demoData } from '../types/article';
-import { DBArticle, dummyDbArticles } from '../types/dbArticle';
+import { Article, dummyArticles } from '../types/article';
 
 type SidePanelControlProps = {
     onClose?: () => void;
@@ -30,7 +29,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [nodeQty, setNodeQty] = useState<number | undefined>(0);
-    const [presentationData, setPresentationData] = useState<DBArticle[]>();
+    const [presentationData, setPresentationData] = useState<Article[]>();
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -50,7 +49,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const handleDataSourceChange = (index: number) => {
         setDataSourceIndex(index);
         if (index === 1) {
-            setArticles(dummyDbArticles);
+            setArticles(dummyArticles);
         }
     };
 
@@ -130,7 +129,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     onClick={(index) => handleDataSourceChange(index)}
                 />
 
-                {/* <div className='dark-card p-2 space-y-3'>
+                <div className='dark-card p-2 space-y-3'>
                     <h2 className='flex gap-2 items-center font-semibold text-light'>
                         <MagnifyingGlassIcon className='size-4' />
                         Search options
@@ -142,7 +141,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         className='dark-text-field'
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
-                </div> */}
+                </div>
 
                 {dataSourceIndex === 0 && (
                     <div>

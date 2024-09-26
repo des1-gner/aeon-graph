@@ -2,14 +2,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import BottomPanelControl from './components/BottomPanelControl';
 import SidePanelControl from './components/SidePanelControl';
-import { BroadClaimVisualiser } from './three.js/BroadClaimVisualiser';
-import { dummyDbArticles } from './types/dbArticle';
+import { ArticleParticle } from './three.js/ArticleParticle';
 import { useArticles } from './contexts/ArticlesContext';
+import { dummyArticles } from './types/article';
 
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
     const [showBottomControls, setShowBottomControls] = useState(true);
-    const { articles, setArticles } = useArticles();
+    const { articles } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -70,7 +70,7 @@ function App() {
 
     return (
         <div className='bg-black min-h-screen'>
-            <BroadClaimVisualiser articles={articles!} />
+            <ArticleParticle articles={articles ? articles : dummyArticles} />
             <AnimatePresence>
                 {showSideControls && (
                     <motion.div
