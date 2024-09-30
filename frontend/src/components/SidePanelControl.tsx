@@ -17,6 +17,7 @@ import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
 import { getLambda } from '../api';
 import { useArticles } from '../contexts/ArticlesContext';
 import { Article, dummyArticles } from '../types/article';
+import QueryModule from './QueryModule'
 
 type SidePanelControlProps = {
     onClose?: () => void;
@@ -33,12 +34,14 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showQueryModule, setShowQueryModule] = useState(false);
 
     const handleSearch = async () => {
         setIsLoading(true);
         try {
             const response = await getLambda(startDate, endDate);
             setArticles(response);
+            setShowQueryModule(true)
         } catch (err: any) {
             console.error('Error fetching articles:', err);
         } finally {
@@ -73,7 +76,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     };
 
     useEffect(() => {
-        setNodeQty(articles?.length);
+        setNodeQty(articles?.length || 0);
     }, [articles]);
 
     const handleDateRangeToggle = (index: number) => {
@@ -190,7 +193,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                                     onChange={(e) =>
                                                         setStartDate(
                                                             e.target.value +
-                                                                'T00:00:00Z'
+                                                            'T00:00:00Z'
                                                         )
                                                     }
                                                     className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none accent-white focus:border-neutral-300'
@@ -209,7 +212,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                                     onChange={(e) =>
                                                         setEndDate(
                                                             e.target.value +
-                                                                'T00:00:00Z'
+                                                            'T00:00:00Z'
                                                         )
                                                     }
                                                     className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300'
@@ -230,6 +233,17 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                     Search
                                 </Button>
                             </div>
+                            {showQueryModule && (
+                                <QueryModule
+                                    startDate={startDate}
+                                    endDate={endDate}
+                                    publishedBy="" // Add this state if you want to include it
+                                    containing={searchQuery}
+                                    nodeLimit={nodeQty || 0}
+                                    onClose={() => setShowQueryModule(false)}
+                                />
+                            )}
+                            <AnimatePresence></AnimatePresence>
                         </Toggle>
                     </div>
                 )}

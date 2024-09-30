@@ -14,6 +14,12 @@ function App() {
     const [isFullScreen, setIsFullScreen] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
+    // New state for QueryModule parameters
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [nodeQty, setNodeQty] = useState<number>(0);
+
     // Bottom Panel Fullscreen
     const toggleFullScreen = () => {
         if (!document.fullscreenElement) {
