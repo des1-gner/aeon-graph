@@ -30,7 +30,7 @@ const variantClasses = {
     glass: 'rounded-full backdrop-blur-lg',
 };
 
-const Button = ({
+export const Button = ({
     children,
     className,
     variant = 'primary',
@@ -52,5 +52,3 @@ const Button = ({
         </button>
     );
 };
-
-export default Button;

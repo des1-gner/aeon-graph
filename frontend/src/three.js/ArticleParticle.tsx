@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
-import Button from '../components/Button';
+import { Button } from '../components/Button';
 import { Article } from '../types/article';
 
 type ViewMode = 'soup' | string;

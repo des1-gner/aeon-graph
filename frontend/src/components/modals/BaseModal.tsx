@@ -5,7 +5,7 @@ type BaseModalProps = {
     className?: string;
     onClose: () => void;
 };
-const BaseModal = ({ children, className, onClose }: BaseModalProps) => {
+export const BaseModal = ({ children, className, onClose }: BaseModalProps) => {
     return (
         <div
             className={`${className} fixed inset-0 z-50 flex items-center justify-center bg-black/75`}
@@ -16,5 +16,3 @@ const BaseModal = ({ children, className, onClose }: BaseModalProps) => {
         </div>
     );
 };
-
-export default BaseModal;

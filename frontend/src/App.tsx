@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import BottomPanelControl from './components/BottomPanelControl';
-import SidePanelControl from './components/SidePanelControl';
+import { BottomPanelControl } from './components/BottomPanelControl';
+import { SidePanelControl } from './components/SidePanelControl';
 import { ArticleParticle } from './three.js/ArticleParticle';
 import { useArticles } from './contexts/ArticlesContext';
 import { dummyArticles } from './types/article';
@@ -13,12 +13,6 @@ function App() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
-
-    // New state for QueryModule parameters
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [nodeQty, setNodeQty] = useState<number>(0);
 
     // Bottom Panel Fullscreen
     const toggleFullScreen = () => {
@@ -94,7 +88,7 @@ function App() {
                     </motion.div>
                 )}
             </AnimatePresence>
-            <AnimatePresence>
+            {/* <AnimatePresence>
                 {showBottomControls && (
                     <motion.div
                         initial={{ opacity: 0, y: '100%' }}
@@ -114,7 +108,7 @@ function App() {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence> */}
             <audio ref={audioRef} src='/music/ambient-spring-forest.mp3' loop />
         </div>
     );

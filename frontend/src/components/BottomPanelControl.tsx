@@ -14,7 +14,7 @@ type BottomPanelControlProps = {
     isFullScreen: boolean;
 };
 
-const BottomPanelControl = ({
+export const BottomPanelControl = ({
     onClose,
     isPlaying,
     toggleMusic,
@@ -131,5 +131,3 @@ const BottomPanelControl = ({
         </div>
     );
 };
-
-export default BottomPanelControl;
