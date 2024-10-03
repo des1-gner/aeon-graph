@@ -1,12 +1,14 @@
 import boto3
 import json
-from boto3.dynamodb.conditions import Attr
+import traceback
+from boto3.dynamodb.conditions import Attr, And
 from botocore.exceptions import ClientError
 from datetime import datetime
 
 dynamodb = boto3.resource('dynamodb')
 table_name = 'lazone'
 table = dynamodb.Table(table_name)
+MAX_ITEMS = 128
 
 def create_response(status_code, body):
     return {
@@ -21,27 +23,32 @@ def create_response(status_code, body):
     }
 
 def scan_all():
-    response = table.scan()
-    items = response.get('Items', [])
-    while 'LastEvaluatedKey' in response:
-        response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-        items.extend(response['Items'])
-    return items
+    items = []
+    response = table.scan(Limit=MAX_ITEMS)
+    items.extend(response.get('Items', []))
+    while 'LastEvaluatedKey' in response and len(items) < MAX_ITEMS:
+        response = table.scan(
+            ExclusiveStartKey=response['LastEvaluatedKey'],
+            Limit=MAX_ITEMS - len(items)
+        )
+        items.extend(response.get('Items', []))
+    return items[:MAX_ITEMS]
 
 def scan_specific(filter_expression):
-    response = table.scan(FilterExpression=filter_expression)
-    items = response.get('Items', [])
-    while 'LastEvaluatedKey' in response:
+    items = []
+    response = table.scan(FilterExpression=filter_expression, Limit=MAX_ITEMS)
+    items.extend(response.get('Items', []))
+    while 'LastEvaluatedKey' in response and len(items) < MAX_ITEMS:
         response = table.scan(
             FilterExpression=filter_expression,
-            ExclusiveStartKey=response['LastEvaluatedKey']
+            ExclusiveStartKey=response['LastEvaluatedKey'],
+            Limit=MAX_ITEMS - len(items)
         )
-        items.extend(response['Items'])
-    return items
+        items.extend(response.get('Items', []))
+    return items[:MAX_ITEMS]
 
 def lambda_handler(event, context):
     print(f"Received event: {event}")
-
     # Handle API Gateway request
     if event.get('requestContext', {}).get('http', {}).get('method') == 'OPTIONS':
         return create_response(200, {})
@@ -51,28 +58,37 @@ def lambda_handler(event, context):
     
     start_date = query_params.get('startDate')
     end_date = query_params.get('endDate')
+    search = query_params.get('search')
+    column_exists = query_params.get('columnExists')  # New parameter
     print(f"Start Date: {start_date}")
     print(f"End Date: {end_date}")
+    print(f"Search: {search}")
+    print(f"Column Exists: {column_exists}")
 
     try:
+        filter_expressions = []
         # Validate date formats
         if start_date:
             datetime.strptime(start_date, "%Y-%m-%dT%H:%M:%SZ")
+            filter_expressions.append(Attr('publishedAt').gte(start_date))
         if end_date:
             datetime.strptime(end_date, "%Y-%m-%dT%H:%M:%SZ")
+            filter_expressions.append(Attr('publishedAt').lte(end_date))
+        if search:
+            filter_expressions.append(Attr('content').contains(search))
+        if column_exists:
+            filter_expressions.append(Attr(column_exists).exists())  # New filter
 
-        if start_date and end_date:
-            filter_expression = Attr('publishedAt').between(start_date, end_date)
-            items = scan_specific(filter_expression)
-        elif start_date:
-            filter_expression = Attr('publishedAt').gte(start_date)
-            items = scan_specific(filter_expression)
-        elif end_date:
-            filter_expression = Attr('publishedAt').lte(end_date)
+        if filter_expressions:
+            if len(filter_expressions) > 1:
+                filter_expression = And(*filter_expressions)
+            else:
+                filter_expression = filter_expressions[0]
+            
+            print(f"Filter expression: {filter_expression.get_expression()}")
             items = scan_specific(filter_expression)
         else:
             items = scan_all()
-
         print(f"Number of Items Returned: {len(items)}")
         return create_response(200, items)
         
@@ -81,7 +97,8 @@ def lambda_handler(event, context):
         return create_response(400, {'error': 'Invalid date format. Use ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ'})
     except ClientError as e:
         print(f"DynamoDB ClientError: {str(e)}")
-        return create_response(500, {'error': 'Database operation failed'})
+        return create_response(500, {'error': 'Database operation failed', 'details': str(e)})
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
-        return create_response(500, {'error': 'An unexpected error occurred'})
+        print(f"Traceback: {traceback.format_exc()}")
+        return create_response(500, {'error': 'An unexpected error occurred', 'details': str(e), 'traceback': traceback.format_exc()})
