@@ -16,7 +16,7 @@
     }
 
     .light-gradient {
-        @apply bg-gradient-to-b from-neutral-200 from-20% to-neutral-300;
+        @apply bg-gradient-to-b from-neutral-200 to-20% to-neutral-300;
     }
 
     .green-gradient {
@@ -37,6 +37,18 @@
 
     .dark-card {
         @apply dark-gradient border-neutral-700 border rounded-lg;
+    }
+
+    .light-label {
+        @apply light-gradient text-dark border border-neutral-300 rounded-full px-3 py-1;
+    }
+
+    .dark-label {
+        @apply dark-gradient text-light border border-neutral-900 rounded-full px-3 py-1;
+    }
+
+    ::-webkit-calendar-picker-indicator {
+        filter: invert(1);
     }
 }
 
