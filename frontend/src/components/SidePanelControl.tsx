@@ -29,6 +29,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [dateRangeIndex, setDateRangeIndex] = useState(0);
     const [nodeLimitIndex, setNodeLimitIndex] = useState(0);
+    const [visualisationOption, setVisualisationOption] = useState(0);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [nodeQty, setNodeQty] = useState<number | undefined>(0);
@@ -138,6 +139,14 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
 
                     <div />
                 </div>
+
+                <Toggle
+                    header={['Visualisation Options', <PaintBrushIcon className='size-4' />]}
+                    toggleLabels={['Highlight', 'Cluster', 'Edges']}
+                    selectedIndex={visualisationOption}
+                    onClick={(index) => setVisualisationOption(index)}
+                />
+
                 <Toggle
                     header={[
                         'Data source',
@@ -209,7 +218,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                                     onChange={(e) =>
                                                         setStartDate(
                                                             e.target.value +
-                                                                'T00:00:00Z'
+                                                            'T00:00:00Z'
                                                         )
                                                     }
                                                     className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none accent-white focus:border-neutral-300'
@@ -228,7 +237,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                                     onChange={(e) =>
                                                         setEndDate(
                                                             e.target.value +
-                                                                'T00:00:00Z'
+                                                            'T00:00:00Z'
                                                         )
                                                     }
                                                     className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300'
