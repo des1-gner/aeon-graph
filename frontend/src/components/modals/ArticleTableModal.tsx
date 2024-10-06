@@ -35,7 +35,7 @@ export const ArticleTableModal = ({ onClose }: ArticleTableModalProps) => {
                         <p className='text-sm'>Delete all</p>
                     </Button>
                 </div>
-                <div className='h-[800px] overflow-auto rounded-lg'>
+                <div className='max-h-[800px] overflow-auto rounded-lg'>
                     <table className='text-light bg-neutral-900 table-fixed'>
                         <thead>
                             <tr className='text-nowrap'>
@@ -73,7 +73,7 @@ export const ArticleTableModal = ({ onClose }: ArticleTableModalProps) => {
                                     <td className='border border-neutral-800 px-4 py-2 capitalize'>
                                         {article.title}
                                     </td>
-                                    <td className='border border-neutral-800 px-4 py-2 break-words'>
+                                    <td className='border border-neutral-800 px-4 py-2 break-words capitalize'>
                                         {article.author}
                                     </td>
                                     <td className='border border-neutral-800 px-4 py-2'>

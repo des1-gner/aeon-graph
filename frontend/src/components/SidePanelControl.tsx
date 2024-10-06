@@ -15,7 +15,7 @@ import {
 import { Button } from './Button';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArticleTableModal } from './modals/ArticleTableModal';
-import { getLambda } from '../api';
+import { fetchArticle } from '../api';
 import { useArticles } from '../contexts/ArticlesContext';
 import { Article, dummyArticles } from '../types/article';
 import { QuerySummaryModal } from './modals/QuerySummaryModal';
@@ -32,9 +32,6 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [nodeQty, setNodeQty] = useState<number | undefined>(0);
-    const [nodeLimitedArticles, setNodeLimitedArticles] = useState<Article[]>(
-        []
-    );
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -43,7 +40,11 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const handleSearch = async () => {
         setIsLoading(true);
         try {
-            const response = await getLambda(startDate, endDate);
+            const response = await fetchArticle(
+                searchQuery,
+                startDate,
+                endDate
+            );
             setArticles(response);
         } catch (err: any) {
             console.error('Error fetching articles:', err);
@@ -91,7 +92,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
         setEndDate(now.toISOString().split('T')[0] + 'T23:59:59Z');
     };
 
-    const handleStartVisualisation = () => {
+    const handleStartPlayback = () => {
         if (nodeQty! < articles!.length) {
             let limitedArticles;
             switch (nodeLimitIndex) {
@@ -275,7 +276,14 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                             <ShareIcon className='size-4' />
                             Node quantity
                         </p>
-                        <p>Limited by</p>
+
+                        <div className='flex justify-between'>
+                            <p>Limited by</p>
+                            <p className='flex gap-1 items-center text-sm hover:underline hover:cursor-pointer'>
+                                Clear
+                                <XMarkIcon className='size-4' />
+                            </p>
+                        </div>
                         <Toggle
                             toggleLabels={['Latest', 'Oldest', 'Random']}
                             selectedIndex={nodeLimitIndex}
@@ -300,7 +308,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                 {/* <div className='dark-card p-2 space-y-1 text-light'>
                     <p className='flex gap-2 items-center pb-1 font-semibold'>
                         <PaintBrushIcon className='size-4' />
-                        Visualisation options
+                        Playback options
                     </p>
                     <div className='flex justify-between items-center'>
                         <label className='text-sm'>Links between pages</label>
@@ -333,13 +341,13 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     <Button
                         variant='action'
                         className='flex items-center gap-2 justify-center w-full'
-                        onClick={handleStartVisualisation}
+                        onClick={handleStartPlayback}
                     >
                         <CubeTransparentIcon className='size-4' />
-                        Start visualisation
+                        Start playback
                     </Button>
                     <Button
-                        variant='secondary'
+                        variant='primary'
                         className='flex items-center gap-2 justify-center w-full'
                         onClick={() => setShowQuerySummaryModal(true)}
                     >
@@ -375,7 +383,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         <QuerySummaryModal
                             startDate={startDate}
                             endDate={endDate}
-                            publishedBy='' // Add this state if you want to include it
+                            publishedBy=''
                             containing={searchQuery}
                             nodeLimit={nodeQty || 0}
                             onClose={() => setShowQuerySummaryModal(false)}
