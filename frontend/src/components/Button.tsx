@@ -10,7 +10,8 @@ type ButtonProps = {
         | 'action'
         | 'rounded'
         | 'delete'
-        | 'circle';
+        | 'circle'
+        | 'glass';
     isLoading?: boolean;
     onClick?: (
         event: React.MouseEvent<HTMLButtonElement> | FormEvent<HTMLFormElement>
@@ -26,9 +27,10 @@ const variantClasses = {
     delete: 'rounded-lg bg-gradient-to-b from-red-400 from-5% to-red-500 border-red-600 bg-red-500',
     rounded: 'rounded-full',
     circle: 'rounded-full !p-2 ',
+    glass: 'rounded-full backdrop-blur-lg',
 };
 
-const Button = ({
+export const Button = ({
     children,
     className,
     variant = 'primary',
@@ -50,5 +52,3 @@ const Button = ({
         </button>
     );
 };
-
-export default Button;

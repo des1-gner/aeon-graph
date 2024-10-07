@@ -1,20 +1,24 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import BottomPanelControl from './components/BottomPanelControl';
 import DisclaimerPopup from './components/DisclaimerPopup'; //Imported DisclaimerPopup component 
 import HomePage from './components/HomePage'; // Imported HomePage component
-import SidePanelControl from './components/SidePanelControl';
+import { BottomPanelControl } from './components/BottomPanelControl';
+import { SidePanelControl } from './components/SidePanelControl';
+import { ArticleParticle } from './three.js/ArticleParticle';
+import { useArticles } from './contexts/ArticlesContext';
+import { dummyArticles } from './types/article';
 
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
     const [showBottomControls, setShowBottomControls] = useState(true);
+    const { articles } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false); // Controls disclaimer visibility
     const [showHomePage, setShowHomePage] = useState(false); // Controls home page visibility
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
- const handleEnterSite = () => {
+    const handleEnterSite = () => {
         setShowHomePage(false); // Hide home page to show main content
     };
 
@@ -78,7 +82,7 @@ function App() {
         };
     }, []);
 
-  // Render DisclaimerPopup first if it has not been accepted yet
+    // Render DisclaimerPopup first if it has not been accepted yet
     if (!isDisclaimerAccepted) {
         return <DisclaimerPopup onAccept={handleDisclaimerAccept} />;
     }
@@ -91,6 +95,7 @@ function App() {
 
     return (
         <div className='bg-black min-h-screen'>
+            <ArticleParticle articles={articles ? articles : dummyArticles} />
             <AnimatePresence>
                 {showSideControls && (
                     <motion.div
@@ -108,7 +113,7 @@ function App() {
                     </motion.div>
                 )}
             </AnimatePresence>
-            <AnimatePresence>
+            {/* <AnimatePresence>
                 {showBottomControls && (
                     <motion.div
                         initial={{ opacity: 0, y: '100%' }}
@@ -128,8 +133,7 @@ function App() {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence>
-
+            </AnimatePresence> */}
             <audio ref={audioRef} src='/music/ambient-spring-forest.mp3' loop />
         </div>
     );

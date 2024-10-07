@@ -4,7 +4,7 @@ type ToggleItemProps = {
     onClick: () => void;
 };
 
-const ToggleItem = ({ label, isSelected, onClick }: ToggleItemProps) => {
+export const ToggleItem = ({ label, isSelected, onClick }: ToggleItemProps) => {
     return (
         <button
             onClick={onClick}
@@ -18,5 +18,3 @@ const ToggleItem = ({ label, isSelected, onClick }: ToggleItemProps) => {
         </button>
     );
 };
-
-export default ToggleItem;

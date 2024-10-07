@@ -1,15 +1,15 @@
 import { ReactNode } from 'react';
-import ToggleItem from './ToggleItem';
+import { ToggleItem } from './ToggleItem';
 
 type ToggleProps = {
-    header?: [string, ReactNode];
+    header?: [string, ReactNode?];
     children?: ReactNode;
     toggleLabels: string[];
     selectedIndex: number;
     onClick: (index: number) => void;
 };
 
-const Toggle = ({
+export const Toggle = ({
     header,
     children,
     toggleLabels,
@@ -38,5 +38,3 @@ const Toggle = ({
         </div>
     );
 };
-
-export default Toggle;
