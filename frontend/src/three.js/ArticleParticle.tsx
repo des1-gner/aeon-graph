@@ -1,12 +1,14 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { Button } from '../components/Button';
 import { Article } from '../types/article';
+import { Button } from '../components/Button';
 
+// Define types
 type ViewMode = 'soup' | string;
 
+// Helper function to generate vibrant colors
 const generateVibrantColor = (index: number, total: number): THREE.Color => {
     const hue = (index / total) * 360;
     const saturation = 100;
@@ -14,6 +16,7 @@ const generateVibrantColor = (index: number, total: number): THREE.Color => {
     return new THREE.Color(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
 };
 
+// Props for individual particles
 interface ParticleProps {
     index: number;
     positions: Float32Array;
@@ -26,6 +29,7 @@ interface ParticleProps {
     highlightedWord: string;
 }
 
+// Component for rendering individual particles
 const Particle: React.FC<ParticleProps> = ({
     index,
     positions,
@@ -41,22 +45,14 @@ const Particle: React.FC<ParticleProps> = ({
     const materialRef = useRef<THREE.MeshStandardMaterial>(null);
     const article = articles[index];
     const originalColor = useMemo(() => color.clone(), [color]);
-    
-    const isHighlighted = useMemo(() => {
-        const shouldHighlight = highlightedWord &&
-            (article.title?.toLowerCase().includes(highlightedWord.toLowerCase()) ||
-             article.broadClaim?.toLowerCase().includes(highlightedWord.toLowerCase()) ||
-             article.subclaims?.some(subclaim => subclaim.toLowerCase().includes(highlightedWord.toLowerCase())));
-        
-        console.log(`Article ${index}:`, { 
-            title: article.title, 
-            broadClaim: article.broadClaim, 
-            highlightedWord, 
-            isHighlighted: shouldHighlight 
-        });
-        
-        return shouldHighlight;
-    }, [highlightedWord, article, index]);
+    const isHighlighted = useMemo(
+        () =>
+            highlightedWord &&
+            article.content
+                .toLowerCase()
+                .includes(highlightedWord.toLowerCase()),
+        [highlightedWord, article.content]
+    );
 
     useEffect(() => {
         if (materialRef.current) {
@@ -76,28 +72,34 @@ const Particle: React.FC<ParticleProps> = ({
                 viewMode === 'soup' || article.broadClaim === viewMode;
 
             if (isHighlighted) {
-                materialRef.current.color.setRGB(1, 0, 0); // Bright red for highlighted
-                materialRef.current.emissive.setRGB(0.5, 0, 0); // Darker red emissive for depth
-                materialRef.current.opacity = 1; // Fully opaque
-                materialRef.current.emissiveIntensity = 1; // Moderate emissive intensity
-                } else if (viewMode === 'soup') {
-                materialRef.current.color.copy(originalColor);
-                materialRef.current.emissive.copy(originalColor);
-                materialRef.current.opacity = 0.5;
-                materialRef.current.emissiveIntensity = 0.5;
-                } else if (isInFocus) {
+                materialRef.current.color.setRGB(1, 1, 1);
+                materialRef.current.emissive.setRGB(1, 1, 1);
+                materialRef.current.opacity = 1;
+                materialRef.current.emissiveIntensity = 10;
+            } else if (viewMode === 'soup') {
+                materialRef.current.color.setRGB(0.5, 0.5, 0.5);
+                materialRef.current.emissive.setRGB(0.5, 0.5, 0.5);
+                materialRef.current.opacity = 0.1;
+                materialRef.current.emissiveIntensity = 0.2;
+            } else if (isInFocus) {
                 materialRef.current.color.copy(originalColor);
                 materialRef.current.emissive.copy(originalColor);
                 materialRef.current.opacity = 1;
                 materialRef.current.emissiveIntensity = 1;
-                } else {
-                materialRef.current.color.lerp(new THREE.Color(0.2, 0.2, 0.2), 0.8);
-                materialRef.current.emissive.lerp(new THREE.Color(0.2, 0.2, 0.2), 0.8);
+            } else {
+                materialRef.current.color.lerp(
+                    new THREE.Color(0.2, 0.2, 0.2),
+                    0.8
+                );
+                materialRef.current.emissive.lerp(
+                    new THREE.Color(0.2, 0.2, 0.2),
+                    0.8
+                );
                 materialRef.current.opacity = 0.2;
                 materialRef.current.emissiveIntensity = 0.2;
-                }
             }
-            });
+        }
+    });
 
     return (
         <mesh
@@ -106,7 +108,6 @@ const Particle: React.FC<ParticleProps> = ({
             onPointerOut={() => setHoveredParticle(null)}
             onClick={(event) => {
                 event.stopPropagation();
-                console.log("Particle clicked:", article);
                 setSelectedArticle(article);
             }}
         >
@@ -121,6 +122,7 @@ const Particle: React.FC<ParticleProps> = ({
     );
 };
 
+// Props for connection lines between particles
 interface ConnectionLinesProps {
     articles: Article[];
     positions: Float32Array;
@@ -129,6 +131,7 @@ interface ConnectionLinesProps {
     colorMap: Map<string, THREE.Color>;
 }
 
+// Component for rendering connection lines between particles
 const ConnectionLines: React.FC<ConnectionLinesProps> = ({
     articles,
     positions,
@@ -202,6 +205,7 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
     );
 };
 
+// Props for the particle swarm
 interface SwarmProps {
     articles: Article[];
     viewMode: ViewMode;
@@ -210,6 +214,7 @@ interface SwarmProps {
     highlightedWord: string;
 }
 
+// Component for rendering the entire particle swarm
 const Swarm: React.FC<SwarmProps> = ({
     articles,
     viewMode,
@@ -374,37 +379,7 @@ const Swarm: React.FC<SwarmProps> = ({
     );
 };
 
-interface SceneProps {
-    articles: Article[];
-    viewMode: ViewMode;
-    colorMap: Map<string, THREE.Color>;
-    setSelectedArticle: (article: Article | null) => void;
-    highlightedWord: string;
-}
-
-const Scene: React.FC<SceneProps> = ({
-    articles,
-    viewMode,
-    colorMap,
-    setSelectedArticle,
-    highlightedWord,
-}) => {
-    return (
-        <>
-            <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} />
-            <Swarm
-                articles={articles}
-                viewMode={viewMode}
-                colorMap={colorMap}
-                setSelectedArticle={setSelectedArticle}
-                highlightedWord={highlightedWord}
-            />
-            <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} />
-        </>
-    );
-};
-
+// Add InfoPanel component
 interface InfoPanelProps {
     article: Article | null;
     onClose: () => void;
@@ -414,27 +389,33 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ article, onClose }) => {
     if (!article) return null;
 
     return (
-        <div className="fixed left-0 top-1/2 transform -translate-y-1/2 text-white p-4 max-w-sm overflow-y-auto max-h-screen">
-            <button 
-                onClick={onClose} 
-                className="absolute top-2 right-2 text-white bg-red-500 rounded-full w-6 h-6 flex items-center justify-center"
+        <div className='fixed left-0 top-1/2 transform -translate-y-1/2 text-white p-4 max-w-sm overflow-y-auto max-h-screen'>
+            <button
+                onClick={onClose}
+                className='absolute top-2 right-2 text-white bg-red-500 rounded-full w-6 h-6 flex items-center justify-center'
             >
                 X
             </button>
-            <h2 className="text-xl font-bold mb-4">{article.title}</h2>
+            <h2 className='text-xl font-bold mb-4'>{article.title}</h2>
             {Object.entries(article).map(([key, value]) => {
                 if (key !== 'title') {
                     return (
-                        <div key={key} className="mb-4">
-                            <h3 className="text-lg font-semibold capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</h3>
+                        <div key={key} className='mb-4'>
+                            <h3 className='text-lg font-semibold capitalize'>
+                                {key.replace(/([A-Z])/g, ' $1').trim()}:
+                            </h3>
                             {Array.isArray(value) ? (
-                                <ul className="list-disc list-inside">
+                                <ul className='list-disc list-inside'>
                                     {value.map((item, index) => (
                                         <li key={index}>{item}</li>
                                     ))}
                                 </ul>
                             ) : (
-                                <p>{typeof value === 'string' ? value : JSON.stringify(value, null, 2)}</p>
+                                <p>
+                                    {typeof value === 'string'
+                                        ? value
+                                        : JSON.stringify(value, null, 2)}
+                                </p>
                             )}
                         </div>
                     );
@@ -445,20 +426,22 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ article, onClose }) => {
     );
 };
 
+// Props for the main ArticleParticle component
 interface ArticleParticleProps {
     articles: Article[];
     highlightedWord?: string;
 }
 
+// Main component for the article particle visualization
 export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     articles,
     highlightedWord = '',
 }) => {
     const [viewMode, setViewMode] = useState<ViewMode>('soup');
     const [broadClaims, setBroadClaims] = useState<string[]>([]);
-    const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-
-    console.log("ArticleParticle render, selectedArticle:", selectedArticle); // Debug log
+    const [selectedArticle, setSelectedArticle] = useState<Article | null>(
+        null
+    );
 
     const colorMap = useMemo(() => {
         const map = new Map<string, THREE.Color>();
@@ -500,27 +483,34 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     };
 
     return (
-        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+        <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
             <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
-                <color attach="background" args={['black']} />
-                <Scene 
-                    articles={articles} 
-                    viewMode={viewMode} 
+                <color attach='background' args={['black']} />
+                <ambientLight intensity={0.5} />
+                <pointLight position={[10, 10, 10]} />
+                <Swarm
+                    articles={articles}
+                    viewMode={viewMode}
                     colorMap={colorMap}
                     setSelectedArticle={handleArticleSelect}
                     highlightedWord={highlightedWord}
                 />
+                <OrbitControls
+                    enablePan={true}
+                    enableZoom={true}
+                    enableRotate={true}
+                />
             </Canvas>
             <Button
-                variant="glass"
+                variant='glass'
                 onClick={handleToggle}
-                className="absolute top-10 left-10 p-10 text-xl text-white font-semibold"
+                className='absolute top-10 left-10 p-10 text-xl text-white font-semibold'
             >
                 {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
             </Button>
             {selectedArticle && (
-                <InfoPanel 
-                    article={selectedArticle} 
+                <InfoPanel
+                    article={selectedArticle}
                     onClose={() => handleArticleSelect(null)}
                 />
             )}
