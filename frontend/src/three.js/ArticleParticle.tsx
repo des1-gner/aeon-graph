@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Button } from '../components/Button';
 import { Article } from '../types/article';
+import { OrbitControls } from '@react-three/drei';
 
 // Define types
 type ViewMode = 'soup' | string;
@@ -378,11 +379,11 @@ interface ArticleParticleProps {
 // Main component for the article particle visualization
 export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     articles,
+    highlightedWord = '',
 }) => {
     const [viewMode, setViewMode] = useState<ViewMode>('soup');
     const [broadClaims, setBroadClaims] = useState<string[]>([]);
 
-    // Generate color map for broad claims
     const colorMap = useMemo(() => {
         const map = new Map<string, THREE.Color>();
         broadClaims.forEach((claim, index) => {
@@ -396,7 +397,6 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
         return map;
     }, [broadClaims]);
 
-    // Extract unique broad claims from articles
     useEffect(() => {
         const claims = Array.from(
             new Set(
@@ -408,7 +408,6 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
         setBroadClaims(['soup', ...claims]);
     }, [articles]);
 
-    // Handle toggling between view modes
     const handleToggle = () => {
         setViewMode((current) => {
             const currentIndex = broadClaims.indexOf(current);
@@ -422,7 +421,6 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
 
     return (
         <div style={{ width: '100vw', height: '100vh' }}>
-            {/* Render the 3D scene */}
             <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
                 <color attach='background' args={['black']} />
                 <ambientLight intensity={0.5} />
@@ -433,14 +431,12 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
                     colorMap={colorMap}
                     highlightedWord={highlightedWord}
                 />
-                <color attach='background' args={['black']} />
-                <Scene
-                    articles={articles}
-                    viewMode={viewMode}
-                    colorMap={colorMap}
+                <OrbitControls
+                    enablePan={true}
+                    enableZoom={true}
+                    enableRotate={true}
                 />
             </Canvas>
-            {/* Render the view mode toggle button */}
             <Button
                 variant='glass'
                 onClick={handleToggle}
