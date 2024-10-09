@@ -77,8 +77,8 @@ const Particle: React.FC<ParticleProps> = ({
             } else if (viewMode === 'soup') {
                 materialRef.current.color.setRGB(0.5, 0.5, 0.5);
                 materialRef.current.emissive.setRGB(0.5, 0.5, 0.5);
-                materialRef.current.opacity = 0.1;
-                materialRef.current.emissiveIntensity = 0.2;
+                materialRef.current.opacity = 0.5;
+                materialRef.current.emissiveIntensity = 0.5;
             } else if (isInFocus) {
                 materialRef.current.color.copy(originalColor);
                 materialRef.current.emissive.copy(originalColor);

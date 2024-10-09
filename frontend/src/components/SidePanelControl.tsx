@@ -11,6 +11,7 @@ import {
     ShareIcon,
     XMarkIcon,
     DocumentTextIcon,
+    EyeIcon,
 } from '@heroicons/react/24/solid';
 import { Button } from './Button';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -143,13 +144,6 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                 </div>
 
                 <Toggle
-                    header={['Visualisation Options', <PaintBrushIcon className='size-4' />]}
-                    toggleLabels={['Highlight', 'Cluster', 'Edges']}
-                    selectedIndex={visualisationOption}
-                    onClick={(index) => setVisualisationOption(index)}
-                />
-
-                <Toggle
                     header={[
                         'Data source',
                         <CircleStackIcon className='size-4' />,
@@ -162,7 +156,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                 <div className='dark-card p-2 space-y-3'>
                     <h2 className='flex gap-2 items-center font-semibold text-light'>
                         <MagnifyingGlassIcon className='size-4' />
-                        Search options
+                        Search
                     </h2>
                     <input
                         type='text'
@@ -220,7 +214,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                                     onChange={(e) =>
                                                         setStartDate(
                                                             e.target.value +
-                                                            'T00:00:00Z'
+                                                                'T00:00:00Z'
                                                         )
                                                     }
                                                     className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none accent-white focus:border-neutral-300'
@@ -239,7 +233,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                                     onChange={(e) =>
                                                         setEndDate(
                                                             e.target.value +
-                                                            'T00:00:00Z'
+                                                                'T00:00:00Z'
                                                         )
                                                     }
                                                     className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300'
@@ -280,10 +274,20 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </div>
                 )}
 
+                <Toggle
+                    header={[
+                        'Visualisation options',
+                        <PaintBrushIcon className='size-4' />,
+                    ]}
+                    toggleLabels={['Highlight', 'Cluster', 'Edges']}
+                    selectedIndex={visualisationOption}
+                    onClick={(index) => setVisualisationOption(index)}
+                />
+
                 <div className='dark-card p-2 space-y-3'>
                     <h2 className='flex gap-2 items-center font-semibold text-light'>
-                        <PaintBrushIcon className='size-4' />
-                        Highlight options
+                        <EyeIcon className='size-4' />
+                        Highlight
                     </h2>
                     <input
                         type='text'

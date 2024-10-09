@@ -49,7 +49,8 @@ export const dummyArticles: Article[] = [
         uri: 'uri-i9j0k1l2',
     },
     {
-        content: 'Global temperatures hit new record high in July',
+        content:
+            'Global temperatures hit new record high in July sparking wildfire',
         source: '',
         dateTime: '',
         urlToImage: '',
