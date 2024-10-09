@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import Toggle from './Toggle';
+import { Toggle } from './Toggle';
 import {
     AdjustmentsHorizontalIcon,
     ArrowUpRightIcon,
@@ -10,35 +10,45 @@ import {
     MagnifyingGlassIcon,
     ShareIcon,
     XMarkIcon,
+    DocumentTextIcon,
+    EyeIcon,
 } from '@heroicons/react/24/solid';
-import Button from './Button';
+import { Button } from './Button';
 import { AnimatePresence, motion } from 'framer-motion';
-import ViewAllArticlesModal from './modals/ViewAllArticlesModal';
-import { getLambda } from '../api';
+import { ArticleTableModal } from './modals/ArticleTableModal';
+import { fetchArticle } from '../api';
 import { useArticles } from '../contexts/ArticlesContext';
-import { Article, demoData } from '../types/article';
+import { dummyArticles } from '../types/article';
+import { QuerySummaryModal } from './modals/QuerySummaryModal';
 
 type SidePanelControlProps = {
     onClose?: () => void;
 };
 
-const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
-    const { articles, setArticles } = useArticles();
+export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
+    const { articles, setArticles, highlightedWord, setHighlightedWord } =
+        useArticles();
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [dateRangeIndex, setDateRangeIndex] = useState(0);
+    const [nodeLimitIndex, setNodeLimitIndex] = useState(0);
+    const [visualisationOption, setVisualisationOption] = useState(0);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [nodeQty, setNodeQty] = useState<number | undefined>(0);
-    const [presentationData, setPresentationData] = useState<Article[]>();
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    // const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [showQuerySummaryModal, setShowQuerySummaryModal] = useState(false);
 
     const handleSearch = async () => {
         setIsLoading(true);
         try {
-            const response = await getLambda();
-            setArticles(response.body);
+            const response = await fetchArticle(
+                searchQuery,
+                startDate,
+                endDate
+            );
+            setArticles(response);
         } catch (err: any) {
             console.error('Error fetching articles:', err);
         } finally {
@@ -49,31 +59,12 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const handleDataSourceChange = (index: number) => {
         setDataSourceIndex(index);
         if (index === 1) {
-            setArticles(demoData);
+            setArticles(dummyArticles);
         }
-    };
-
-    const createPresentationData = () => {
-        if (nodeQty !== articles?.length) {
-            const updatedArray = articles?.slice(0, nodeQty);
-            setPresentationData(updatedArray);
-            console.log(updatedArray?.length);
-        }
-    };
-
-    const handleStartVisualisation = () => {
-        createPresentationData();
-
-        // how i'm thinking starting playback will work - not created yet
-        // if (presentationData) {
-        //     startPlayback(presentationData)
-        // } else {
-        //     startPlayback(articles);
-        // }
     };
 
     useEffect(() => {
-        setNodeQty(articles?.length);
+        setNodeQty(articles?.length || 0);
     }, [articles]);
 
     const handleDateRangeToggle = (index: number) => {
@@ -100,14 +91,45 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                 setStartDate('');
                 return;
         }
-
         setStartDate(from.toISOString().split('T')[0] + 'T00:00:00Z');
         setEndDate(now.toISOString().split('T')[0] + 'T23:59:59Z');
     };
 
+    const handleStartPlayback = () => {
+        if (nodeQty! < articles!.length) {
+            let limitedArticles;
+            switch (nodeLimitIndex) {
+                case 0:
+                    limitedArticles = [...articles!].sort((a, b) => {
+                        return (
+                            new Date(b.dateTime).getTime() -
+                            new Date(a.dateTime).getTime()
+                        );
+                    });
+                    break;
+                case 1:
+                    limitedArticles = [...articles!].sort((a, b) => {
+                        return (
+                            new Date(a.dateTime).getTime() -
+                            new Date(b.dateTime).getTime()
+                        );
+                    });
+                    break;
+                case 2:
+                    limitedArticles = [...articles!].sort(
+                        () => 0.5 - Math.random()
+                    );
+                    break;
+                default:
+                    limitedArticles = [...articles!];
+            }
+            setArticles(limitedArticles.slice(0, nodeQty));
+        }
+    };
+
     return (
         <>
-            <div className='bg-neutral-950 border-neutral-700 border p-4 space-y-8 rounded-lg z-10 min-w-[385px]'>
+            <div className='backdrop-blur-xl border-neutral-700 border p-4 space-y-8 rounded-lg z-10 min-w-[385px]'>
                 <div className='flex items-center justify-between'>
                     <XMarkIcon
                         className='size-5 text-light cursor-pointer flex justify-start'
@@ -120,6 +142,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
 
                     <div />
                 </div>
+
                 <Toggle
                     header={[
                         'Data source',
@@ -130,19 +153,20 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     onClick={(index) => handleDataSourceChange(index)}
                 />
 
-                {/* <div className='dark-card p-2 space-y-3'>
-                        <h2 className='flex gap-2 items-center font-semibold text-light'>
-                            <MagnifyingGlassIcon className='size-4' />
-                            Search options
-                        </h2>
-                        <input
-                            type='text'
-                            value={searchQuery}
-                            placeholder='Search query'
-                            className='dark-text-field'
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div> */}
+                <div className='dark-card p-2 space-y-3'>
+                    <h2 className='flex gap-2 items-center font-semibold text-light'>
+                        <MagnifyingGlassIcon className='size-4' />
+                        Search
+                    </h2>
+                    <input
+                        type='text'
+                        value={searchQuery}
+                        placeholder='Search query'
+                        className='dark-text-field'
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
+
                 {dataSourceIndex === 0 && (
                     <div>
                         <Toggle
@@ -250,12 +274,49 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </div>
                 )}
 
+                <Toggle
+                    header={[
+                        'Visualisation options',
+                        <PaintBrushIcon className='size-4' />,
+                    ]}
+                    toggleLabels={['Highlight', 'Cluster', 'Edges']}
+                    selectedIndex={visualisationOption}
+                    onClick={(index) => setVisualisationOption(index)}
+                />
+
+                <div className='dark-card p-2 space-y-3'>
+                    <h2 className='flex gap-2 items-center font-semibold text-light'>
+                        <EyeIcon className='size-4' />
+                        Highlight
+                    </h2>
+                    <input
+                        type='text'
+                        value={highlightedWord}
+                        placeholder='E.g. Wildfire'
+                        className='dark-text-field'
+                        onChange={(e) => setHighlightedWord(e.target.value)}
+                    />
+                </div>
+
                 {articles?.length! > 0 && (
                     <div className='dark-card p-2 space-y-1 text-light'>
                         <p className='flex gap-2 items-center pb-1 font-semibold '>
                             <ShareIcon className='size-4' />
                             Node quantity
                         </p>
+
+                        <div className='flex justify-between'>
+                            <p>Limited by</p>
+                            <p className='flex gap-1 items-center text-sm hover:underline hover:cursor-pointer'>
+                                Clear
+                                <XMarkIcon className='size-4' />
+                            </p>
+                        </div>
+                        <Toggle
+                            toggleLabels={['Latest', 'Oldest', 'Random']}
+                            selectedIndex={nodeLimitIndex}
+                            onClick={(index) => setNodeLimitIndex(index)}
+                        />
                         <div className='flex items-center px-1 gap-3'>
                             <input
                                 type='range'
@@ -272,15 +333,13 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </div>
                 )}
 
-                <div className='dark-card p-2 space-y-1 text-light'>
+                {/* <div className='dark-card p-2 space-y-1 text-light'>
                     <p className='flex gap-2 items-center pb-1 font-semibold'>
                         <PaintBrushIcon className='size-4' />
-                        Visualisation options
+                        Playback options
                     </p>
                     <div className='flex justify-between items-center'>
-                        <label htmlFor='linksBetweenPages' className='text-sm'>
-                            Links between pages
-                        </label>
+                        <label className='text-sm'>Links between pages</label>
                         <input
                             type='checkbox'
                             defaultChecked
@@ -289,9 +348,7 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         />
                     </div>
                     <div className='flex justify-between items-center'>
-                        <label htmlFor='linksBetweenPages' className='text-sm'>
-                            Sentiment analysis
-                        </label>
+                        <label className='text-sm'>Sentiment analysis</label>
                         <input
                             type='checkbox'
                             id='linksBetweenPages'
@@ -299,25 +356,31 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         />
                     </div>
                     <div className='flex justify-between items-center'>
-                        <label htmlFor='linksBetweenPages' className='text-sm'>
-                            3D
-                        </label>
+                        <label className='text-sm'>3D</label>
                         <input
                             type='checkbox'
                             id='linksBetweenPages'
                             className='accent-neutral-300 size-4'
                         />
                     </div>
-                </div>
+                </div> */}
 
                 <div className='space-y-2'>
                     <Button
                         variant='action'
                         className='flex items-center gap-2 justify-center w-full'
-                        onClick={handleStartVisualisation}
+                        onClick={handleStartPlayback}
                     >
                         <CubeTransparentIcon className='size-4' />
-                        Start visualisation
+                        Start playback
+                    </Button>
+                    <Button
+                        variant='primary'
+                        className='flex items-center gap-2 justify-center w-full'
+                        onClick={() => setShowQuerySummaryModal(true)}
+                    >
+                        <DocumentTextIcon className='size-4' />
+                        Query summary
                     </Button>
                 </div>
             </div>
@@ -330,8 +393,28 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         transition={{ duration: 0.2 }}
                         className='fixed inset-0 z-50 flex items-center justify-center'
                     >
-                        <ViewAllArticlesModal
+                        <ArticleTableModal
                             onClose={() => setShowArticleModal(false)}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {showQuerySummaryModal && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.97 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.97 }}
+                        transition={{ duration: 0.2 }}
+                        className='fixed inset-0 z-50 flex items-center justify-center'
+                    >
+                        <QuerySummaryModal
+                            startDate={startDate}
+                            endDate={endDate}
+                            publishedBy=''
+                            containing={searchQuery}
+                            nodeLimit={nodeQty || 0}
+                            onClose={() => setShowQuerySummaryModal(false)}
                         />
                     </motion.div>
                 )}
@@ -339,5 +422,3 @@ const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
         </>
     );
 };
-
-export default SidePanelControl;

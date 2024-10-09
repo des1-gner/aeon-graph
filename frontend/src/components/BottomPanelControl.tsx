@@ -14,7 +14,7 @@ type BottomPanelControlProps = {
     isFullScreen: boolean;
 };
 
-const BottomPanelControl = ({
+export const BottomPanelControl = ({
     onClose,
     isPlaying,
     toggleMusic,
@@ -22,7 +22,7 @@ const BottomPanelControl = ({
     isFullScreen,
 }: BottomPanelControlProps) => {
     return (
-        <div className='bg-neutral-950 border border-neutral-700 p-4 rounded-lg shadow-lg w-fit z-10'>
+        <div className='backdrop-blur-xl border border-neutral-700 p-4 rounded-lg shadow-lg w-fit z-10'>
             <div className='flex items-center justify-between'>
                 <h1 className='text-base font-semibold text-light'>
                     Playback Controls
@@ -131,5 +131,3 @@ const BottomPanelControl = ({
         </div>
     );
 };
-
-export default BottomPanelControl;
