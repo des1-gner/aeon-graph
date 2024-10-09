@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
+import DisclaimerPopup from './components/DisclaimerPopup'; //Imported DisclaimerPopup component 
 import { BottomPanelControl } from './components/BottomPanelControl';
 import { SidePanelControl } from './components/SidePanelControl';
 import { ArticleParticle } from './three.js/ArticleParticle';
@@ -12,7 +13,20 @@ function App() {
     const { articles, highlightedWord } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
+    const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false); // Controls disclaimer visibility
+    const [disclaimerOpacity, setDisclaimerOpacity] = useState(1);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    const handleEnterSite = () => {
+        setIsDisclaimerAccepted(false); // Hide home page to show main content
+    };
+
+    const handleDisclaimerAccept = () => {
+        setDisclaimerOpacity(0);
+        setTimeout(() => {
+          setIsDisclaimerAccepted(true);
+        }, 2000);
+      };
 
     // Bottom Panel Fullscreen
     const toggleFullScreen = () => {
@@ -67,6 +81,11 @@ function App() {
             window.removeEventListener('mouseleave', handleMouseLeave);
         };
     }, []);
+
+    // Render DisclaimerPopup first if it has not been accepted yet
+    if (!isDisclaimerAccepted) {
+        return <DisclaimerPopup onAccept={handleDisclaimerAccept} />;
+    }
 
     return (
         <div className='bg-black min-h-screen'>

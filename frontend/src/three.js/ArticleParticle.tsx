@@ -1,11 +1,13 @@
-import React, { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Button } from '../components/Button';
 import { Article } from '../types/article';
 
+// Define types
 type ViewMode = 'soup' | string;
 
+// Helper function to generate vibrant colors
 const generateVibrantColor = (index: number, total: number): THREE.Color => {
     const hue = (index / total) * 360;
     const saturation = 100;
@@ -13,16 +15,8 @@ const generateVibrantColor = (index: number, total: number): THREE.Color => {
     return new THREE.Color(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
 };
 
-const Particle = ({
-    index,
-    positions,
-    velocities,
-    articles,
-    viewMode,
-    color,
-    setHoveredParticle,
-    highlightedWord,
-}: {
+// Props for individual particles
+interface ParticleProps {
     index: number;
     positions: Float32Array;
     velocities: Float32Array;
@@ -31,6 +25,18 @@ const Particle = ({
     color: THREE.Color;
     setHoveredParticle: (index: number | null) => void;
     highlightedWord: string;
+}
+
+// Component for rendering individual particles
+const Particle: React.FC<ParticleProps> = ({
+    index,
+    positions,
+    velocities,
+    articles,
+    viewMode,
+    color,
+    setHoveredParticle,
+    highlightedWord,
 }) => {
     const meshRef = useRef<THREE.Mesh>(null);
     const materialRef = useRef<THREE.MeshStandardMaterial>(null);
@@ -109,18 +115,22 @@ const Particle = ({
     );
 };
 
-const ConnectionLines = ({
-    articles,
-    positions,
-    hoveredParticle,
-    viewMode,
-    colorMap,
-}: {
+// Props for connection lines between particles
+interface ConnectionLinesProps {
     articles: Article[];
     positions: Float32Array;
     hoveredParticle: number | null;
     viewMode: ViewMode;
     colorMap: Map<string, THREE.Color>;
+}
+
+// Component for rendering connection lines between particles
+const ConnectionLines: React.FC<ConnectionLinesProps> = ({
+    articles,
+    positions,
+    hoveredParticle,
+    viewMode,
+    colorMap,
 }) => {
     const lineRef = useRef<THREE.LineSegments>(null);
     const materialRef = useRef<THREE.LineBasicMaterial>(null);
@@ -188,16 +198,20 @@ const ConnectionLines = ({
     );
 };
 
-const Swarm = ({
-    articles,
-    viewMode,
-    colorMap,
-    highlightedWord,
-}: {
+// Props for the particle swarm
+interface SwarmProps {
     articles: Article[];
     viewMode: ViewMode;
     colorMap: Map<string, THREE.Color>;
     highlightedWord: string;
+}
+
+// Component for rendering the entire particle swarm
+const Swarm: React.FC<SwarmProps> = ({
+    articles,
+    viewMode,
+    colorMap,
+    highlightedWord,
 }) => {
     const positionsRef = useRef<Float32Array>(
         new Float32Array(articles.length * 3)
@@ -355,15 +369,20 @@ const Swarm = ({
     );
 };
 
-export const ArticleParticle = ({
-    articles,
-    highlightedWord = '',
-}: {
+// Props for the main ArticleParticle component
+interface ArticleParticleProps {
     articles: Article[];
     highlightedWord?: string;
+}
+
+// Main component for the article particle visualization
+export const ArticleParticle: React.FC<ArticleParticleProps> = ({
+    articles,
 }) => {
     const [viewMode, setViewMode] = useState<ViewMode>('soup');
     const [broadClaims, setBroadClaims] = useState<string[]>([]);
+
+    // Generate color map for broad claims
     const colorMap = useMemo(() => {
         const map = new Map<string, THREE.Color>();
         broadClaims.forEach((claim, index) => {
@@ -377,6 +396,7 @@ export const ArticleParticle = ({
         return map;
     }, [broadClaims]);
 
+    // Extract unique broad claims from articles
     useEffect(() => {
         const claims = Array.from(
             new Set(
@@ -388,6 +408,7 @@ export const ArticleParticle = ({
         setBroadClaims(['soup', ...claims]);
     }, [articles]);
 
+    // Handle toggling between view modes
     const handleToggle = () => {
         setViewMode((current) => {
             const currentIndex = broadClaims.indexOf(current);
@@ -401,6 +422,7 @@ export const ArticleParticle = ({
 
     return (
         <div style={{ width: '100vw', height: '100vh' }}>
+            {/* Render the 3D scene */}
             <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
                 <color attach='background' args={['black']} />
                 <ambientLight intensity={0.5} />
@@ -411,7 +433,14 @@ export const ArticleParticle = ({
                     colorMap={colorMap}
                     highlightedWord={highlightedWord}
                 />
+                <color attach='background' args={['black']} />
+                <Scene
+                    articles={articles}
+                    viewMode={viewMode}
+                    colorMap={colorMap}
+                />
             </Canvas>
+            {/* Render the view mode toggle button */}
             <Button
                 variant='glass'
                 onClick={handleToggle}
