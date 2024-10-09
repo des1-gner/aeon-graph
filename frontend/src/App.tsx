@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import DisclaimerPopup from './components/DisclaimerPopup'; //Imported DisclaimerPopup component 
+import DisclaimerPopup from './components/DisclaimerPopup';
 import { BottomPanelControl } from './components/BottomPanelControl';
 import { SidePanelControl } from './components/SidePanelControl';
 import { ArticleParticle } from './three.js/ArticleParticle';
@@ -13,12 +13,12 @@ function App() {
     const { articles, highlightedWord } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
-    const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false); // Controls disclaimer visibility
+    const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false);
     const [disclaimerOpacity, setDisclaimerOpacity] = useState(1);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const handleEnterSite = () => {
-        setIsDisclaimerAccepted(false); // Hide home page to show main content
+        setIsDisclaimerAccepted(false);
     };
 
     const handleDisclaimerAccept = () => {
@@ -26,9 +26,8 @@ function App() {
         setTimeout(() => {
           setIsDisclaimerAccepted(true);
         }, 2000);
-      };
+    };
 
-    // Bottom Panel Fullscreen
     const toggleFullScreen = () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch((err) => {
@@ -42,7 +41,6 @@ function App() {
         setIsFullScreen(!isFullScreen);
     };
 
-    // Bottom Panel Music
     const toggleMusic = () => {
         if (audioRef.current) {
             if (isPlaying) {
@@ -56,7 +54,6 @@ function App() {
 
     useEffect(() => {
         const handleSidePanelMouseMove = (e: MouseEvent) => {
-            // Changed to detect top right corner
             if (e.clientX > window.innerWidth - 100 && e.clientY < 100) {
                 setShowSideControls(true);
             }
@@ -66,7 +63,6 @@ function App() {
             }
         };
 
-        // Hovering about a certain point allows the bottom panel to pop up
         const handleMouseLeave = (e: MouseEvent) => {
             if (e.clientY < window.innerHeight - 50) {
                 setShowBottomControls(true);
@@ -82,17 +78,18 @@ function App() {
         };
     }, []);
 
-    // Render DisclaimerPopup first if it has not been accepted yet
     if (!isDisclaimerAccepted) {
         return <DisclaimerPopup onAccept={handleDisclaimerAccept} />;
     }
 
     return (
-        <div className='bg-black min-h-screen'>
-            <ArticleParticle
-                articles={dummyArticles}
-                highlightedWord={highlightedWord}
-            />
+        <div className='bg-black min-h-screen relative'>
+            <div className="absolute inset-0 z-0">
+                <ArticleParticle 
+                    articles={articles ? articles : dummyArticles}
+                    highlightedWord={highlightedWord}
+                />
+            </div>
             <AnimatePresence>
                 {showSideControls && (
                     <motion.div
@@ -100,7 +97,7 @@ function App() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: '100%' }}
                         transition={{ duration: 0.8 }}
-                        className='fixed top-0 right-0 z-10'
+                        className='fixed top-0 right-0 z-20'
                     >
                         <div className='p-4'>
                             <SidePanelControl
@@ -110,14 +107,14 @@ function App() {
                     </motion.div>
                 )}
             </AnimatePresence>
-            {/* <AnimatePresence>
+            <AnimatePresence>
                 {showBottomControls && (
                     <motion.div
                         initial={{ opacity: 0, y: '100%' }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: '100%' }}
                         transition={{ duration: 0.8 }}
-                        className='fixed bottom-0 flex justify-center left-0 right-0'
+                        className='fixed bottom-0 flex justify-center left-0 right-0 z-20'
                     >
                         <div className='p-4'>
                             <BottomPanelControl
@@ -130,7 +127,7 @@ function App() {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence> */}
+            </AnimatePresence>
             <audio ref={audioRef} src='/music/ambient-spring-forest.mp3' loop />
         </div>
     );
