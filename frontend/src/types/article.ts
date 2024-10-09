@@ -13,7 +13,7 @@ export type Article = {
 
 export const dummyArticles: Article[] = [
     {
-        content: '',
+        content: 'New study shows coffee may improve memory',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -25,7 +25,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-a1b2c3d4',
     },
     {
-        content: '',
+        content: 'Electric cars outsell gasoline vehicles for the first time',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -37,7 +37,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-e5f6g7h8',
     },
     {
-        content: '',
+        content: 'Scientists discover new species of deep-sea creature',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -49,7 +49,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-i9j0k1l2',
     },
     {
-        content: '',
+        content: 'Global temperatures hit new record high in July',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -61,7 +61,8 @@ export const dummyArticles: Article[] = [
         uri: 'uri-m3n4o5p6',
     },
     {
-        content: '',
+        content:
+            'Artificial intelligence beats human experts in medical diagnosis',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -73,7 +74,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-q7r8s9t0',
     },
     {
-        content: '',
+        content: 'New renewable energy project powers entire city',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -85,7 +86,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-u1v2w3x4',
     },
     {
-        content: '',
+        content: 'Breakthrough in quantum computing achieved',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -97,7 +98,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-y5z6a7b8',
     },
     {
-        content: '',
+        content: 'Ocean cleanup project removes 100 tons of plastic',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -109,7 +110,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-c9d0e1f2',
     },
     {
-        content: '',
+        content: 'New plant-based meat alternative gains popularity',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -121,7 +122,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-g3h4i5j6',
     },
     {
-        content: '',
+        content: 'Virtual reality therapy shows promise in treating PTSD',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -133,7 +134,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-k7l8m9n0',
     },
     {
-        content: '',
+        content: 'Rare solar eclipse visible across North America',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -145,7 +146,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-o1p2q3r4',
     },
     {
-        content: '',
+        content: 'New gene therapy cures rare childhood disease',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -157,7 +158,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-s5t6u7v8',
     },
     {
-        content: '',
+        content: 'Autonomous vehicles reduce traffic accidents by 30%',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -169,7 +170,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-w9x0y1z2',
     },
     {
-        content: '',
+        content: 'Biodegradable packaging solution wins innovation award',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -181,7 +182,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-a3b4c5d6',
     },
     {
-        content: '',
+        content: 'Worlds largest vertical farm opens in Singapore',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -193,7 +194,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-e7f8g9h0',
     },
     {
-        content: '',
+        content: 'New antibiotic discovered in soil bacteria',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -205,7 +206,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-i1j2k3l4',
     },
     {
-        content: '',
+        content: 'Global literacy rates reach all-time high',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -217,7 +218,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-m5n6o7p8',
     },
     {
-        content: '',
+        content: 'Renewable energy surpasses fossil fuels in power generation',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -229,7 +230,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-q9r0s1t2',
     },
     {
-        content: '',
+        content: 'Scientists successfully teleport quantum information',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -241,7 +242,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-u3v4w5x6',
     },
     {
-        content: '',
+        content: 'New coral restoration technique shows promising results',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -253,7 +254,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-y7z8a9b0',
     },
     {
-        content: '',
+        content: 'First commercial space hotel to open in 2025',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -265,7 +266,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-c1d2e3f4',
     },
     {
-        content: '',
+        content: 'Novel treatment reverses Alzheimers symptoms in mice',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -277,7 +278,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-g5h6i7j8',
     },
     {
-        content: '',
+        content: 'Plastic-eating bacteria could revolutionize waste management',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -289,7 +290,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-k9l0m1n2',
     },
     {
-        content: '',
+        content: 'Worlds first 3D-printed neighborhood completed',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -301,7 +302,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-o3p4q5r6',
     },
     {
-        content: '',
+        content: 'New satellite system provides global internet coverage',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -313,7 +314,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-s7t8u9v0',
     },
     {
-        content: '',
+        content: 'Fusion energy breakthrough achieved in laboratory',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -325,7 +326,8 @@ export const dummyArticles: Article[] = [
         uri: 'uri-w1x2y3z4',
     },
     {
-        content: '',
+        content:
+            'Record number of endangered species recover from near-extinction',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -337,7 +339,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-a5b6c7d8',
     },
     {
-        content: '',
+        content: 'Carbon capture technology becomes economically viable',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -349,7 +351,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-e9f0g1h2',
     },
     {
-        content: '',
+        content: 'Universal flu vaccine shows promising results in trials',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -361,7 +363,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-i3j4k5l6',
     },
     {
-        content: '',
+        content: 'New desalination technique could solve global water crisis',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -373,7 +375,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-m7n8o9p0',
     },
     {
-        content: '',
+        content: 'Artificial leaf converts CO2 to fuel efficiently',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -385,7 +387,8 @@ export const dummyArticles: Article[] = [
         uri: 'uri-q1r2s3t4',
     },
     {
-        content: '',
+        content:
+            'Brain-computer interface allows paralyzed patients to communicate',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -397,7 +400,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-u5v6w7x8',
     },
     {
-        content: '',
+        content: 'Sustainable aviation fuel reduces airline emissions by 80%',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -409,7 +412,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-y9z0a1b2',
     },
     {
-        content: '',
+        content: 'Lab-grown organs successfully transplanted in humans',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -421,7 +424,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-c3d4e5f6',
     },
     {
-        content: '',
+        content: 'New battery technology doubles electric vehicle range',
         source: '',
         dateTime: '',
         urlToImage: '',
@@ -433,7 +436,7 @@ export const dummyArticles: Article[] = [
         uri: 'uri-g7h8i9j0',
     },
     {
-        content: '',
+        content: 'Microplastics discovered in human bloodstream',
         source: '',
         dateTime: '',
         urlToImage: '',

@@ -17,7 +17,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArticleTableModal } from './modals/ArticleTableModal';
 import { fetchArticle } from '../api';
 import { useArticles } from '../contexts/ArticlesContext';
-import { Article, dummyArticles } from '../types/article';
+import { dummyArticles } from '../types/article';
 import { QuerySummaryModal } from './modals/QuerySummaryModal';
 
 type SidePanelControlProps = {
@@ -25,7 +25,8 @@ type SidePanelControlProps = {
 };
 
 export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
-    const { articles, setArticles } = useArticles();
+    const { articles, setArticles, highlightedWord, setHighlightedWord } =
+        useArticles();
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [dateRangeIndex, setDateRangeIndex] = useState(0);
     const [nodeLimitIndex, setNodeLimitIndex] = useState(0);
@@ -269,6 +270,20 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         </Button>
                     </div>
                 )}
+
+                <div className='dark-card p-2 space-y-3'>
+                    <h2 className='flex gap-2 items-center font-semibold text-light'>
+                        <PaintBrushIcon className='size-4' />
+                        Highlight options
+                    </h2>
+                    <input
+                        type='text'
+                        value={highlightedWord}
+                        placeholder='E.g. Wildfire'
+                        className='dark-text-field'
+                        onChange={(e) => setHighlightedWord(e.target.value)}
+                    />
+                </div>
 
                 {articles?.length! > 0 && (
                     <div className='dark-card p-2 space-y-1 text-light'>

@@ -21,6 +21,7 @@ const Particle = ({
     viewMode,
     color,
     setHoveredParticle,
+    highlightedWord,
 }: {
     index: number;
     positions: Float32Array;
@@ -29,11 +30,20 @@ const Particle = ({
     viewMode: ViewMode;
     color: THREE.Color;
     setHoveredParticle: (index: number | null) => void;
+    highlightedWord: string;
 }) => {
     const meshRef = useRef<THREE.Mesh>(null);
     const materialRef = useRef<THREE.MeshStandardMaterial>(null);
     const article = articles[index];
     const originalColor = useMemo(() => color.clone(), [color]);
+    const isHighlighted = useMemo(
+        () =>
+            highlightedWord &&
+            article.content
+                .toLowerCase()
+                .includes(highlightedWord.toLowerCase()),
+        [highlightedWord, article.content]
+    );
 
     useEffect(() => {
         if (materialRef.current) {
@@ -54,7 +64,11 @@ const Particle = ({
             materialRef.current.opacity = isInFocus ? 1 : 0.2;
             materialRef.current.emissiveIntensity = isInFocus ? 1 : 0.2;
 
-            if (isInFocus) {
+            if (isHighlighted) {
+                materialRef.current.color.setRGB(1, 1, 0); // Yellow for highlighted particles
+                materialRef.current.emissive.setRGB(1, 1, 0);
+                materialRef.current.emissiveIntensity = 2;
+            } else if (isInFocus) {
                 materialRef.current.color.copy(originalColor);
                 materialRef.current.emissive.copy(originalColor);
             } else {
@@ -170,10 +184,12 @@ const Swarm = ({
     articles,
     viewMode,
     colorMap,
+    highlightedWord,
 }: {
     articles: Article[];
     viewMode: ViewMode;
     colorMap: Map<string, THREE.Color>;
+    highlightedWord: string;
 }) => {
     const positionsRef = useRef<Float32Array>(
         new Float32Array(articles.length * 3)
@@ -317,6 +333,7 @@ const Swarm = ({
                     viewMode={viewMode}
                     color={colorsRef.current[index]}
                     setHoveredParticle={setHoveredParticle}
+                    highlightedWord={highlightedWord}
                 />
             ))}
             <ConnectionLines
@@ -330,7 +347,13 @@ const Swarm = ({
     );
 };
 
-export const ArticleParticle = ({ articles }: { articles: Article[] }) => {
+export const ArticleParticle = ({
+    articles,
+    highlightedWord = '',
+}: {
+    articles: Article[];
+    highlightedWord?: string;
+}) => {
     const [viewMode, setViewMode] = useState<ViewMode>('soup');
     const [broadClaims, setBroadClaims] = useState<string[]>([]);
     const colorMap = useMemo(() => {
@@ -378,6 +401,7 @@ export const ArticleParticle = ({ articles }: { articles: Article[] }) => {
                     articles={articles}
                     viewMode={viewMode}
                     colorMap={colorMap}
+                    highlightedWord={highlightedWord}
                 />
             </Canvas>
             <Button
