@@ -76,28 +76,28 @@ const Particle: React.FC<ParticleProps> = ({
                 viewMode === 'soup' || article.broadClaim === viewMode;
 
             if (isHighlighted) {
-                materialRef.current.color.setRGB(1, 1, 1); // White for highlighted
-                materialRef.current.emissive.setRGB(1, 1, 1);
-                materialRef.current.opacity = 1;
-                materialRef.current.emissiveIntensity = 2;
-            } else if (viewMode === 'soup') {
+                materialRef.current.color.setRGB(1, 0, 0); // Bright red for highlighted
+                materialRef.current.emissive.setRGB(0.5, 0, 0); // Darker red emissive for depth
+                materialRef.current.opacity = 1; // Fully opaque
+                materialRef.current.emissiveIntensity = 1; // Moderate emissive intensity
+                } else if (viewMode === 'soup') {
                 materialRef.current.color.copy(originalColor);
                 materialRef.current.emissive.copy(originalColor);
                 materialRef.current.opacity = 0.5;
                 materialRef.current.emissiveIntensity = 0.5;
-            } else if (isInFocus) {
+                } else if (isInFocus) {
                 materialRef.current.color.copy(originalColor);
                 materialRef.current.emissive.copy(originalColor);
                 materialRef.current.opacity = 1;
                 materialRef.current.emissiveIntensity = 1;
-            } else {
+                } else {
                 materialRef.current.color.lerp(new THREE.Color(0.2, 0.2, 0.2), 0.8);
                 materialRef.current.emissive.lerp(new THREE.Color(0.2, 0.2, 0.2), 0.8);
                 materialRef.current.opacity = 0.2;
                 materialRef.current.emissiveIntensity = 0.2;
+                }
             }
-        }
-    });
+            });
 
     return (
         <mesh
