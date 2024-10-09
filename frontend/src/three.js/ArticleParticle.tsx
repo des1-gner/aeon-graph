@@ -61,16 +61,22 @@ const Particle = ({
 
             const isInFocus =
                 viewMode === 'soup' || article.broadClaim === viewMode;
-            materialRef.current.opacity = isInFocus ? 1 : 0.2;
-            materialRef.current.emissiveIntensity = isInFocus ? 1 : 0.2;
 
             if (isHighlighted) {
-                materialRef.current.color.setRGB(1, 1, 0); // Yellow for highlighted particles
-                materialRef.current.emissive.setRGB(1, 1, 0);
-                materialRef.current.emissiveIntensity = 2;
+                materialRef.current.color.setRGB(1, 1, 1);
+                materialRef.current.emissive.setRGB(1, 1, 1);
+                materialRef.current.opacity = 1;
+                materialRef.current.emissiveIntensity = 10;
+            } else if (viewMode === 'soup') {
+                materialRef.current.color.setRGB(0.5, 0.5, 0.5);
+                materialRef.current.emissive.setRGB(0.5, 0.5, 0.5);
+                materialRef.current.opacity = 0.1;
+                materialRef.current.emissiveIntensity = 0.2;
             } else if (isInFocus) {
                 materialRef.current.color.copy(originalColor);
                 materialRef.current.emissive.copy(originalColor);
+                materialRef.current.opacity = 1;
+                materialRef.current.emissiveIntensity = 1;
             } else {
                 materialRef.current.color.lerp(
                     new THREE.Color(0.2, 0.2, 0.2),
@@ -80,6 +86,8 @@ const Particle = ({
                     new THREE.Color(0.2, 0.2, 0.2),
                     0.8
                 );
+                materialRef.current.opacity = 0.2;
+                materialRef.current.emissiveIntensity = 0.2;
             }
         }
     });
