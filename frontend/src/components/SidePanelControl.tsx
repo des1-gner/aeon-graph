@@ -99,16 +99,16 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                 case 0:
                     limitedArticles = [...articles!].sort((a, b) => {
                         return (
-                            new Date(b.publishedAt).getTime() -
-                            new Date(a.publishedAt).getTime()
+                            new Date(b.dateTime).getTime() -
+                            new Date(a.dateTime).getTime()
                         );
                     });
                     break;
                 case 1:
                     limitedArticles = [...articles!].sort((a, b) => {
                         return (
-                            new Date(a.publishedAt).getTime() -
-                            new Date(b.publishedAt).getTime()
+                            new Date(a.dateTime).getTime() -
+                            new Date(b.dateTime).getTime()
                         );
                     });
                     break;

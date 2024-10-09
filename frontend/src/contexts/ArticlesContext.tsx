@@ -42,7 +42,7 @@ export const ArticleProvider = ({ children }: ArticlesProviderProps) => {
     const deleteArticle = (articleToDelete: Article) => {
         if (articles) {
             const updatedArticles = articles.filter(
-                (article) => article.title !== articleToDelete.title
+                (article) => article.uri !== articleToDelete.uri
             );
             setArticles(updatedArticles);
         }

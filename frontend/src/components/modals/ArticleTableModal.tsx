@@ -49,7 +49,7 @@ export const ArticleTableModal = ({ onClose }: ArticleTableModalProps) => {
                                     Author
                                 </th>
                                 <th className='bg-neutral-900 sticky top-0 px-4 py-2 w-32'>
-                                    Publication
+                                    Source
                                 </th>
                                 <th className='bg-neutral-900 sticky top-0 px-4 py-2 w-32'>
                                     Publish Date
@@ -74,13 +74,13 @@ export const ArticleTableModal = ({ onClose }: ArticleTableModalProps) => {
                                         {article.title}
                                     </td>
                                     <td className='border border-neutral-800 px-4 py-2 break-words capitalize'>
-                                        {article.author}
+                                        {article.authors}
                                     </td>
                                     <td className='border border-neutral-800 px-4 py-2'>
-                                        {article.sourceName}
+                                        {article.source}
                                     </td>
                                     <td className='border border-neutral-800 px-4 py-2'>
-                                        {new Date(article.publishedAt)
+                                        {new Date(article.dateTime)
                                             .toLocaleDateString('en-GB', {
                                                 day: '2-digit',
                                                 month: '2-digit',
