@@ -1,7 +1,12 @@
 import axios from 'axios';
 
-export const getLambda = async (startDate?: string, endDate?: string) => {
+export const fetchArticle = async (
+    search?: string,
+    startDate?: string,
+    endDate?: string
+) => {
     const params = {
+        search: search,
         startDate: startDate,
         endDate: endDate,
     };
@@ -17,18 +22,18 @@ export const getLambda = async (startDate?: string, endDate?: string) => {
         });
 };
 
-// export const getNews = async (
-//     query: string,
-//     fromDate: string,
-//     toDate: string = new Date().toISOString()
-// ) => {
-//     const url = `https://newsapi.org/v2/everything?q=${query}&from=${fromDate}&language=en&apiKey=${process.env.REACT_APP_NEWS_API}`;
-
+// export const searchArticleByQuery = async (search: string) => {
+//     const params = {
+//         search,
+//     };
 //     return axios
-//         .get(url)
+//         .get(
+//             'https://ynicn27cgg.execute-api.ap-southeast-2.amazonaws.com/prod',
+//             { params }
+//         )
 //         .then((res) => res.data)
 //         .catch((error) => {
-//             console.log('Error fetching new api articles', error);
+//             console.error('Error fetching articles:', error);
 //             throw error;
 //         });
 // };

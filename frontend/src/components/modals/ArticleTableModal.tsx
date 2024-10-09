@@ -35,7 +35,7 @@ export const ArticleTableModal = ({ onClose }: ArticleTableModalProps) => {
                         <p className='text-sm'>Delete all</p>
                     </Button>
                 </div>
-                <div className='h-[800px] overflow-auto rounded-lg'>
+                <div className='max-h-[800px] overflow-auto rounded-lg'>
                     <table className='text-light bg-neutral-900 table-fixed'>
                         <thead>
                             <tr className='text-nowrap'>
@@ -49,7 +49,7 @@ export const ArticleTableModal = ({ onClose }: ArticleTableModalProps) => {
                                     Author
                                 </th>
                                 <th className='bg-neutral-900 sticky top-0 px-4 py-2 w-32'>
-                                    Publication
+                                    Source
                                 </th>
                                 <th className='bg-neutral-900 sticky top-0 px-4 py-2 w-32'>
                                     Publish Date
@@ -73,14 +73,14 @@ export const ArticleTableModal = ({ onClose }: ArticleTableModalProps) => {
                                     <td className='border border-neutral-800 px-4 py-2 capitalize'>
                                         {article.title}
                                     </td>
-                                    <td className='border border-neutral-800 px-4 py-2 break-words'>
-                                        {article.author}
+                                    <td className='border border-neutral-800 px-4 py-2 break-words capitalize'>
+                                        {article.authors}
                                     </td>
                                     <td className='border border-neutral-800 px-4 py-2'>
-                                        {article.sourceName}
+                                        {article.source}
                                     </td>
                                     <td className='border border-neutral-800 px-4 py-2'>
-                                        {new Date(article.publishedAt)
+                                        {new Date(article.dateTime)
                                             .toLocaleDateString('en-GB', {
                                                 day: '2-digit',
                                                 month: '2-digit',

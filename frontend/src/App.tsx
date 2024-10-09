@@ -10,7 +10,7 @@ import { dummyArticles } from './types/article';
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
     const [showBottomControls, setShowBottomControls] = useState(true);
-    const { articles } = useArticles();
+    const { articles, highlightedWord } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false); // Controls disclaimer visibility
@@ -89,7 +89,10 @@ function App() {
 
     return (
         <div className='bg-black min-h-screen'>
-            <ArticleParticle articles={articles ? articles : dummyArticles} />
+            <ArticleParticle
+                articles={dummyArticles}
+                highlightedWord={highlightedWord}
+            />
             <AnimatePresence>
                 {showSideControls && (
                     <motion.div

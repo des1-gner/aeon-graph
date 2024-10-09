@@ -14,17 +14,23 @@ interface ArticlesProviderProps {
     children: ReactNode;
 }
 
-interface ArticlesContextProps {
+type ArticlesContextProps = {
     articles: Article[] | undefined;
     setArticles: (articles: Article[] | undefined) => void;
     deleteArticle: (article: Article) => void;
     clearAllArticles: () => void;
-}
+    highlightedWord: string | undefined;
+    setHighlightedWord: (word: string | undefined) => void;
+    clearHighlightedWord: () => void;
+};
 
 const ArticleContext = createContext({} as ArticlesContextProps);
 
 export const ArticleProvider = ({ children }: ArticlesProviderProps) => {
     const [articles, setArticles] = useState<Article[] | undefined>();
+    const [highlightedWord, setHighlightedWord] = useState<
+        string | undefined
+    >();
 
     useEffect(() => {
         const cachedArticles = localStorage.getItem(CACHED_ARTICLES_KEY);
@@ -42,7 +48,7 @@ export const ArticleProvider = ({ children }: ArticlesProviderProps) => {
     const deleteArticle = (articleToDelete: Article) => {
         if (articles) {
             const updatedArticles = articles.filter(
-                (article) => article.title !== articleToDelete.title
+                (article) => article.uri !== articleToDelete.uri
             );
             setArticles(updatedArticles);
         }
@@ -53,6 +59,10 @@ export const ArticleProvider = ({ children }: ArticlesProviderProps) => {
         setArticles(undefined);
     };
 
+    const clearHighlightedWord = () => {
+        setHighlightedWord(undefined);
+    };
+
     return (
         <ArticleContext.Provider
             value={{
@@ -60,6 +70,9 @@ export const ArticleProvider = ({ children }: ArticlesProviderProps) => {
                 setArticles,
                 deleteArticle,
                 clearAllArticles,
+                highlightedWord,
+                setHighlightedWord,
+                clearHighlightedWord,
             }}
         >
             {children}

@@ -1,14 +1,14 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
 import { Button } from '../components/Button';
 import { Article } from '../types/article';
+import { OrbitControls } from '@react-three/drei';
 
-// Define the possible view modes
+// Define types
 type ViewMode = 'soup' | string;
 
-// Function to generate vibrant colors for particles
+// Helper function to generate vibrant colors
 const generateVibrantColor = (index: number, total: number): THREE.Color => {
     const hue = (index / total) * 360;
     const saturation = 100;
@@ -25,6 +25,7 @@ interface ParticleProps {
     viewMode: ViewMode;
     color: THREE.Color;
     setHoveredParticle: (index: number | null) => void;
+    highlightedWord: string;
 }
 
 // Component for rendering individual particles
@@ -36,41 +37,53 @@ const Particle: React.FC<ParticleProps> = ({
     viewMode,
     color,
     setHoveredParticle,
+    highlightedWord,
 }) => {
-    const meshRef = React.useRef<THREE.Mesh>(null);
-    const materialRef = React.useRef<THREE.MeshStandardMaterial>(null);
+    const meshRef = useRef<THREE.Mesh>(null);
+    const materialRef = useRef<THREE.MeshStandardMaterial>(null);
     const article = articles[index];
     const originalColor = useMemo(() => color.clone(), [color]);
+    const isHighlighted = useMemo(
+        () =>
+            highlightedWord &&
+            article.content
+                .toLowerCase()
+                .includes(highlightedWord.toLowerCase()),
+        [highlightedWord, article.content]
+    );
 
-    // Set initial material properties
     useEffect(() => {
         if (materialRef.current) {
             materialRef.current.transparent = true;
         }
     }, []);
 
-    // Update particle position and appearance each frame
     useFrame(() => {
         if (meshRef.current && materialRef.current) {
-            // Update position
             meshRef.current.position.set(
                 positions[index * 3],
                 positions[index * 3 + 1],
                 positions[index * 3 + 2]
             );
 
-            // Determine if particle is in focus based on view mode
             const isInFocus =
                 viewMode === 'soup' || article.broadClaim === viewMode;
-            
-            // Adjust opacity and emissive intensity
-            materialRef.current.opacity = isInFocus ? 1 : 0.2;
-            materialRef.current.emissiveIntensity = isInFocus ? 1 : 0.2;
 
-            // Adjust color based on focus
-            if (isInFocus) {
+            if (isHighlighted) {
+                materialRef.current.color.setRGB(1, 1, 1);
+                materialRef.current.emissive.setRGB(1, 1, 1);
+                materialRef.current.opacity = 1;
+                materialRef.current.emissiveIntensity = 10;
+            } else if (viewMode === 'soup') {
+                materialRef.current.color.setRGB(0.5, 0.5, 0.5);
+                materialRef.current.emissive.setRGB(0.5, 0.5, 0.5);
+                materialRef.current.opacity = 0.1;
+                materialRef.current.emissiveIntensity = 0.2;
+            } else if (isInFocus) {
                 materialRef.current.color.copy(originalColor);
                 materialRef.current.emissive.copy(originalColor);
+                materialRef.current.opacity = 1;
+                materialRef.current.emissiveIntensity = 1;
             } else {
                 materialRef.current.color.lerp(
                     new THREE.Color(0.2, 0.2, 0.2),
@@ -80,6 +93,8 @@ const Particle: React.FC<ParticleProps> = ({
                     new THREE.Color(0.2, 0.2, 0.2),
                     0.8
                 );
+                materialRef.current.opacity = 0.2;
+                materialRef.current.emissiveIntensity = 0.2;
             }
         }
     });
@@ -118,10 +133,9 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
     viewMode,
     colorMap,
 }) => {
-    const lineRef = React.useRef<THREE.LineSegments>(null);
-    const materialRef = React.useRef<THREE.LineBasicMaterial>(null);
+    const lineRef = useRef<THREE.LineSegments>(null);
+    const materialRef = useRef<THREE.LineBasicMaterial>(null);
 
-    // Update connection lines each frame
     useFrame(() => {
         if (lineRef.current && materialRef.current) {
             const geometry = lineRef.current.geometry as THREE.BufferGeometry;
@@ -130,7 +144,6 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
                 const hoveredArticle = articles[hoveredParticle];
                 const vertices: number[] = [];
 
-                // Create connections between particles with shared subclaims
                 if (
                     hoveredArticle.broadClaim === viewMode &&
                     hoveredArticle.subclaims
@@ -156,14 +169,12 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
                     });
                 }
 
-                // Update line geometry
                 geometry.setAttribute(
                     'position',
                     new THREE.Float32BufferAttribute(vertices, 3)
                 );
                 geometry.attributes.position.needsUpdate = true;
 
-                // Set line color based on broad claim
                 if (
                     hoveredArticle.broadClaim &&
                     colorMap.has(hoveredArticle.broadClaim)
@@ -193,26 +204,30 @@ interface SwarmProps {
     articles: Article[];
     viewMode: ViewMode;
     colorMap: Map<string, THREE.Color>;
+    highlightedWord: string;
 }
 
 // Component for rendering the entire particle swarm
-const Swarm: React.FC<SwarmProps> = ({ articles, viewMode, colorMap }) => {
-    // Refs for particle positions, velocities, and colors
-    const positionsRef = React.useRef<Float32Array>(
+const Swarm: React.FC<SwarmProps> = ({
+    articles,
+    viewMode,
+    colorMap,
+    highlightedWord,
+}) => {
+    const positionsRef = useRef<Float32Array>(
         new Float32Array(articles.length * 3)
     );
-    const velocitiesRef = React.useRef<Float32Array>(
+    const velocitiesRef = useRef<Float32Array>(
         new Float32Array(articles.length * 3)
     );
-    const targetPositionsRef = React.useRef<Float32Array>(
+    const targetPositionsRef = useRef<Float32Array>(
         new Float32Array(articles.length * 3)
     );
-    const colorsRef = React.useRef<THREE.Color[]>([]);
-    const transitionProgressRef = React.useRef<number>(0);
-    const prevViewModeRef = React.useRef<ViewMode>('soup');
+    const colorsRef = useRef<THREE.Color[]>([]);
+    const transitionProgressRef = useRef<number>(0);
+    const prevViewModeRef = useRef<ViewMode>('soup');
     const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
 
-    // Initialize particle positions, velocities, and colors
     useMemo(() => {
         for (let i = 0; i < articles.length; i++) {
             positionsRef.current[i * 3] = (Math.random() - 0.5) * 20;
@@ -230,7 +245,6 @@ const Swarm: React.FC<SwarmProps> = ({ articles, viewMode, colorMap }) => {
         }
     }, [articles, colorMap]);
 
-    // Update target positions when view mode changes
     useEffect(() => {
         if (viewMode !== prevViewModeRef.current) {
             transitionProgressRef.current = 0;
@@ -256,7 +270,6 @@ const Swarm: React.FC<SwarmProps> = ({ articles, viewMode, colorMap }) => {
         }
     }, [viewMode, articles]);
 
-    // Update particle positions each frame
     useFrame(() => {
         const positions = positionsRef.current;
         const velocities = velocitiesRef.current;
@@ -284,7 +297,6 @@ const Swarm: React.FC<SwarmProps> = ({ articles, viewMode, colorMap }) => {
                 targetPositions[i * 3 + 2]
             );
 
-            // Update particle position based on view mode
             if (viewMode !== 'soup') {
                 if (article.broadClaim === viewMode) {
                     particlePosition.lerp(targetPosition, 0.1);
@@ -310,7 +322,6 @@ const Swarm: React.FC<SwarmProps> = ({ articles, viewMode, colorMap }) => {
                 particlePosition.add(particleVelocity);
             }
 
-            // Keep particles within bounds
             for (let axis = 0; axis < 3; axis++) {
                 if (Math.abs(particlePosition.getComponent(axis)) > 10) {
                     particlePosition.setComponent(
@@ -324,7 +335,6 @@ const Swarm: React.FC<SwarmProps> = ({ articles, viewMode, colorMap }) => {
                 }
             }
 
-            // Update position and velocity arrays
             positions[i * 3] = particlePosition.x;
             positions[i * 3 + 1] = particlePosition.y;
             positions[i * 3 + 2] = particlePosition.z;
@@ -346,6 +356,7 @@ const Swarm: React.FC<SwarmProps> = ({ articles, viewMode, colorMap }) => {
                     viewMode={viewMode}
                     color={colorsRef.current[index]}
                     setHoveredParticle={setHoveredParticle}
+                    highlightedWord={highlightedWord}
                 />
             ))}
             <ConnectionLines
@@ -359,40 +370,20 @@ const Swarm: React.FC<SwarmProps> = ({ articles, viewMode, colorMap }) => {
     );
 };
 
-// Props for the entire 3D scene
-interface SceneProps {
-    articles: Article[];
-    viewMode: ViewMode;
-    colorMap: Map<string, THREE.Color>;
-}
-
-// Component for rendering the entire 3D scene
-const Scene: React.FC<SceneProps> = ({ articles, viewMode, colorMap }) => {
-    return (
-        <>
-            <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} />
-            <Swarm
-                articles={articles}
-                viewMode={viewMode}
-                colorMap={colorMap}
-            />
-            <OrbitControls enablePan={true} enableZoom={true} enableRotate={true} />
-        </>
-    );
-};
-
 // Props for the main ArticleParticle component
 interface ArticleParticleProps {
     articles: Article[];
+    highlightedWord?: string;
 }
 
 // Main component for the article particle visualization
-export const ArticleParticle: React.FC<ArticleParticleProps> = ({ articles }) => {
+export const ArticleParticle: React.FC<ArticleParticleProps> = ({
+    articles,
+    highlightedWord = '',
+}) => {
     const [viewMode, setViewMode] = useState<ViewMode>('soup');
     const [broadClaims, setBroadClaims] = useState<string[]>([]);
 
-    // Generate color map for broad claims
     const colorMap = useMemo(() => {
         const map = new Map<string, THREE.Color>();
         broadClaims.forEach((claim, index) => {
@@ -406,7 +397,6 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({ articles }) =>
         return map;
     }, [broadClaims]);
 
-    // Extract unique broad claims from articles
     useEffect(() => {
         const claims = Array.from(
             new Set(
@@ -418,7 +408,6 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({ articles }) =>
         setBroadClaims(['soup', ...claims]);
     }, [articles]);
 
-    // Handle toggling between view modes
     const handleToggle = () => {
         setViewMode((current) => {
             const currentIndex = broadClaims.indexOf(current);
@@ -432,16 +421,26 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({ articles }) =>
 
     return (
         <div style={{ width: '100vw', height: '100vh' }}>
-            {/* Render the 3D scene */}
             <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
-                <color attach="background" args={['black']} />
-                <Scene articles={articles} viewMode={viewMode} colorMap={colorMap} />
+                <color attach='background' args={['black']} />
+                <ambientLight intensity={0.5} />
+                <pointLight position={[10, 10, 10]} />
+                <Swarm
+                    articles={articles}
+                    viewMode={viewMode}
+                    colorMap={colorMap}
+                    highlightedWord={highlightedWord}
+                />
+                <OrbitControls
+                    enablePan={true}
+                    enableZoom={true}
+                    enableRotate={true}
+                />
             </Canvas>
-            {/* Render the view mode toggle button */}
             <Button
-                variant="glass"
+                variant='glass'
                 onClick={handleToggle}
-                className="absolute top-10 left-10 p-10 text-xl text-white font-semibold"
+                className='absolute top-10 left-10 p-10 text-xl text-white font-semibold'
             >
                 {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
             </Button>
