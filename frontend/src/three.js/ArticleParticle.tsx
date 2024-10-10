@@ -441,52 +441,68 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ article, onClose }) => {
     if (!article) return null;
 
     return (
-        <div className='fixed left-0 top-1/2 transform -translate-y-1/2 text-white p-4 max-w-sm overflow-y-auto max-h-screen bg-black bg-opacity-75'>
+        <div className='fixed left-4 top-1/2 transform -translate-y-1/2 text-white p-6 w-96 max-h-[80vh] overflow-y-auto bg-black bg-opacity-75 rounded-lg shadow-lg'>
             <button
                 onClick={onClose}
-                className='absolute top-2 right-2 text-white bg-red-500 rounded-full w-6 h-6 flex items-center justify-center'
+                className='absolute top-2 right-2 text-white bg-red-500 hover:bg-red-600 rounded-full w-8 h-8 flex items-center justify-center transition-colors duration-200'
             >
                 X
             </button>
-            <h2 className='text-xl font-bold mb-4'>
-                {article.title || 'Untitled'}
-            </h2>
-            <p className='mb-2'>
-                <strong>Content:</strong> {article.body}
-            </p>
-            <p className='mb-2'>
-                <strong>Source:</strong> {article.source || 'Unknown'}
-            </p>
-            <p className='mb-2'>
-                <strong>Date:</strong>{' '}
-                {new Date(article.dateTime).toLocaleDateString()}
-            </p>
-            <p className='mb-2'>
-                <strong>Authors:</strong> {article.authors || 'Unknown'}
-            </p>
-            <h3 className='text-lg font-semibold mt-4 mb-2'>Broad Claims:</h3>
-            {article.broadClaims &&
-                Object.entries(article.broadClaims).map(
-                    ([key, value]) =>
-                        value && (
-                            <p key={key} className='mb-1'>
-                                <strong>{key}:</strong> {value}
-                            </p>
-                        )
+            <div className='space-y-4'>
+                <h2 className='text-2xl font-bold pr-8'>
+                    {article.title || 'Untitled'}
+                </h2>
+                {article.url && (
+                    <p><strong>URL:</strong> <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:underline">{article.url}</a></p>
                 )}
-            <h3 className='text-lg font-semibold mt-4 mb-2'>Sub Claims:</h3>
-            {article.subClaims &&
-                Object.entries(article.subClaims).map(
-                    ([key, value]) =>
-                        value && (
-                            <p key={key} className='mb-1'>
-                                <strong>{key}:</strong> {value}
-                            </p>
-                        )
+                <p><strong>Author(s):</strong> {article.authors || 'Unknown'}</p>
+                <p><strong>Source:</strong> {article.source || 'Unknown'}</p>
+                <p><strong>Date:</strong> {new Date(article.dateTime).toLocaleDateString()}</p>
+                <div>
+                    <strong>Content:</strong>
+                    <p className="mt-2">{article.body}</p>
+                </div>
+                {article.image && (
+                    <div>
+                        <strong>Image:</strong>
+                        <img src={article.image} alt="Article image" className="mt-2 w-full h-auto rounded" />
+                    </div>
                 )}
+                <div>
+                    <h3 className='text-xl font-semibold'>Broad Claims:</h3>
+                    <ul className='list-disc pl-5 space-y-1 mt-2'>
+                        {article.broadClaims &&
+                            Object.entries(article.broadClaims).map(
+                                ([key, value]) =>
+                                    value && (
+                                        <li key={key}>
+                                            <strong>{key}:</strong> {value}
+                                        </li>
+                                    )
+                            )}
+                    </ul>
+                </div>
+                <div>
+                    <h3 className='text-xl font-semibold'>Sub Claims:</h3>
+                    <ul className='list-disc pl-5 space-y-1 mt-2'>
+                        {article.subClaims &&
+                            Object.entries(article.subClaims).map(
+                                ([key, value]) =>
+                                    value && (
+                                        <li key={key}>
+                                            <strong>{key}:</strong> {value}
+                                        </li>
+                                    )
+                            )}
+                    </ul>
+                </div>
+                {/* Add any additional fields here */}
+            </div>
         </div>
     );
 };
+
+export default InfoPanel;
 
 interface ArticleParticleProps {
     articles: Article[];
