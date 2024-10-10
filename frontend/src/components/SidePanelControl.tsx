@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Toggle } from './Toggle';
 import {
     AdjustmentsHorizontalIcon,
@@ -20,13 +20,14 @@ import { fetchArticle } from '../api';
 import { useArticles } from '../contexts/ArticlesContext';
 import { dummyArticles } from '../types/article';
 import { QuerySummaryModal } from './modals/QuerySummaryModal';
+import { HexColorPicker } from 'react-colorful';
 
 type SidePanelControlProps = {
     onClose?: () => void;
 };
 
 export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
-    const { articles, setArticles, highlightedWord, setHighlightedWord } =
+    const { articles, setArticles, highlightedWord, setHighlightedWord, highlightColor, setHighlightColor } =
         useArticles();
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [dateRangeIndex, setDateRangeIndex] = useState(0);
@@ -39,6 +40,9 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [showQuerySummaryModal, setShowQuerySummaryModal] = useState(false);
+    const [showColorPicker, setShowColorPicker] = useState(false);
+
+    const colorPickerRef = useRef<HTMLDivElement>(null);
 
     const handleSearch = async () => {
         setIsLoading(true);
@@ -126,6 +130,19 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
             setArticles(limitedArticles.slice(0, nodeQty));
         }
     };
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (colorPickerRef.current && !colorPickerRef.current.contains(event.target as Node)) {
+                setShowColorPicker(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     return (
         <>
@@ -289,13 +306,27 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         <EyeIcon className='size-4' />
                         Highlight
                     </h2>
-                    <input
-                        type='text'
-                        value={highlightedWord}
-                        placeholder='E.g. Wildfire'
-                        className='dark-text-field'
-                        onChange={(e) => setHighlightedWord(e.target.value)}
-                    />
+                    <div className='flex items-center gap-2'>
+                        <input
+                            type='text'
+                            value={highlightedWord}
+                            placeholder='E.g. Wildfire'
+                            className='dark-text-field flex-grow'
+                            onChange={(e) => setHighlightedWord(e.target.value)}
+                        />
+                        <div className='relative' ref={colorPickerRef}>
+                            <button
+                                className='w-8 h-8 rounded-full border border-neutral-500'
+                                style={{ backgroundColor: highlightColor }}
+                                onClick={() => setShowColorPicker(!showColorPicker)}
+                            />
+                            {showColorPicker && (
+                                <div className='absolute right-0 mt-2 z-10'>
+                                    <HexColorPicker color={highlightColor} onChange={setHighlightColor} />
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 {articles?.length! > 0 && (
@@ -333,38 +364,6 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     </div>
                 )}
 
-                {/* <div className='dark-card p-2 space-y-1 text-light'>
-                    <p className='flex gap-2 items-center pb-1 font-semibold'>
-                        <PaintBrushIcon className='size-4' />
-                        Playback options
-                    </p>
-                    <div className='flex justify-between items-center'>
-                        <label className='text-sm'>Links between pages</label>
-                        <input
-                            type='checkbox'
-                            defaultChecked
-                            id='linksBetweenPages'
-                            className='accent-neutral-300 size-4'
-                        />
-                    </div>
-                    <div className='flex justify-between items-center'>
-                        <label className='text-sm'>Sentiment analysis</label>
-                        <input
-                            type='checkbox'
-                            id='linksBetweenPages'
-                            className='accent-neutral-300 size-4'
-                        />
-                    </div>
-                    <div className='flex justify-between items-center'>
-                        <label className='text-sm'>3D</label>
-                        <input
-                            type='checkbox'
-                            id='linksBetweenPages'
-                            className='accent-neutral-300 size-4'
-                        />
-                    </div>
-                </div> */}
-
                 <div className='space-y-2'>
                     <Button
                         variant='action'
@@ -386,6 +385,21 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
             </div>
             <AnimatePresence>
                 {showArticleModal && articles && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.97 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.97 }}
+                        transition={{ duration: 0.2 }}
+                        className='fixed inset-0 z-50 flex items-center justify-center'
+                    >
+                        <ArticleTableModal
+                            onClose={() => setShowArticleModal(false)}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {showQuerySummaryModal && (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.97 }}
                         animate={{ opacity: 1, scale: 1 }}

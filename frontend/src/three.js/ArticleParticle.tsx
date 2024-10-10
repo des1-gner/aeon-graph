@@ -50,6 +50,7 @@ interface ParticleProps {
     setHoveredParticle: (index: number | null) => void;
     setSelectedArticle: (article: Article | null) => void;
     highlightedWord: string;
+    highlightColor: string;  // Add this line
 }
 
 const Particle: React.FC<ParticleProps> = ({
@@ -62,6 +63,7 @@ const Particle: React.FC<ParticleProps> = ({
     setHoveredParticle,
     setSelectedArticle,
     highlightedWord,
+    highlightColor,  // Add this line
 }) => {
     const meshRef = useRef<THREE.Mesh>(null);
     const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
@@ -108,8 +110,8 @@ const Particle: React.FC<ParticleProps> = ({
             let targetEmissiveIntensity: number;
 
             if (isHighlighted) {
-                targetColor = whiteColor;
-                targetEmissive = whiteColor;
+                targetColor = new THREE.Color(highlightColor);  // Use highlightColor here
+                targetEmissive = new THREE.Color(highlightColor);  // And here
                 targetOpacity = 1;
                 targetEmissiveIntensity = 2;
             } else if (viewMode === 'soup') {
@@ -247,6 +249,7 @@ interface SwarmProps {
     colorMap: Map<string, THREE.Color>;
     setSelectedArticle: (article: Article | null) => void;
     highlightedWord: string;
+    highlightColor: string;  // Add this line
 }
 
 const DEFAULT_COLOR = new THREE.Color(0.5, 0.5, 0.5);
@@ -257,6 +260,7 @@ const Swarm: React.FC<SwarmProps> = ({
     colorMap,
     setSelectedArticle,
     highlightedWord,
+    highlightColor,  // Add this line lol
 }) => {
     const positionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
     const velocitiesRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
@@ -413,6 +417,7 @@ const Swarm: React.FC<SwarmProps> = ({
                     setHoveredParticle={setHoveredParticle}
                     setSelectedArticle={setSelectedArticle}
                     highlightedWord={highlightedWord}
+                    highlightColor={highlightColor}  // Pass highlightColor here
                 />
             ))}
             <ConnectionLines
@@ -506,6 +511,7 @@ export default InfoPanel;
 interface ArticleParticleProps {
     articles: Article[];
     highlightedWord?: string;
+    highlightColor: string;  // Add this line
 }
 
 const Scene: React.FC<{
@@ -514,7 +520,8 @@ const Scene: React.FC<{
     colorMap: Map<string, THREE.Color>;
     setSelectedArticle: (article: Article | null) => void;
     highlightedWord: string;
-}> = ({ articles, viewMode, colorMap, setSelectedArticle, highlightedWord }) => {
+    highlightColor: string;  // Add this line
+}> = ({ articles, viewMode, colorMap, setSelectedArticle, highlightedWord, highlightColor }) => {
     return (
         <>
             <ambientLight intensity={0.2} />
@@ -532,6 +539,7 @@ const Scene: React.FC<{
                 colorMap={colorMap}
                 setSelectedArticle={setSelectedArticle}
                 highlightedWord={highlightedWord}
+                highlightColor={highlightColor}  // Pass highlightColor here
             />
             <OrbitControls
                 enablePan={true}
@@ -550,6 +558,7 @@ const Scene: React.FC<{
 export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     articles,
     highlightedWord = '',
+    highlightColor,  // Add this line
 }) => {
     const [viewMode, setViewMode] = useState<ViewMode>('soup');
     const [broadClaims, setBroadClaims] = useState<ViewMode[]>(['soup']);
@@ -613,6 +622,7 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
                     colorMap={colorMap}
                     setSelectedArticle={handleArticleSelect}
                     highlightedWord={highlightedWord}
+                    highlightColor={highlightColor}  // Pass highlightColor here
                 />
             </Canvas>
             <Button
