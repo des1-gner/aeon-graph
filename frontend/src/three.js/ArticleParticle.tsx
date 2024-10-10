@@ -66,7 +66,13 @@ const Particle: React.FC<ParticleProps> = ({
     const meshRef = useRef<THREE.Mesh>(null);
     const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
     const article = articles[index];
-    const originalColor = useMemo(() => color.clone(), [color]);
+    const originalColor = useMemo(() => {
+        if (!color) {
+            console.warn(`Color is undefined for particle ${index}. Using default color.`);
+            return DEFAULT_COLOR.clone();
+        }
+        return color.clone();
+    }, [color, index]);
     const greyColor = new THREE.Color(0.5, 0.5, 0.5);
     const whiteColor = new THREE.Color(1, 1, 1);
 
@@ -243,6 +249,8 @@ interface SwarmProps {
     highlightedWord: string;
 }
 
+const DEFAULT_COLOR = new THREE.Color(0.5, 0.5, 0.5);
+
 const Swarm: React.FC<SwarmProps> = ({
     articles,
     viewMode,
@@ -250,92 +258,78 @@ const Swarm: React.FC<SwarmProps> = ({
     setSelectedArticle,
     highlightedWord,
 }) => {
-    const positionsRef = useRef<Float32Array>(
-        new Float32Array(articles.length * 3)
-    );
-    const velocitiesRef = useRef<Float32Array>(
-        new Float32Array(articles.length * 3)
-    );
-    const targetPositionsRef = useRef<Float32Array>(
-        new Float32Array(articles.length * 3)
-    );
+    const positionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
+    const velocitiesRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
+    const targetPositionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
     const colorsRef = useRef<THREE.Color[]>([]);
-    const transitionProgressRef = useRef<number>(0);
-    const prevViewModeRef = useRef<ViewMode>('soup');
+    const targetColorsRef = useRef<THREE.Color[]>([]);
     const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
-    const [transitionState, setTransitionState] = useState<'idle' | 'dispersing' | 'clustering'>('idle');
 
-    const sphereRadius = 10; // Radius of the sphere
-    const maxSpeed = 0.05; // Maximum speed for particles
-    const defaultSpeed = 0.01; // Default speed for particles
-    const clusterTransitionSpeed = 0.02; // Speed of transition to cluster (lower is slower)
-    const dispersionSpeed = 0.03; // Speed of dispersion (higher is faster)
+    const sphereRadius = 10;
+    const maxSpeed = 0.05;
+    const defaultSpeed = 0.01;
+    const transitionSpeed = 0.02;
+    const clusterRadius = 4;
+    const colorTransitionSpeed = 0.1;
 
-    const generateRandomPointOnSphere = (): THREE.Vector3 => {
+    const generateRandomPointOnSphere = (radius: number): THREE.Vector3 => {
         const u = Math.random();
         const v = Math.random();
         const theta = 2 * Math.PI * u;
         const phi = Math.acos(2 * v - 1);
-        const x = sphereRadius * Math.sin(phi) * Math.cos(theta);
-        const y = sphereRadius * Math.sin(phi) * Math.sin(theta);
-        const z = sphereRadius * Math.cos(phi);
+        const x = radius * Math.sin(phi) * Math.cos(theta);
+        const y = radius * Math.sin(phi) * Math.sin(theta);
+        const z = radius * Math.cos(phi);
         return new THREE.Vector3(x, y, z);
     };
 
-    useMemo(() => {
+    // Initialize positions, velocities, and colors
+    useEffect(() => {
         for (let i = 0; i < articles.length; i++) {
-            const point = generateRandomPointOnSphere();
+            const point = generateRandomPointOnSphere(sphereRadius);
             positionsRef.current[i * 3] = point.x;
             positionsRef.current[i * 3 + 1] = point.y;
             positionsRef.current[i * 3 + 2] = point.z;
+            targetPositionsRef.current[i * 3] = point.x;
+            targetPositionsRef.current[i * 3 + 1] = point.y;
+            targetPositionsRef.current[i * 3 + 2] = point.z;
             velocitiesRef.current[i * 3] = (Math.random() - 0.5) * defaultSpeed;
             velocitiesRef.current[i * 3 + 1] = (Math.random() - 0.5) * defaultSpeed;
             velocitiesRef.current[i * 3 + 2] = (Math.random() - 0.5) * defaultSpeed;
-
-            const article = articles[i];
-            colorsRef.current[i] =
-                article.broadClaims && colorMap.has(viewMode)
-                    ? colorMap.get(viewMode)!
-                    : new THREE.Color(0.5, 0.5, 0.5);
+            
+            colorsRef.current[i] = DEFAULT_COLOR.clone();
+            targetColorsRef.current[i] = DEFAULT_COLOR.clone();
         }
-    }, [articles, colorMap, viewMode]);
+    }, [articles]);
 
+    // Update target positions and colors when viewMode changes
     useEffect(() => {
-        if (viewMode !== prevViewModeRef.current) {
-            transitionProgressRef.current = 0;
-            for (let i = 0; i < articles.length; i++) {
-                const article = articles[i];
-                if (
-                    viewMode !== 'soup' &&
-                    article.broadClaims &&
-                    article.broadClaims[viewMode]
-                ) {
-                    const point = generateRandomPointOnSphere().multiplyScalar(0.4);
-                    targetPositionsRef.current[i * 3] = point.x;
-                    targetPositionsRef.current[i * 3 + 1] = point.y;
-                    targetPositionsRef.current[i * 3 + 2] = point.z;
-                } else {
-                    const point = generateRandomPointOnSphere();
-                    targetPositionsRef.current[i * 3] = point.x;
-                    targetPositionsRef.current[i * 3 + 1] = point.y;
-                    targetPositionsRef.current[i * 3 + 2] = point.z;
-                }
+        for (let i = 0; i < articles.length; i++) {
+            const article = articles[i];
+            if (viewMode !== 'soup' && article.broadClaims && article.broadClaims[viewMode]) {
+                const clusterPoint = generateRandomPointOnSphere(clusterRadius);
+                targetPositionsRef.current[i * 3] = clusterPoint.x;
+                targetPositionsRef.current[i * 3 + 1] = clusterPoint.y;
+                targetPositionsRef.current[i * 3 + 2] = clusterPoint.z;
+                
+                targetColorsRef.current[i] = colorMap.get(viewMode) || DEFAULT_COLOR.clone();
+            } else {
+                const soupPoint = generateRandomPointOnSphere(sphereRadius);
+                targetPositionsRef.current[i * 3] = soupPoint.x;
+                targetPositionsRef.current[i * 3 + 1] = soupPoint.y;
+                targetPositionsRef.current[i * 3 + 2] = soupPoint.z;
+                
+                targetColorsRef.current[i] = DEFAULT_COLOR.clone();
             }
-            prevViewModeRef.current = viewMode;
         }
-    }, [viewMode, articles]);
+    }, [viewMode, articles, colorMap]);
 
     useFrame(() => {
         const positions = positionsRef.current;
         const velocities = velocitiesRef.current;
         const targetPositions = targetPositionsRef.current;
 
-        if (transitionProgressRef.current < 1) {
-            transitionProgressRef.current += clusterTransitionSpeed;
-        }
-
         for (let i = 0; i < articles.length; i++) {
-            const article = articles[i];
             const particlePosition = new THREE.Vector3(
                 positions[i * 3],
                 positions[i * 3 + 1],
@@ -352,32 +346,25 @@ const Swarm: React.FC<SwarmProps> = ({
                 targetPositions[i * 3 + 2]
             );
 
-            if (viewMode !== 'soup') {
-                if (article.broadClaims && article.broadClaims[viewMode]) {
-                    // Slow down the transition to the cluster
-                    particlePosition.lerp(targetPosition, clusterTransitionSpeed);
-                    // Gradually reduce velocity as we approach the target
-                    particleVelocity.multiplyScalar(0.95);
-                } else {
-                    particleVelocity.add(
-                        new THREE.Vector3(
-                            (Math.random() - 0.5) * 0.001,
-                            (Math.random() - 0.5) * 0.001,
-                            (Math.random() - 0.5) * 0.001
-                        )
-                    );
-                    particlePosition.add(particleVelocity);
-                }
+            // Calculate direction to target
+            const direction = targetPosition.clone().sub(particlePosition);
+            const distance = direction.length();
+
+            if (distance > 0.1) {
+                // If not very close to target, move towards it
+                direction.normalize().multiplyScalar(transitionSpeed);
+                particleVelocity.lerp(direction, 0.1);
             } else {
-                particleVelocity.add(
-                    new THREE.Vector3(
-                        (Math.random() - 0.5) * 0.001,
-                        (Math.random() - 0.5) * 0.001,
-                        (Math.random() - 0.5) * 0.001
-                    )
-                );
-                particlePosition.add(particleVelocity);
+                // If close to target, add some random movement
+                particleVelocity.add(new THREE.Vector3(
+                    (Math.random() - 0.5) * 0.001,
+                    (Math.random() - 0.5) * 0.001,
+                    (Math.random() - 0.5) * 0.001
+                ));
             }
+
+            // Update position based on velocity
+            particlePosition.add(particleVelocity);
 
             // Limit the speed of the particle
             const speed = particleVelocity.length();
@@ -391,12 +378,24 @@ const Swarm: React.FC<SwarmProps> = ({
                 particleVelocity.reflect(particlePosition.clone().normalize());
             }
 
+            // Update positions and velocities
             positions[i * 3] = particlePosition.x;
             positions[i * 3 + 1] = particlePosition.y;
             positions[i * 3 + 2] = particlePosition.z;
             velocities[i * 3] = particleVelocity.x;
             velocities[i * 3 + 1] = particleVelocity.y;
             velocities[i * 3 + 2] = particleVelocity.z;
+
+            // Update color
+            if (!colorsRef.current[i]) {
+                console.warn(`Color is undefined for particle ${i}. Initializing with default color.`);
+                colorsRef.current[i] = DEFAULT_COLOR.clone();
+            }
+            if (!targetColorsRef.current[i]) {
+                console.warn(`Target color is undefined for particle ${i}. Initializing with default color.`);
+                targetColorsRef.current[i] = DEFAULT_COLOR.clone();
+            }
+            colorsRef.current[i].lerp(targetColorsRef.current[i], colorTransitionSpeed);
         }
     });
 
@@ -410,7 +409,7 @@ const Swarm: React.FC<SwarmProps> = ({
                     velocities={velocitiesRef.current}
                     articles={articles}
                     viewMode={viewMode}
-                    color={colorsRef.current[index]}
+                    color={colorsRef.current[index] || DEFAULT_COLOR}
                     setHoveredParticle={setHoveredParticle}
                     setSelectedArticle={setSelectedArticle}
                     highlightedWord={highlightedWord}
