@@ -26,6 +26,42 @@ type SidePanelControlProps = {
     onClose?: () => void;
 };
 
+const broadClaims = {
+    "gw_not_happening": "global warming is not happening",
+    "not_caused_by_human": "climate change is not caused by human activities",
+    "impacts_not_bad": "climate change impacts are not that bad",
+    "solutions_wont_work": "climate solutions won't work",
+    "science_movement_unrel": "climate science or movement is unreliable",
+    "individual_action": "individual action is pointless"
+};
+
+const subClaims = {
+    "sc_cold_event_denial": "cold weather event disproves global warming",
+    "sc_deny_extreme_weather": "extreme weather events are not increasing",
+    "sc_natural_variations": "climate change is due to natural variations",
+    "sc_past_climate_reference": "past climate changes prove current changes are natural",
+    "sc_species_adapt": "species can adapt to climate change",
+    "sc_downplay_warming": "warming is not as bad as predicted",
+    "sc_policies_negative": "climate policies have negative consequences",
+    "sc_policies_ineffective": "climate policies are ineffective",
+    "sc_policies_difficult": "climate policies are too difficult to implement",
+    "sc_low_support_policies": "there is low public support for climate policies",
+    "sc_clean_energy_unreliable": "clean energy sources are unreliable",
+    "sc_climate_science_unrel": "climate science is unreliable",
+    "sc_no_consensus": "there is no scientific consensus on climate change",
+    "sc_movement_unreliable": "the climate movement is unreliable",
+    "sc_hoax_conspiracy": "climate change is a hoax or conspiracy"
+};
+
+const sources = [
+    "theaustralian.com.au", "theguardian.com", "abc.net.au", "news.com.au",
+    "heraldsun.com.au", "skynews.com.au", "afr.com", "smh.com.au",
+    "dailytelegraph.com.au", "foxnews.com", "nytimes.com", "dailywire.com",
+    "couriermail.com.au", "thewest.com.au", "7news.com.au", "9news.com.au",
+    "theconversation.com", "nypost.com", "wsj.com", "wattsupwiththat.com",
+    "breitbart.com", "newsmax.com", "naturalnews.com", "washingtontimes.com"
+];
+
 export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const { articles, setArticles, highlightedWord, setHighlightedWord, highlightColor, setHighlightColor } =
         useArticles();
@@ -43,8 +79,9 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [showColorPicker, setShowColorPicker] = useState(false);
 
     // New state variables for cluster and edge colors
-    const [clusterColor, setClusterColor] = useState('#FF5733');
-    const [edgeColor, setEdgeColor] = useState('#33FF57');
+    const [highlightedColor, setHighlightedColor] = useState('#FF0000');
+    const [clusterColor, setClusterColor] = useState('#2BFF00');
+    const [edgeColor, setEdgeColor] = useState('#0004FF');
     const [showClusterColorPicker, setShowClusterColorPicker] = useState(false);
     const [showEdgeColorPicker, setShowEdgeColorPicker] = useState(false);
 
@@ -61,6 +98,13 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [source, setSource] = useState('');
     const [hasThinktankReference, setHasThinktankReference] = useState('');
     const [isDuplicate, setIsDuplicate] = useState('');
+
+    // New state variables for selections
+    const [selectedBroadClaim, setSelectedBroadClaim] = useState('');
+    const [selectedSubClaim, setSelectedSubClaim] = useState('');
+    const [selectedSource, setSelectedSource] = useState('');
+    const [clusterInput, setClusterInput] = useState('');
+    const [edgeInput, setEdgeInput] = useState('');
 
     const handleSearch = async () => {
         setIsLoading(true);
@@ -173,13 +217,6 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
             case 0: // Highlight
                 return (
                     <div className="space-y-3">
-                        <input
-                            type="text"
-                            value={highlightedWord}
-                            placeholder="E.g. Wildfire"
-                            className="dark-text-field w-full"
-                            onChange={(e) => setHighlightedWord(e.target.value)}
-                        />
                         <div className="flex items-center gap-2">
                             <div className="relative" ref={colorPickerRef}>
                                 <button
@@ -188,12 +225,22 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                     onClick={() => setShowColorPicker(!showColorPicker)}
                                 />
                                 {showColorPicker && (
-                                    <div className="absolute right-0 mt-2 z-10">
+                                    <div className="absolute left-0 mt-2 z-10">
                                         <HexColorPicker color={highlightColor} onChange={setHighlightColor} />
                                     </div>
                                 )}
                             </div>
-                            <span className="text-light">Select highlight color</span>
+                            <span className="text-light">Highlight color</span>
+                        </div>
+                        <div>
+                            <p className="text-light mb-1">Filter on Article Body:</p>
+                            <input
+                                type="text"
+                                value={highlightedWord}
+                                placeholder="E.g. wildfire"
+                                className="dark-text-field w-full"
+                                onChange={(e) => setHighlightedWord(e.target.value)}
+                            />
                         </div>
                         {renderCommonDropdowns()}
                     </div>
@@ -201,16 +248,6 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
             case 1: // Cluster
                 return (
                     <div className="space-y-3">
-                        <select
-                            value={clusterBy}
-                            onChange={(e) => setClusterBy(e.target.value)}
-                            className="dark-text-field w-full"
-                        >
-                            <option value="">Select cluster type</option>
-                            <option value="topic">By Topic</option>
-                            <option value="source">By Source</option>
-                            <option value="date">By Date</option>
-                        </select>
                         <div className="flex items-center gap-2">
                             <div className="relative" ref={clusterColorPickerRef}>
                                 <button
@@ -219,12 +256,22 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                     onClick={() => setShowClusterColorPicker(!showClusterColorPicker)}
                                 />
                                 {showClusterColorPicker && (
-                                    <div className="absolute right-0 mt-2 z-10">
+                                    <div className="absolute left-0 mt-2 z-10">
                                         <HexColorPicker color={clusterColor} onChange={setClusterColor} />
                                     </div>
                                 )}
                             </div>
-                            <span className="text-light">Select cluster color</span>
+                            <span className="text-light">Cluster color</span>
+                        </div>
+                        <div>
+                            <p className="text-light mb-1">Filter on Article Body:</p>
+                            <input
+                                type="text"
+                                value={clusterInput}
+                                placeholder="E.g. climate"
+                                className="dark-text-field w-full"
+                                onChange={(e) => setClusterInput(e.target.value)}
+                            />
                         </div>
                         {renderCommonDropdowns()}
                     </div>
@@ -232,16 +279,6 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
             case 2: // Edges
                 return (
                     <div className="space-y-3">
-                        <select
-                            value={edgeType}
-                            onChange={(e) => setEdgeType(e.target.value)}
-                            className="dark-text-field w-full"
-                        >
-                            <option value="">Select edge type</option>
-                            <option value="similarity">Similarity</option>
-                            <option value="citation">Citation</option>
-                            <option value="temporal">Temporal</option>
-                        </select>
                         <div className="flex items-center gap-2">
                             <div className="relative" ref={edgeColorPickerRef}>
                                 <button
@@ -250,12 +287,22 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                     onClick={() => setShowEdgeColorPicker(!showEdgeColorPicker)}
                                 />
                                 {showEdgeColorPicker && (
-                                    <div className="absolute right-0 mt-2 z-10">
+                                    <div className="absolute left-0 mt-2 z-10">
                                         <HexColorPicker color={edgeColor} onChange={setEdgeColor} />
                                     </div>
                                 )}
                             </div>
-                            <span className="text-light">Select edge color</span>
+                            <span className="text-light">Edge color</span>
+                        </div>
+                        <div>
+                            <p className="text-light mb-1">Filter on Article Body:</p>
+                            <input
+                                type="text"
+                                value={edgeInput}
+                                placeholder="E.g. arson"
+                                className="dark-text-field w-full"
+                                onChange={(e) => setEdgeInput(e.target.value)}
+                            />
                         </div>
                         {renderCommonDropdowns()}
                     </div>
@@ -266,63 +313,63 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     };
 
     const renderCommonDropdowns = () => (
-        <>
+        <div className="space-y-3">
             <select
-                value={claimsIdentified}
-                onChange={(e) => setClaimsIdentified(e.target.value)}
+                value={selectedBroadClaim}
+                onChange={(e) => setSelectedBroadClaim(e.target.value)}
                 className="dark-text-field w-full"
             >
-                <option value="">Claims identified</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
+                <option value="">Select broad claim</option>
+                {Object.entries(broadClaims).map(([key, value]) => (
+                    <option key={key} value={key}>{value}</option>
+                ))}
             </select>
             <select
-                value={subclaims}
-                onChange={(e) => setSubclaims(e.target.value)}
+                value={selectedSubClaim}
+                onChange={(e) => setSelectedSubClaim(e.target.value)}
                 className="dark-text-field w-full"
             >
-                <option value="">Subclaims</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-            </select>
-            <input
-                type="text"
-                value={author}
-                placeholder="Author"
-                onChange={(e) => setAuthor(e.target.value)}
-                className="dark-text-field w-full"
-            />
-            <input
-                type="text"
-                value={source}
-                placeholder="Source"
-                onChange={(e) => setSource(e.target.value)}
-                className="dark-text-field w-full"
-            />
-            <select
-                value={hasThinktankReference}
-                onChange={(e) => setHasThinktankReference(e.target.value)}
-                className="dark-text-field w-full"
-            >
-                <option value="">Has thinktank reference</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
+                <option value="">Select sub-claim</option>
+                {Object.entries(subClaims).map(([key, value]) => (
+                    <option key={key} value={key}>{value}</option>
+                ))}
             </select>
             <select
-                value={isDuplicate}
-                onChange={(e) => setIsDuplicate(e.target.value)}
+                value={selectedSource}
+                onChange={(e) => setSelectedSource(e.target.value)}
                 className="dark-text-field w-full"
             >
-                <option value="">Is a duplicate</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
+                <option value="">Select source</option>
+                {sources.map((source) => (
+                    <option key={source} value={source}>{source}</option>
+                ))}
             </select>
-        </>
+            <div className="flex gap-2">
+                <select
+                    value={hasThinktankReference}
+                    onChange={(e) => setHasThinktankReference(e.target.value)}
+                    className="dark-text-field w-1/2"
+                >
+                    <option value="">Has thinktank reference</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select>
+                <select
+                    value={isDuplicate}
+                    onChange={(e) => setIsDuplicate(e.target.value)}
+                    className="dark-text-field w-1/2"
+                >
+                    <option value="">Is a duplicate</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
+        </div>
     );
 
     return (
         <>
-            <div className="backdrop-blur-xl border-neutral-700 border p-4 space-y-8 rounded-lg z-10 min-w-[385px]">
+            <div className="backdrop-blur-xl border-neutral-700 border p-4 space-y-6 rounded-lg z-10 w-96">
                 <div className="flex items-center justify-between">
                     <XMarkIcon
                         className="size-5 text-light cursor-pointer flex justify-start"
@@ -340,12 +387,12 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         'Data source',
                         <CircleStackIcon className="size-4" />,
                     ]}
-                    toggleLabels={['Database', 'Demo data']}
+                    toggleLabels={['Database', 'Demo']}
                     selectedIndex={dataSourceIndex}
                     onClick={(index) => handleDataSourceChange(index)}
                 />
 
-                <div className="dark-card p-2 space-y-3">
+                <div className="dark-card p-3 space-y-3">
                     <h2 className="flex gap-2 items-center font-semibold text-light">
                         <MagnifyingGlassIcon className="size-4" />
                         Search
@@ -354,7 +401,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         type="text"
                         value={searchQuery}
                         placeholder="Search query"
-                        className="dark-text-field"
+                        className="dark-text-field w-full"
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
@@ -471,7 +518,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     onClick={(index) => setVisualisationOption(index)}
                 />
 
-                <div className="dark-card p-2 space-y-3">
+                <div className="dark-card p-3 space-y-3">
                     <h2 className="flex gap-2 items-center font-semibold text-light">
                         <EyeIcon className="size-4" />
                         {visualisationOption === 0 ? 'Highlight' : visualisationOption === 1 ? 'Cluster' : 'Edges'}
