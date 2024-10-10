@@ -2,13 +2,11 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { Article } from '../types/article';
 import { Button } from '../components/Button';
+import { Article } from '../types/article';
 
-// Define types
-type ViewMode = 'soup' | string;
+type ViewMode = 'soup' | keyof Article['broadClaims'];
 
-// Helper function to generate vibrant colors
 const generateVibrantColor = (index: number, total: number): THREE.Color => {
     const hue = (index / total) * 360;
     const saturation = 100;
@@ -16,7 +14,6 @@ const generateVibrantColor = (index: number, total: number): THREE.Color => {
     return new THREE.Color(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
 };
 
-// Props for individual particles
 interface ParticleProps {
     index: number;
     positions: Float32Array;
@@ -29,7 +26,6 @@ interface ParticleProps {
     highlightedWord: string;
 }
 
-// Component for rendering individual particles
 const Particle: React.FC<ParticleProps> = ({
     index,
     positions,
@@ -48,10 +44,8 @@ const Particle: React.FC<ParticleProps> = ({
     const isHighlighted = useMemo(
         () =>
             highlightedWord &&
-            article.content
-                .toLowerCase()
-                .includes(highlightedWord.toLowerCase()),
-        [highlightedWord, article.content]
+            article.body?.toLowerCase().includes(highlightedWord.toLowerCase()),
+        [highlightedWord, article.body]
     );
 
     useEffect(() => {
@@ -69,7 +63,8 @@ const Particle: React.FC<ParticleProps> = ({
             );
 
             const isInFocus =
-                viewMode === 'soup' || article.broadClaim === viewMode;
+                viewMode === 'soup' ||
+                (article.broadClaims && article.broadClaims[viewMode]);
 
             if (isHighlighted) {
                 materialRef.current.color.setRGB(1, 1, 1);
@@ -79,8 +74,8 @@ const Particle: React.FC<ParticleProps> = ({
             } else if (viewMode === 'soup') {
                 materialRef.current.color.setRGB(0.5, 0.5, 0.5);
                 materialRef.current.emissive.setRGB(0.5, 0.5, 0.5);
-                materialRef.current.opacity = 0.1;
-                materialRef.current.emissiveIntensity = 0.2;
+                materialRef.current.opacity = 0.5;
+                materialRef.current.emissiveIntensity = 0.5;
             } else if (isInFocus) {
                 materialRef.current.color.copy(originalColor);
                 materialRef.current.emissive.copy(originalColor);
@@ -88,15 +83,15 @@ const Particle: React.FC<ParticleProps> = ({
                 materialRef.current.emissiveIntensity = 1;
             } else {
                 materialRef.current.color.lerp(
-                    new THREE.Color(0.2, 0.2, 0.2),
+                    new THREE.Color(0.5, 0.5, 0.5),
                     0.8
                 );
                 materialRef.current.emissive.lerp(
-                    new THREE.Color(0.2, 0.2, 0.2),
+                    new THREE.Color(0.5, 0.5, 0.5),
                     0.8
                 );
-                materialRef.current.opacity = 0.2;
-                materialRef.current.emissiveIntensity = 0.2;
+                materialRef.current.opacity = 0.5;
+                materialRef.current.emissiveIntensity = 0.5;
             }
         }
     });
@@ -122,7 +117,6 @@ const Particle: React.FC<ParticleProps> = ({
     );
 };
 
-// Props for connection lines between particles
 interface ConnectionLinesProps {
     articles: Article[];
     positions: Float32Array;
@@ -131,7 +125,6 @@ interface ConnectionLinesProps {
     colorMap: Map<string, THREE.Color>;
 }
 
-// Component for rendering connection lines between particles
 const ConnectionLines: React.FC<ConnectionLinesProps> = ({
     articles,
     positions,
@@ -151,16 +144,21 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
                 const vertices: number[] = [];
 
                 if (
-                    hoveredArticle.broadClaim === viewMode &&
-                    hoveredArticle.subclaims
+                    hoveredArticle.broadClaims &&
+                    hoveredArticle.broadClaims[viewMode] &&
+                    hoveredArticle.subClaims
                 ) {
                     articles.forEach((article, index) => {
                         if (
                             index !== hoveredParticle &&
-                            article.broadClaim === viewMode &&
-                            article.subclaims &&
-                            hoveredArticle.subclaims!.some((subclaim) =>
-                                article.subclaims!.includes(subclaim)
+                            article.broadClaims &&
+                            article.broadClaims[viewMode] &&
+                            article.subClaims &&
+                            Object.keys(hoveredArticle.subClaims!).some(
+                                (subclaim) =>
+                                    article.subClaims![
+                                        subclaim as keyof Article['subClaims']
+                                    ]
                             )
                         ) {
                             vertices.push(
@@ -181,13 +179,8 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
                 );
                 geometry.attributes.position.needsUpdate = true;
 
-                if (
-                    hoveredArticle.broadClaim &&
-                    colorMap.has(hoveredArticle.broadClaim)
-                ) {
-                    materialRef.current.color = colorMap.get(
-                        hoveredArticle.broadClaim
-                    )!;
+                if (colorMap.has(viewMode)) {
+                    materialRef.current.color = colorMap.get(viewMode)!;
                 }
 
                 materialRef.current.visible = true;
@@ -205,7 +198,6 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
     );
 };
 
-// Props for the particle swarm
 interface SwarmProps {
     articles: Article[];
     viewMode: ViewMode;
@@ -214,7 +206,6 @@ interface SwarmProps {
     highlightedWord: string;
 }
 
-// Component for rendering the entire particle swarm
 const Swarm: React.FC<SwarmProps> = ({
     articles,
     viewMode,
@@ -247,18 +238,22 @@ const Swarm: React.FC<SwarmProps> = ({
 
             const article = articles[i];
             colorsRef.current[i] =
-                article.broadClaim && colorMap.has(article.broadClaim)
-                    ? colorMap.get(article.broadClaim)!
+                article.broadClaims && colorMap.has(viewMode)
+                    ? colorMap.get(viewMode)!
                     : new THREE.Color(0.5, 0.5, 0.5);
         }
-    }, [articles, colorMap]);
+    }, [articles, colorMap, viewMode]);
 
     useEffect(() => {
         if (viewMode !== prevViewModeRef.current) {
             transitionProgressRef.current = 0;
             for (let i = 0; i < articles.length; i++) {
                 const article = articles[i];
-                if (viewMode !== 'soup' && article.broadClaim === viewMode) {
+                if (
+                    viewMode !== 'soup' &&
+                    article.broadClaims &&
+                    article.broadClaims[viewMode]
+                ) {
                     targetPositionsRef.current[i * 3] =
                         (Math.random() - 0.5) * 4;
                     targetPositionsRef.current[i * 3 + 1] =
@@ -306,7 +301,7 @@ const Swarm: React.FC<SwarmProps> = ({
             );
 
             if (viewMode !== 'soup') {
-                if (article.broadClaim === viewMode) {
+                if (article.broadClaims && article.broadClaims[viewMode]) {
                     particlePosition.lerp(targetPosition, 0.1);
                     particleVelocity.set(0, 0, 0);
                 } else {
@@ -379,7 +374,6 @@ const Swarm: React.FC<SwarmProps> = ({
     );
 };
 
-// Add InfoPanel component
 interface InfoPanelProps {
     article: Article | null;
     onClose: () => void;
@@ -389,56 +383,64 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ article, onClose }) => {
     if (!article) return null;
 
     return (
-        <div className='fixed left-0 top-1/2 transform -translate-y-1/2 text-white p-4 max-w-sm overflow-y-auto max-h-screen'>
+        <div className='fixed left-0 top-1/2 transform -translate-y-1/2 text-white p-4 max-w-sm overflow-y-auto max-h-screen bg-black bg-opacity-75'>
             <button
                 onClick={onClose}
                 className='absolute top-2 right-2 text-white bg-red-500 rounded-full w-6 h-6 flex items-center justify-center'
             >
                 X
             </button>
-            <h2 className='text-xl font-bold mb-4'>{article.title}</h2>
-            {Object.entries(article).map(([key, value]) => {
-                if (key !== 'title') {
-                    return (
-                        <div key={key} className='mb-4'>
-                            <h3 className='text-lg font-semibold capitalize'>
-                                {key.replace(/([A-Z])/g, ' $1').trim()}:
-                            </h3>
-                            {Array.isArray(value) ? (
-                                <ul className='list-disc list-inside'>
-                                    {value.map((item, index) => (
-                                        <li key={index}>{item}</li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <p>
-                                    {typeof value === 'string'
-                                        ? value
-                                        : JSON.stringify(value, null, 2)}
-                                </p>
-                            )}
-                        </div>
-                    );
-                }
-                return null;
-            })}
+            <h2 className='text-xl font-bold mb-4'>
+                {article.title || 'Untitled'}
+            </h2>
+            <p className='mb-2'>
+                <strong>Content:</strong> {article.body}
+            </p>
+            <p className='mb-2'>
+                <strong>Source:</strong> {article.source || 'Unknown'}
+            </p>
+            <p className='mb-2'>
+                <strong>Date:</strong>{' '}
+                {new Date(article.dateTime).toLocaleDateString()}
+            </p>
+            <p className='mb-2'>
+                <strong>Authors:</strong> {article.authors || 'Unknown'}
+            </p>
+            <h3 className='text-lg font-semibold mt-4 mb-2'>Broad Claims:</h3>
+            {article.broadClaims &&
+                Object.entries(article.broadClaims).map(
+                    ([key, value]) =>
+                        value && (
+                            <p key={key} className='mb-1'>
+                                <strong>{key}:</strong> {value}
+                            </p>
+                        )
+                )}
+            <h3 className='text-lg font-semibold mt-4 mb-2'>Sub Claims:</h3>
+            {article.subClaims &&
+                Object.entries(article.subClaims).map(
+                    ([key, value]) =>
+                        value && (
+                            <p key={key} className='mb-1'>
+                                <strong>{key}:</strong> {value}
+                            </p>
+                        )
+                )}
         </div>
     );
 };
 
-// Props for the main ArticleParticle component
 interface ArticleParticleProps {
     articles: Article[];
     highlightedWord?: string;
 }
 
-// Main component for the article particle visualization
 export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     articles,
     highlightedWord = '',
 }) => {
     const [viewMode, setViewMode] = useState<ViewMode>('soup');
-    const [broadClaims, setBroadClaims] = useState<string[]>([]);
+    const [broadClaims, setBroadClaims] = useState<ViewMode[]>(['soup']);
     const [selectedArticle, setSelectedArticle] = useState<Article | null>(
         null
     );
@@ -457,14 +459,21 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     }, [broadClaims]);
 
     useEffect(() => {
-        const claims = Array.from(
-            new Set(
-                articles
-                    .map((article) => article.broadClaim)
-                    .filter(Boolean) as string[]
-            )
-        );
-        setBroadClaims(['soup', ...claims]);
+        const uniqueClaims = new Set<string>(['soup']);
+        articles.forEach((article) => {
+            if (article.broadClaims) {
+                Object.keys(article.broadClaims).forEach((claim) => {
+                    if (
+                        article.broadClaims![
+                            claim as keyof Article['broadClaims']
+                        ]
+                    ) {
+                        uniqueClaims.add(claim);
+                    }
+                });
+            }
+        });
+        setBroadClaims(Array.from(uniqueClaims) as ViewMode[]);
     }, [articles]);
 
     const handleToggle = () => {
@@ -506,7 +515,8 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
                 onClick={handleToggle}
                 className='absolute top-10 left-10 p-10 text-xl text-white font-semibold'
             >
-                {viewMode.charAt(0).toUpperCase() + viewMode.slice(1)}
+                {viewMode.charAt(0).toUpperCase() +
+                    viewMode.slice(1).replace(/_/g, ' ')}
             </Button>
             {selectedArticle && (
                 <InfoPanel

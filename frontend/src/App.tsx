@@ -24,7 +24,7 @@ function App() {
     const handleDisclaimerAccept = () => {
         setDisclaimerOpacity(0);
         setTimeout(() => {
-          setIsDisclaimerAccepted(true);
+            setIsDisclaimerAccepted(true);
         }, 2000);
     };
 
@@ -84,8 +84,8 @@ function App() {
 
     return (
         <div className='bg-black min-h-screen relative'>
-            <div className="absolute inset-0 z-0">
-                <ArticleParticle 
+            <div className='absolute inset-0 z-0'>
+                <ArticleParticle
                     articles={articles ? articles : dummyArticles}
                     highlightedWord={highlightedWord}
                 />
