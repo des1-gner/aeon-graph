@@ -14,7 +14,7 @@ function App() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false);
-    const [disclaimerOpacity, setDisclaimerOpacity] = useState(1);
+    const [isTransitioning, setIsTransitioning] = useState(false);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const handleEnterSite = () => {
@@ -22,9 +22,11 @@ function App() {
     };
 
     const handleDisclaimerAccept = () => {
-        setDisclaimerOpacity(0);
+        setIsTransitioning(true);
         setTimeout(() => {
             setIsDisclaimerAccepted(true);
+
+            setIsTransitioning(false);
         }, 2000);
     };
 
@@ -78,20 +80,36 @@ function App() {
         };
     }, []);
 
-    if (!isDisclaimerAccepted) {
-        return <DisclaimerPopup onAccept={handleDisclaimerAccept} />;
-    }
-
     return (
         <div className='bg-black min-h-screen relative'>
-            <div className='absolute inset-0 z-0'>
-                <ArticleParticle
+            <AnimatePresence>
+                {!isDisclaimerAccepted && (
+                    <motion.div
+                        initial={{ opacity: 1 }}
+                        animate={{ opacity: isTransitioning ? 0 : 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 2 }}
+                        className="absolute inset-0 z-50"
+                    >
+                        <DisclaimerPopup onAccept={handleDisclaimerAccept} />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: isDisclaimerAccepted ? 1 : 0 }}
+                transition={{ duration: 2 }}
+                className="absolute inset-0 z-0"
+            >
+                <ArticleParticle 
                     articles={articles ? articles : dummyArticles}
                     highlightedWord={highlightedWord}
                 />
-            </div>
+            </motion.div>
+
             <AnimatePresence>
-                {showSideControls && (
+                {showSideControls && isDisclaimerAccepted && (
                     <motion.div
                         initial={{ opacity: 0, x: '100%' }}
                         animate={{ opacity: 1, x: 0 }}
@@ -107,8 +125,9 @@ function App() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
             <AnimatePresence>
-                {showBottomControls && (
+                {showBottomControls && isDisclaimerAccepted && (
                     <motion.div
                         initial={{ opacity: 0, y: '100%' }}
                         animate={{ opacity: 1, y: 0 }}
@@ -128,6 +147,7 @@ function App() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
             <audio ref={audioRef} src='/music/ambient-spring-forest.mp3' loop />
         </div>
     );
