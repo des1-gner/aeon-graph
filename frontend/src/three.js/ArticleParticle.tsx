@@ -263,10 +263,13 @@ const Swarm: React.FC<SwarmProps> = ({
     const transitionProgressRef = useRef<number>(0);
     const prevViewModeRef = useRef<ViewMode>('soup');
     const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
+    const [transitionState, setTransitionState] = useState<'idle' | 'dispersing' | 'clustering'>('idle');
 
     const sphereRadius = 10; // Radius of the sphere
-    const maxSpeed = 0.02; // Maximum speed for particles
+    const maxSpeed = 0.05; // Maximum speed for particles
     const defaultSpeed = 0.01; // Default speed for particles
+    const clusterTransitionSpeed = 0.02; // Speed of transition to cluster (lower is slower)
+    const dispersionSpeed = 0.03; // Speed of dispersion (higher is faster)
 
     const generateRandomPointOnSphere = (): THREE.Vector3 => {
         const u = Math.random();
@@ -328,7 +331,7 @@ const Swarm: React.FC<SwarmProps> = ({
         const targetPositions = targetPositionsRef.current;
 
         if (transitionProgressRef.current < 1) {
-            transitionProgressRef.current += 0.02;
+            transitionProgressRef.current += clusterTransitionSpeed;
         }
 
         for (let i = 0; i < articles.length; i++) {
@@ -351,8 +354,10 @@ const Swarm: React.FC<SwarmProps> = ({
 
             if (viewMode !== 'soup') {
                 if (article.broadClaims && article.broadClaims[viewMode]) {
-                    particlePosition.lerp(targetPosition, 0.1);
-                    particleVelocity.set(0, 0, 0);
+                    // Slow down the transition to the cluster
+                    particlePosition.lerp(targetPosition, clusterTransitionSpeed);
+                    // Gradually reduce velocity as we approach the target
+                    particleVelocity.multiplyScalar(0.95);
                 } else {
                     particleVelocity.add(
                         new THREE.Vector3(
