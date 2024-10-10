@@ -25,6 +25,7 @@ function App() {
         setIsTransitioning(true);
         setTimeout(() => {
             setIsDisclaimerAccepted(true);
+
             setIsTransitioning(false);
         }, 2000);
     };
