@@ -10,27 +10,66 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
   const [isChecked, setIsChecked] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
   const mountRef = useRef<HTMLDivElement>(null);
+  const backgroundRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const particlesRef = useRef<THREE.Points | null>(null);
+  const backgroundParticlesRef = useRef<THREE.Points | null>(null);
   const frameIdRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!mountRef.current) return;
+    if (!mountRef.current || !backgroundRef.current) return;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / 300, 0.1, 1000);
-    camera.position.z = 150;
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 300; // Increased z-position to zoom out
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, 300);
-    mountRef.current.appendChild(renderer.domElement);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    backgroundRef.current.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
+    // Background particles
+    const backgroundGeometry = new THREE.BufferGeometry();
+    const backgroundParticleCount = 100;
+    const backgroundPositions = new Float32Array(backgroundParticleCount * 3);
+    const backgroundSizes = new Float32Array(backgroundParticleCount);
+    const backgroundVelocities = new Float32Array(backgroundParticleCount * 3);
+
+    for (let i = 0; i < backgroundParticleCount; i++) {
+      backgroundPositions[i * 3] = (Math.random() - 0.5) * window.innerWidth;
+      backgroundPositions[i * 3 + 1] = (Math.random() - 0.5) * window.innerHeight;
+      backgroundPositions[i * 3 + 2] = 0;
+
+      backgroundVelocities[i * 3] = (Math.random() - 0.5) * 2;
+      backgroundVelocities[i * 3 + 1] = (Math.random() - 0.5) * 2;
+      backgroundVelocities[i * 3 + 2] = 0;
+
+      backgroundSizes[i] = Math.random() * 5 + 2;
+    }
+
+    backgroundGeometry.setAttribute('position', new THREE.BufferAttribute(backgroundPositions, 3));
+    backgroundGeometry.setAttribute('size', new THREE.BufferAttribute(backgroundSizes, 1));
+
+    // Create a circular texture for particles
+    const particleTexture = new THREE.TextureLoader().load('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJzSURBVHic7ZpNaxNRFIafO9OYdKaVfqS2WsVVEVy5dOFfEBQLrtyJP6RrN4ILdeMvcOMmrsS1UjcKaqtWW5u0SZN0Zq4LY0vnTjNzc+fec4M8EDKEe857TtLcZCbgOI7jOI7jOI7jOI6x5N+hJ1UVd4GnQBXo2UvV48rAW+ARMKBk66PrGZHwFqMScP9fdxJ4BdwAasAVodgXhOp20QLeAVfpM2ILLAsJnAvVPQukQCgkvACmhep207nUJjDdbdAUCj4lVHcauAG0hWqPUmqTApdkxNYFWmwhzb4Pu80GYQyYFqprTQisCtW1JmTWBzXBXhGqGw3bXNJnQk0gj41G3bM2ALgllVjQhBqwIFTXmhAT/nCKpQELAnVPAD8Fao7LrA8+BXZCzX3gJfJPwS0sXv4AL4AesDfEhB5wF4v3wWmBmrMMf/+0hA8Ij8qocZxhj6qWB7gCfDuiQApcGDN32QYkwHngExCEGm+BFLgQc15cQr90gJ/APkObGQ2tD/A1wrzKDagQfQ5aYcTkNmOYxGj6tU0NyIC5EXNWMDDAOgHSr21qQAI0gC8R5tmbkAEz/LvzfwNTMedZJQDCv+RPgZlwrBG8HVrnucB4LO8AH4Gfq9WJbuKCbCEe5w1b7xpNs/0+2B5wE3gnXTiFM7UHVCt57rG6SFRqAMClA+2VqFWuPeDvpn/nvW4D6xjdCFw5cGzIy5QyJkxDcZ8/y+bLt7vO9/dvmrrg5PiWNQNCTAFXB47TJGIzStbvA+JGZIhFgm0mBEaDIpFk16sBm01w3cjPB4zjOI7jOI7jOI7jZMBvLTVZOScB8a8AAAAASUVORK5CYII=');
+
+    const backgroundMaterial = new THREE.PointsMaterial({
+      color: 0xffffff,
+      size: 5,
+      map: particleTexture,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthTest: false
+    });
+    const backgroundParticles = new THREE.Points(backgroundGeometry, backgroundMaterial);
+    scene.add(backgroundParticles);
+
+    // Main "The Zone" text particles
     const geometry = new THREE.BufferGeometry();
     const particleCount = 500;
     const positions = new Float32Array(particleCount * 3);
@@ -77,7 +116,7 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
         colors[i * 3 + 1] = Math.random();
         colors[i * 3 + 2] = Math.random();
 
-        sizes[i] = Math.random() * 5 + 2;
+        sizes[i] = Math.random() * 10 + 20;
       }
     }
 
@@ -122,10 +161,37 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
     cameraRef.current = camera;
     rendererRef.current = renderer;
     particlesRef.current = particles;
+    backgroundParticlesRef.current = backgroundParticles;
 
     const animate = () => {
       frameIdRef.current = requestAnimationFrame(animate);
       controls.update();
+
+      if (backgroundParticlesRef.current) {
+        const positions = backgroundParticlesRef.current.geometry.attributes.position.array as Float32Array;
+        const sizes = backgroundParticlesRef.current.geometry.attributes.size.array as Float32Array;
+
+        for (let i = 0; i < positions.length; i += 3) {
+          positions[i] += backgroundVelocities[i];
+          positions[i + 1] += backgroundVelocities[i + 1];
+
+          // Bounce off edges
+          if (Math.abs(positions[i]) > window.innerWidth / 2) {
+            backgroundVelocities[i] *= -1;
+          }
+          if (Math.abs(positions[i + 1]) > window.innerHeight / 2) {
+            backgroundVelocities[i + 1] *= -1;
+          }
+
+          // Gradually increase size
+          if (sizes[i / 3] < 10) {
+            sizes[i / 3] += 0.01;
+          }
+        }
+
+        backgroundParticlesRef.current.geometry.attributes.position.needsUpdate = true;
+        backgroundParticlesRef.current.geometry.attributes.size.needsUpdate = true;
+      }
 
       if (particlesRef.current) {
         const positions = particlesRef.current.geometry.attributes.position.array as Float32Array;
@@ -157,7 +223,7 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
             positions[i + 1] += velocities[i + 1];
             positions[i + 2] += velocities[i + 2];
 
-            sizes[i / 3] *= 0.99;
+            sizes[i / 3] *= 1;
           }
         }
         particlesRef.current.geometry.attributes.position.needsUpdate = true;
@@ -171,9 +237,9 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
 
     const handleResize = () => {
       if (cameraRef.current && rendererRef.current) {
-        cameraRef.current.aspect = window.innerWidth / 300;
+        cameraRef.current.aspect = window.innerWidth / window.innerHeight;
         cameraRef.current.updateProjectionMatrix();
-        rendererRef.current.setSize(window.innerWidth, 300);
+        rendererRef.current.setSize(window.innerWidth, window.innerHeight);
       }
     };
 
@@ -183,8 +249,8 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
       if (frameIdRef.current) {
         cancelAnimationFrame(frameIdRef.current);
       }
-      if (mountRef.current && rendererRef.current) {
-        mountRef.current.removeChild(rendererRef.current.domElement);
+      if (backgroundRef.current && rendererRef.current) {
+        backgroundRef.current.removeChild(rendererRef.current.domElement);
       }
       window.removeEventListener('resize', handleResize);
     };
@@ -199,38 +265,40 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
-      <div className="bg-red-600 text-white p-4 rounded mb-4 max-w-2xl text-center">
-        <strong>WARNING:</strong> This page contains moving particles and flashing lights. 
-        It may potentially trigger seizures for people with photosensitive epilepsy. 
-        Viewer discretion is advised.
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4 relative">
+      <div ref={backgroundRef} className="absolute inset-0" style={{ zIndex: 0 }} />
+      <div className="relative z-10 flex flex-col items-center justify-center">
+        <div className="bg-red-600 text-white p-4 rounded mb-4 max-w-2xl text-center">
+          <strong>Photosensitivity Warning:</strong> This page contains moving particles and lights. 
+          Viewer discretion is advised.
+        </div>
+        <div ref={mountRef} className="w-full h-64 mb-8" />
+        <h1 className="text-4xl font-bold mb-6 pt-20">Disclaimer</h1>
+        <p className="text-center max-w-2xl mb-6">
+          The content on The Zone represents an artistic exploration of the flow of news and media in the 21st century,
+          using advanced Deep Learning techniques to classify and analyze articles across various topics. While every
+          effort has been made to use technology to gain insights and organize information, these methods are not
+          infallible. Visitors should approach the content with critical thinking and caution.
+        </p>
+        <div className="flex items-center mb-6">
+          <input
+            type="checkbox"
+            checked={isChecked}
+            onChange={() => setIsChecked(!isChecked)}
+            className="mr-2"
+          />
+          <label>I have read and accept the terms and conditions</label>
+        </div>
+        <button
+          onClick={handleAccept}
+          disabled={!isChecked || isExploding}
+          className={`px-6 py-2 rounded ${
+            isChecked && !isExploding ? 'bg-white text-black hover:bg-gray-200' : 'bg-gray-500 cursor-not-allowed'
+          }`}
+        >
+          {isExploding ? 'Entering The Zone...' : 'Enter The Zone'}
+        </button>
       </div>
-      <div ref={mountRef} className="w-full h-64 mb-8" />
-      <h1 className="text-4xl font-bold mb-6">Disclaimer</h1>
-      <p className="text-center max-w-2xl mb-6">
-        The content on The Zone represents an artistic exploration of the flow of news and media in the 21st century,
-        using advanced Deep Learning techniques to classify and analyze articles across various topics. While every
-        effort has been made to use technology to gain insights and organize information, these methods are not
-        infallible. Visitors should approach the content with critical thinking and caution.
-      </p>
-      <div className="flex items-center mb-6">
-        <input
-          type="checkbox"
-          checked={isChecked}
-          onChange={() => setIsChecked(!isChecked)}
-          className="mr-2"
-        />
-        <label>I have read and accept the terms and conditions</label>
-      </div>
-      <button
-        onClick={handleAccept}
-        disabled={!isChecked || isExploding}
-        className={`px-6 py-2 rounded ${
-          isChecked && !isExploding ? 'bg-white text-black hover:bg-gray-200' : 'bg-gray-500 cursor-not-allowed'
-        }`}
-      >
-        {isExploding ? 'Entering The Zone...' : 'Enter The Zone'}
-      </button>
     </div>
   );
 };
