@@ -51,6 +51,7 @@ interface ParticleProps {
     setSelectedArticle: (article: Article | null) => void;
     highlightedWord: string;
     highlightColor: string;  // Add this line
+    clusterColor: string;
 }
 
 const Particle: React.FC<ParticleProps> = ({
@@ -63,7 +64,8 @@ const Particle: React.FC<ParticleProps> = ({
     setHoveredParticle,
     setSelectedArticle,
     highlightedWord,
-    highlightColor,  // Add this line
+    highlightColor,
+    clusterColor,
 }) => {
     const meshRef = useRef<THREE.Mesh>(null);
     const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
@@ -110,8 +112,8 @@ const Particle: React.FC<ParticleProps> = ({
             let targetEmissiveIntensity: number;
 
             if (isHighlighted) {
-                targetColor = new THREE.Color(highlightColor);  // Use highlightColor here
-                targetEmissive = new THREE.Color(highlightColor);  // And here
+                targetColor = new THREE.Color(highlightColor);
+                targetEmissive = new THREE.Color(highlightColor);
                 targetOpacity = 1;
                 targetEmissiveIntensity = 2;
             } else if (viewMode === 'soup') {
@@ -120,8 +122,8 @@ const Particle: React.FC<ParticleProps> = ({
                 targetOpacity = 0.7;
                 targetEmissiveIntensity = 0.5;
             } else if (isInCluster) {
-                targetColor = originalColor;
-                targetEmissive = originalColor;
+                targetColor = new THREE.Color(clusterColor);
+                targetEmissive = new THREE.Color(clusterColor);
                 targetOpacity = 0.7;
                 targetEmissiveIntensity = 1;
             } else {
@@ -168,6 +170,16 @@ interface ConnectionLinesProps {
     hoveredParticle: number | null;
     viewMode: ViewMode;
     colorMap: Map<string, THREE.Color>;
+    edgeColor: string;
+}
+
+interface ConnectionLinesProps {
+    articles: Article[];
+    positions: Float32Array;
+    hoveredParticle: number | null;
+    viewMode: ViewMode;
+    colorMap: Map<string, THREE.Color>;
+    edgeColor: string;
 }
 
 const ConnectionLines: React.FC<ConnectionLinesProps> = ({
@@ -176,6 +188,7 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
     hoveredParticle,
     viewMode,
     colorMap,
+    edgeColor,
 }) => {
     const lineRef = useRef<THREE.LineSegments>(null);
     const materialRef = useRef<THREE.LineBasicMaterial>(null);
@@ -224,10 +237,7 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
                 );
                 geometry.attributes.position.needsUpdate = true;
 
-                if (colorMap.has(viewMode)) {
-                    materialRef.current.color = colorMap.get(viewMode)!;
-                }
-
+                materialRef.current.color = new THREE.Color(edgeColor);
                 materialRef.current.visible = true;
             } else {
                 materialRef.current.visible = false;
@@ -249,7 +259,9 @@ interface SwarmProps {
     colorMap: Map<string, THREE.Color>;
     setSelectedArticle: (article: Article | null) => void;
     highlightedWord: string;
-    highlightColor: string;  // Add this line
+    highlightColor: string;
+    clusterColor: string;
+    edgeColor: string;
 }
 
 const DEFAULT_COLOR = new THREE.Color(0.5, 0.5, 0.5);
@@ -260,7 +272,9 @@ const Swarm: React.FC<SwarmProps> = ({
     colorMap,
     setSelectedArticle,
     highlightedWord,
-    highlightColor,  // Add this line lol
+    highlightColor,
+    clusterColor,
+    edgeColor,
 }) => {
     const positionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
     const velocitiesRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
@@ -316,7 +330,7 @@ const Swarm: React.FC<SwarmProps> = ({
                 targetPositionsRef.current[i * 3 + 1] = clusterPoint.y;
                 targetPositionsRef.current[i * 3 + 2] = clusterPoint.z;
                 
-                targetColorsRef.current[i] = colorMap.get(viewMode) || DEFAULT_COLOR.clone();
+                targetColorsRef.current[i] = new THREE.Color(clusterColor);
             } else {
                 const soupPoint = generateRandomPointOnSphere(sphereRadius);
                 targetPositionsRef.current[i * 3] = soupPoint.x;
@@ -326,7 +340,7 @@ const Swarm: React.FC<SwarmProps> = ({
                 targetColorsRef.current[i] = DEFAULT_COLOR.clone();
             }
         }
-    }, [viewMode, articles, colorMap]);
+    }, [viewMode, articles, clusterColor]);
 
     useFrame(() => {
         const positions = positionsRef.current;
@@ -405,7 +419,7 @@ const Swarm: React.FC<SwarmProps> = ({
 
     return (
         <>
-            {articles.map((article, index) => (
+            {articles.map((article: Article, index: number) => (
                 <Particle
                     key={index}
                     index={index}
@@ -417,7 +431,8 @@ const Swarm: React.FC<SwarmProps> = ({
                     setHoveredParticle={setHoveredParticle}
                     setSelectedArticle={setSelectedArticle}
                     highlightedWord={highlightedWord}
-                    highlightColor={highlightColor}  // Pass highlightColor here
+                    highlightColor={highlightColor}
+                    clusterColor={clusterColor}
                 />
             ))}
             <ConnectionLines
@@ -426,6 +441,7 @@ const Swarm: React.FC<SwarmProps> = ({
                 hoveredParticle={hoveredParticle}
                 viewMode={viewMode}
                 colorMap={colorMap}
+                edgeColor={edgeColor}
             />
             {/* Add a plane to receive shadows */}
             <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -sphereRadius, 0]} receiveShadow>
@@ -511,7 +527,9 @@ export default InfoPanel;
 interface ArticleParticleProps {
     articles: Article[];
     highlightedWord?: string;
-    highlightColor: string;  // Add this line
+    highlightColor: string;
+    clusterColor: string;  // Add this line
+    edgeColor: string;  // Add this line
 }
 
 const Scene: React.FC<{
@@ -520,8 +538,10 @@ const Scene: React.FC<{
     colorMap: Map<string, THREE.Color>;
     setSelectedArticle: (article: Article | null) => void;
     highlightedWord: string;
-    highlightColor: string;  // Add this line
-}> = ({ articles, viewMode, colorMap, setSelectedArticle, highlightedWord, highlightColor }) => {
+    highlightColor: string;
+    clusterColor: string;  // Add this line
+    edgeColor: string;  // Add this line
+}> = ({ articles, viewMode, colorMap, setSelectedArticle, highlightedWord, highlightColor, clusterColor, edgeColor }) => {
     return (
         <>
             <ambientLight intensity={0.2} />
@@ -539,7 +559,9 @@ const Scene: React.FC<{
                 colorMap={colorMap}
                 setSelectedArticle={setSelectedArticle}
                 highlightedWord={highlightedWord}
-                highlightColor={highlightColor}  // Pass highlightColor here
+                highlightColor={highlightColor}
+                clusterColor={clusterColor}  // Pass clusterColor here
+                edgeColor={edgeColor}  // Pass edgeColor here
             />
             <OrbitControls
                 enablePan={true}
@@ -558,13 +580,14 @@ const Scene: React.FC<{
 export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     articles,
     highlightedWord = '',
-    highlightColor,  // Add this line
+    highlightColor,
+    clusterColor,
+    edgeColor,
 }) => {
     const [viewMode, setViewMode] = useState<ViewMode>('soup');
     const [broadClaims, setBroadClaims] = useState<ViewMode[]>(['soup']);
-    const [selectedArticle, setSelectedArticle] = useState<Article | null>(
-        null
-    );
+    const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const colorMap = useMemo(() => {
         const map = new Map<string, THREE.Color>();
@@ -580,21 +603,30 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     }, [broadClaims]);
 
     useEffect(() => {
-        const uniqueClaims = new Set<string>(['soup']);
-        articles.forEach((article) => {
-            if (article.broadClaims) {
-                Object.keys(article.broadClaims).forEach((claim) => {
-                    if (
-                        article.broadClaims![
-                            claim as keyof Article['broadClaims']
-                        ]
-                    ) {
-                        uniqueClaims.add(claim);
-                    }
-                });
-            }
-        });
-        setBroadClaims(Array.from(uniqueClaims) as ViewMode[]);
+        if (!articles || articles.length === 0) {
+            setError("No articles available");
+            return;
+        }
+
+        try {
+            const uniqueClaims = new Set<string>(['soup']);
+            articles.forEach((article) => {
+                if (article.broadClaims) {
+                    Object.keys(article.broadClaims).forEach((claim) => {
+                        if (
+                            article.broadClaims![
+                                claim as keyof Article['broadClaims']
+                            ]
+                        ) {
+                            uniqueClaims.add(claim);
+                        }
+                    });
+                }
+            });
+            setBroadClaims(Array.from(uniqueClaims) as ViewMode[]);
+        } catch (err) {
+            setError(`Error processing articles: ${err}`);
+        }
     }, [articles]);
 
     const handleToggle = () => {
@@ -612,6 +644,14 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
         setSelectedArticle(article);
     };
 
+    if (error) {
+        return <div className="text-white p-4">{error}</div>;
+    }
+
+    if (!articles || articles.length === 0) {
+        return <div className="text-white p-4">No articles to display</div>;
+    }
+
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
             <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
@@ -622,7 +662,9 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
                     colorMap={colorMap}
                     setSelectedArticle={handleArticleSelect}
                     highlightedWord={highlightedWord}
-                    highlightColor={highlightColor}  // Pass highlightColor here
+                    highlightColor={highlightColor}
+                    clusterColor={clusterColor}
+                    edgeColor={edgeColor}
                 />
             </Canvas>
             <Button

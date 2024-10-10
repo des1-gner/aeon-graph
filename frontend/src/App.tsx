@@ -10,7 +10,7 @@ import { dummyArticles } from './types/article';
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
     const [showBottomControls, setShowBottomControls] = useState(true);
-    const { articles, highlightedWord, highlightColor } = useArticles();
+    const { articles, highlightedWord, highlightColor, clusterColor, edgeColor } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false);
@@ -105,6 +105,8 @@ function App() {
                     articles={articles ? articles : dummyArticles}
                     highlightedWord={highlightedWord}
                     highlightColor={highlightColor}
+                    clusterColor={clusterColor}
+                    edgeColor={edgeColor}
                 />
             </motion.div>
 
