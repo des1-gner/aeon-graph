@@ -5,14 +5,40 @@ import { OrbitControls } from '@react-three/drei';
 import { Button } from '../components/Button';
 import { Article } from '../types/article';
 
-type ViewMode = 'soup' | keyof Article['broadClaims'];
-
 const generateVibrantColor = (index: number, total: number): THREE.Color => {
     const hue = (index / total) * 360;
     const saturation = 100;
     const lightness = 50;
     return new THREE.Color(`hsl(${hue}, ${saturation}%, ${lightness}%)`);
 };
+
+const vertexShader = `
+  varying vec3 vNormal;
+  varying vec3 vWorldPosition;
+
+  void main() {
+    vNormal = normalize(normalMatrix * normal);
+    vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+    vWorldPosition = worldPosition.xyz;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const fragmentShader = `
+  uniform vec3 color;
+  uniform vec3 lightPosition;
+  varying vec3 vNormal;
+  varying vec3 vWorldPosition;
+
+  void main() {
+    vec3 lightDir = normalize(lightPosition - vWorldPosition);
+    float shadow = 0.5 + 0.5 * dot(vNormal, lightDir);
+    vec3 shadedColor = color * shadow;
+    gl_FragColor = vec4(shadedColor, 1.0);
+  }
+`;
+
+type ViewMode = 'soup' | keyof Article['broadClaims'];
 
 interface ParticleProps {
     index: number;
@@ -38,14 +64,22 @@ const Particle: React.FC<ParticleProps> = ({
     highlightedWord,
 }) => {
     const meshRef = useRef<THREE.Mesh>(null);
-    const materialRef = useRef<THREE.MeshStandardMaterial>(null);
+    const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
     const article = articles[index];
     const originalColor = useMemo(() => color.clone(), [color]);
+    const greyColor = new THREE.Color(0.5, 0.5, 0.5);
+    const whiteColor = new THREE.Color(1, 1, 1);
+
     const isHighlighted = useMemo(
         () =>
-            highlightedWord &&
+            highlightedWord !== '' &&
             article.body?.toLowerCase().includes(highlightedWord.toLowerCase()),
         [highlightedWord, article.body]
+    );
+
+    const isInCluster = useMemo(() => 
+        viewMode !== 'soup' && article.broadClaims && article.broadClaims[viewMode],
+        [viewMode, article.broadClaims]
     );
 
     useEffect(() => {
@@ -62,37 +96,37 @@ const Particle: React.FC<ParticleProps> = ({
                 positions[index * 3 + 2]
             );
 
-            const isInFocus =
-                viewMode === 'soup' ||
-                (article.broadClaims && article.broadClaims[viewMode]);
+            let targetColor: THREE.Color;
+            let targetEmissive: THREE.Color;
+            let targetOpacity: number;
+            let targetEmissiveIntensity: number;
 
             if (isHighlighted) {
-                materialRef.current.color.setRGB(1, 1, 1);
-                materialRef.current.emissive.setRGB(1, 1, 1);
-                materialRef.current.opacity = 1;
-                materialRef.current.emissiveIntensity = 10;
+                targetColor = whiteColor;
+                targetEmissive = whiteColor;
+                targetOpacity = 1;
+                targetEmissiveIntensity = 2;
             } else if (viewMode === 'soup') {
-                materialRef.current.color.setRGB(0.5, 0.5, 0.5);
-                materialRef.current.emissive.setRGB(0.5, 0.5, 0.5);
-                materialRef.current.opacity = 0.5;
-                materialRef.current.emissiveIntensity = 0.5;
-            } else if (isInFocus) {
-                materialRef.current.color.copy(originalColor);
-                materialRef.current.emissive.copy(originalColor);
-                materialRef.current.opacity = 1;
-                materialRef.current.emissiveIntensity = 1;
+                targetColor = originalColor;
+                targetEmissive = originalColor;
+                targetOpacity = 0.7;
+                targetEmissiveIntensity = 0.5;
+            } else if (isInCluster) {
+                targetColor = originalColor;
+                targetEmissive = originalColor;
+                targetOpacity = 0.7;
+                targetEmissiveIntensity = 1;
             } else {
-                materialRef.current.color.lerp(
-                    new THREE.Color(0.5, 0.5, 0.5),
-                    0.8
-                );
-                materialRef.current.emissive.lerp(
-                    new THREE.Color(0.5, 0.5, 0.5),
-                    0.8
-                );
-                materialRef.current.opacity = 0.5;
-                materialRef.current.emissiveIntensity = 0.5;
+                targetColor = greyColor;
+                targetEmissive = greyColor;
+                targetOpacity = 0.3;
+                targetEmissiveIntensity = 0.2;
             }
+
+            materialRef.current.color.lerp(targetColor, 0.1);
+            materialRef.current.emissive.lerp(targetEmissive, 0.1);
+            materialRef.current.opacity = THREE.MathUtils.lerp(materialRef.current.opacity, targetOpacity, 0.1);
+            materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(materialRef.current.emissiveIntensity, targetEmissiveIntensity, 0.1);
         }
     });
 
@@ -107,11 +141,14 @@ const Particle: React.FC<ParticleProps> = ({
             }}
         >
             <sphereGeometry args={[0.2, 32, 32]} />
-            <meshStandardMaterial
+            <meshPhysicalMaterial
                 ref={materialRef}
                 color={originalColor}
                 emissive={originalColor}
-                emissiveIntensity={1}
+                emissiveIntensity={0.5}
+                transparent
+                roughness={0.5}
+                metalness={0.8}
             />
         </mesh>
     );
@@ -227,14 +264,30 @@ const Swarm: React.FC<SwarmProps> = ({
     const prevViewModeRef = useRef<ViewMode>('soup');
     const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
 
+    const sphereRadius = 10; // Radius of the sphere
+    const maxSpeed = 0.02; // Maximum speed for particles
+    const defaultSpeed = 0.01; // Default speed for particles
+
+    const generateRandomPointOnSphere = (): THREE.Vector3 => {
+        const u = Math.random();
+        const v = Math.random();
+        const theta = 2 * Math.PI * u;
+        const phi = Math.acos(2 * v - 1);
+        const x = sphereRadius * Math.sin(phi) * Math.cos(theta);
+        const y = sphereRadius * Math.sin(phi) * Math.sin(theta);
+        const z = sphereRadius * Math.cos(phi);
+        return new THREE.Vector3(x, y, z);
+    };
+
     useMemo(() => {
         for (let i = 0; i < articles.length; i++) {
-            positionsRef.current[i * 3] = (Math.random() - 0.5) * 20;
-            positionsRef.current[i * 3 + 1] = (Math.random() - 0.5) * 20;
-            positionsRef.current[i * 3 + 2] = (Math.random() - 0.5) * 20;
-            velocitiesRef.current[i * 3] = (Math.random() - 0.5) * 0.1;
-            velocitiesRef.current[i * 3 + 1] = (Math.random() - 0.5) * 0.1;
-            velocitiesRef.current[i * 3 + 2] = (Math.random() - 0.5) * 0.1;
+            const point = generateRandomPointOnSphere();
+            positionsRef.current[i * 3] = point.x;
+            positionsRef.current[i * 3 + 1] = point.y;
+            positionsRef.current[i * 3 + 2] = point.z;
+            velocitiesRef.current[i * 3] = (Math.random() - 0.5) * defaultSpeed;
+            velocitiesRef.current[i * 3 + 1] = (Math.random() - 0.5) * defaultSpeed;
+            velocitiesRef.current[i * 3 + 2] = (Math.random() - 0.5) * defaultSpeed;
 
             const article = articles[i];
             colorsRef.current[i] =
@@ -254,19 +307,15 @@ const Swarm: React.FC<SwarmProps> = ({
                     article.broadClaims &&
                     article.broadClaims[viewMode]
                 ) {
-                    targetPositionsRef.current[i * 3] =
-                        (Math.random() - 0.5) * 4;
-                    targetPositionsRef.current[i * 3 + 1] =
-                        (Math.random() - 0.5) * 4;
-                    targetPositionsRef.current[i * 3 + 2] =
-                        (Math.random() - 0.5) * 4;
+                    const point = generateRandomPointOnSphere().multiplyScalar(0.4);
+                    targetPositionsRef.current[i * 3] = point.x;
+                    targetPositionsRef.current[i * 3 + 1] = point.y;
+                    targetPositionsRef.current[i * 3 + 2] = point.z;
                 } else {
-                    targetPositionsRef.current[i * 3] =
-                        (Math.random() - 0.5) * 20;
-                    targetPositionsRef.current[i * 3 + 1] =
-                        (Math.random() - 0.5) * 20;
-                    targetPositionsRef.current[i * 3 + 2] =
-                        (Math.random() - 0.5) * 20;
+                    const point = generateRandomPointOnSphere();
+                    targetPositionsRef.current[i * 3] = point.x;
+                    targetPositionsRef.current[i * 3 + 1] = point.y;
+                    targetPositionsRef.current[i * 3 + 2] = point.z;
                 }
             }
             prevViewModeRef.current = viewMode;
@@ -307,9 +356,9 @@ const Swarm: React.FC<SwarmProps> = ({
                 } else {
                     particleVelocity.add(
                         new THREE.Vector3(
-                            (Math.random() - 0.5) * 0.01,
-                            (Math.random() - 0.5) * 0.01,
-                            (Math.random() - 0.5) * 0.01
+                            (Math.random() - 0.5) * 0.001,
+                            (Math.random() - 0.5) * 0.001,
+                            (Math.random() - 0.5) * 0.001
                         )
                     );
                     particlePosition.add(particleVelocity);
@@ -317,25 +366,24 @@ const Swarm: React.FC<SwarmProps> = ({
             } else {
                 particleVelocity.add(
                     new THREE.Vector3(
-                        (Math.random() - 0.5) * 0.01,
-                        (Math.random() - 0.5) * 0.01,
-                        (Math.random() - 0.5) * 0.01
+                        (Math.random() - 0.5) * 0.001,
+                        (Math.random() - 0.5) * 0.001,
+                        (Math.random() - 0.5) * 0.001
                     )
                 );
                 particlePosition.add(particleVelocity);
             }
 
-            for (let axis = 0; axis < 3; axis++) {
-                if (Math.abs(particlePosition.getComponent(axis)) > 10) {
-                    particlePosition.setComponent(
-                        axis,
-                        Math.sign(particlePosition.getComponent(axis)) * 10
-                    );
-                    particleVelocity.setComponent(
-                        axis,
-                        -particleVelocity.getComponent(axis) * 0.8
-                    );
-                }
+            // Limit the speed of the particle
+            const speed = particleVelocity.length();
+            if (speed > maxSpeed) {
+                particleVelocity.multiplyScalar(maxSpeed / speed);
+            }
+
+            // Keep particles within the sphere
+            if (particlePosition.length() > sphereRadius) {
+                particlePosition.normalize().multiplyScalar(sphereRadius);
+                particleVelocity.reflect(particlePosition.clone().normalize());
             }
 
             positions[i * 3] = particlePosition.x;
@@ -370,6 +418,11 @@ const Swarm: React.FC<SwarmProps> = ({
                 viewMode={viewMode}
                 colorMap={colorMap}
             />
+            {/* Add a plane to receive shadows */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -sphereRadius, 0]} receiveShadow>
+                <planeGeometry args={[100, 100]} />
+                <shadowMaterial transparent opacity={0.2} />
+            </mesh>
         </>
     );
 };
@@ -435,6 +488,45 @@ interface ArticleParticleProps {
     highlightedWord?: string;
 }
 
+const Scene: React.FC<{
+    articles: Article[];
+    viewMode: ViewMode;
+    colorMap: Map<string, THREE.Color>;
+    setSelectedArticle: (article: Article | null) => void;
+    highlightedWord: string;
+}> = ({ articles, viewMode, colorMap, setSelectedArticle, highlightedWord }) => {
+    return (
+        <>
+            <ambientLight intensity={0.2} />
+            <pointLight position={[10, 10, 10]} intensity={0.8} castShadow />
+            <directionalLight
+                position={[5, 5, 5]}
+                intensity={0.5}
+                castShadow
+                shadow-mapSize-width={1024}
+                shadow-mapSize-height={1024}
+            />
+            <Swarm
+                articles={articles}
+                viewMode={viewMode}
+                colorMap={colorMap}
+                setSelectedArticle={setSelectedArticle}
+                highlightedWord={highlightedWord}
+            />
+            <OrbitControls
+                enablePan={true}
+                enableZoom={true}
+                enableRotate={true}
+            />
+            {/* Add a plane to receive shadows */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -10, 0]} receiveShadow>
+                <planeGeometry args={[100, 100]} />
+                <shadowMaterial transparent opacity={0.4} />
+            </mesh>
+        </>
+    );
+};
+
 export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     articles,
     highlightedWord = '',
@@ -494,20 +586,13 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
             <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
-                <color attach='background' args={['black']} />
-                <ambientLight intensity={0.5} />
-                <pointLight position={[10, 10, 10]} />
-                <Swarm
+                <color attach='background' args={['#000']} />
+                <Scene
                     articles={articles}
                     viewMode={viewMode}
                     colorMap={colorMap}
                     setSelectedArticle={handleArticleSelect}
                     highlightedWord={highlightedWord}
-                />
-                <OrbitControls
-                    enablePan={true}
-                    enableZoom={true}
-                    enableRotate={true}
                 />
             </Canvas>
             <Button
