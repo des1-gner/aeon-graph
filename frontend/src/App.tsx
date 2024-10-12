@@ -10,7 +10,7 @@ import { dummyArticles } from './types/article';
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
     const [showBottomControls, setShowBottomControls] = useState(true);
-    const { articles, highlightedWord } = useArticles();
+    const {articles, highlightedWord, highlightColor, clusterColor, edgeColor } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false);
@@ -25,7 +25,6 @@ function App() {
         setIsTransitioning(true);
         setTimeout(() => {
             setIsDisclaimerAccepted(true);
-
             setIsTransitioning(false);
         }, 2000);
     };
@@ -105,6 +104,9 @@ function App() {
                 <ArticleParticle 
                     articles={articles ? articles : dummyArticles}
                     highlightedWord={highlightedWord}
+                    highlightColor={highlightColor}
+                    clusterColor={clusterColor}
+                    edgeColor={edgeColor}
                 />
             </motion.div>
 
