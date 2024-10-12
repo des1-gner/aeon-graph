@@ -32,8 +32,8 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
     const [articles, setArticles] = useState<Article[] | undefined>();
     const [highlightedWord, setHighlightedWord] = useState<string | undefined>();
     const [highlightColor, setHighlightColor] = useState('#FFFFFF');
-    const [clusterColor, setClusterColor] = useState('#FF0000');
-    const [edgeColor, setEdgeColor] = useState('#00FF00');
+    const [clusterColor, setClusterColor] = useState('#FFFFFF');
+    const [edgeColor, setEdgeColor] = useState('#FFFFFF');
 
     useEffect(() => {
         const cachedArticles = localStorage.getItem(CACHED_ARTICLES_KEY);

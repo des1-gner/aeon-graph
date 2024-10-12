@@ -63,8 +63,6 @@ const sources = [
 ];
 
 export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
-    const { articles, setArticles, highlightedWord, setHighlightedWord, highlightColor, setHighlightColor } =
-        useArticles();
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [dateRangeIndex, setDateRangeIndex] = useState(0);
     const [nodeLimitIndex, setNodeLimitIndex] = useState(0);
@@ -78,14 +76,26 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [showQuerySummaryModal, setShowQuerySummaryModal] = useState(false);
     const [showColorPicker, setShowColorPicker] = useState(false);
 
-    // New state variables for cluster and edge colors
-    const [highlightedColor, setHighlightedColor] = useState('#FF0000');
-    const [clusterColor, setClusterColor] = useState('#2BFF00');
-    const [edgeColor, setEdgeColor] = useState('#0004FF');
+    const { 
+        articles, 
+        setArticles, 
+        highlightedWord, 
+        setHighlightedWord,
+        highlightColor,
+        setHighlightColor,
+        clusterColor,
+        setClusterColor,
+        edgeColor,
+        setEdgeColor
+    } = useArticles();
+
+    // Separate state for showing each color picker
+    const [showHighlightColorPicker, setShowHighlightColorPicker] = useState(false);
     const [showClusterColorPicker, setShowClusterColorPicker] = useState(false);
     const [showEdgeColorPicker, setShowEdgeColorPicker] = useState(false);
 
-    const colorPickerRef = useRef<HTMLDivElement>(null);
+    // Separate refs for each color picker
+    const highlightColorPickerRef = useRef<HTMLDivElement>(null);
     const clusterColorPickerRef = useRef<HTMLDivElement>(null);
     const edgeColorPickerRef = useRef<HTMLDivElement>(null);
 
@@ -103,8 +113,6 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [selectedBroadClaim, setSelectedBroadClaim] = useState('');
     const [selectedSubClaim, setSelectedSubClaim] = useState('');
     const [selectedSource, setSelectedSource] = useState('');
-    const [clusterInput, setClusterInput] = useState('');
-    const [edgeInput, setEdgeInput] = useState('');
 
     const handleSearch = async () => {
         setIsLoading(true);
@@ -195,8 +203,8 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (colorPickerRef.current && !colorPickerRef.current.contains(event.target as Node)) {
-                setShowColorPicker(false);
+            if (highlightColorPickerRef.current && !highlightColorPickerRef.current.contains(event.target as Node)) {
+                setShowHighlightColorPicker(false);
             }
             if (clusterColorPickerRef.current && !clusterColorPickerRef.current.contains(event.target as Node)) {
                 setShowClusterColorPicker(false);
@@ -218,13 +226,13 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                 return (
                     <div className="space-y-3">
                         <div className="flex items-center gap-2">
-                            <div className="relative" ref={colorPickerRef}>
+                            <div className="relative" ref={highlightColorPickerRef}>
                                 <button
                                     className="w-8 h-8 rounded-full border border-neutral-500"
                                     style={{ backgroundColor: highlightColor }}
-                                    onClick={() => setShowColorPicker(!showColorPicker)}
+                                    onClick={() => setShowHighlightColorPicker(!showHighlightColorPicker)}
                                 />
-                                {showColorPicker && (
+                                {showHighlightColorPicker && (
                                     <div className="absolute left-0 mt-2 z-10">
                                         <HexColorPicker color={highlightColor} onChange={setHighlightColor} />
                                     </div>
@@ -263,16 +271,6 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                             </div>
                             <span className="text-light">Cluster color</span>
                         </div>
-                        <div>
-                            <p className="text-light mb-1">Filter on Article Body:</p>
-                            <input
-                                type="text"
-                                value={clusterInput}
-                                placeholder="E.g. climate"
-                                className="dark-text-field w-full"
-                                onChange={(e) => setClusterInput(e.target.value)}
-                            />
-                        </div>
                         {renderCommonDropdowns()}
                     </div>
                 );
@@ -293,16 +291,6 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                 )}
                             </div>
                             <span className="text-light">Edge color</span>
-                        </div>
-                        <div>
-                            <p className="text-light mb-1">Filter on Article Body:</p>
-                            <input
-                                type="text"
-                                value={edgeInput}
-                                placeholder="E.g. arson"
-                                className="dark-text-field w-full"
-                                onChange={(e) => setEdgeInput(e.target.value)}
-                            />
                         </div>
                         {renderCommonDropdowns()}
                     </div>

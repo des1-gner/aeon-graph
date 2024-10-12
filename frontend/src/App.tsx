@@ -10,7 +10,7 @@ import { dummyArticles } from './types/article';
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
     const [showBottomControls, setShowBottomControls] = useState(true);
-    const { articles, highlightedWord, highlightColor, clusterColor, edgeColor } = useArticles();
+    const {articles, highlightedWord, highlightColor, clusterColor, edgeColor } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false);

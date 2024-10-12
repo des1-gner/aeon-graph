@@ -122,8 +122,8 @@ const Particle: React.FC<ParticleProps> = ({
                 targetOpacity = 0.7;
                 targetEmissiveIntensity = 0.5;
             } else if (isInCluster) {
-                targetColor = new THREE.Color(clusterColor);
-                targetEmissive = new THREE.Color(clusterColor);
+                targetColor = new THREE.Color(clusterColor);  // Use the clusterColor prop here
+                targetEmissive = new THREE.Color(clusterColor);  // And here
                 targetOpacity = 0.7;
                 targetEmissiveIntensity = 1;
             } else {
@@ -539,9 +539,11 @@ const Scene: React.FC<{
     setSelectedArticle: (article: Article | null) => void;
     highlightedWord: string;
     highlightColor: string;
-    clusterColor: string;  // Add this line
-    edgeColor: string;  // Add this line
+    clusterColor: string;
+    edgeColor: string;
 }> = ({ articles, viewMode, colorMap, setSelectedArticle, highlightedWord, highlightColor, clusterColor, edgeColor }) => {
+    console.log('Scene props:', { highlightColor, clusterColor, edgeColor });
+
     return (
         <>
             <ambientLight intensity={0.2} />
@@ -560,19 +562,14 @@ const Scene: React.FC<{
                 setSelectedArticle={setSelectedArticle}
                 highlightedWord={highlightedWord}
                 highlightColor={highlightColor}
-                clusterColor={clusterColor}  // Pass clusterColor here
-                edgeColor={edgeColor}  // Pass edgeColor here
+                clusterColor={clusterColor}
+                edgeColor={edgeColor}
             />
             <OrbitControls
                 enablePan={true}
                 enableZoom={true}
                 enableRotate={true}
             />
-            {/* Add a plane to receive shadows */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -10, 0]} receiveShadow>
-                <planeGeometry args={[100, 100]} />
-                <shadowMaterial transparent opacity={0.4} />
-            </mesh>
         </>
     );
 };
@@ -584,6 +581,7 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     clusterColor,
     edgeColor,
 }) => {
+    console.log('ArticleParticle props:', { highlightColor, clusterColor, edgeColor });
     const [viewMode, setViewMode] = useState<ViewMode>('soup');
     const [broadClaims, setBroadClaims] = useState<ViewMode[]>(['soup']);
     const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
