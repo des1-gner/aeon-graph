@@ -4,11 +4,18 @@ import traceback
 from boto3.dynamodb.conditions import Attr, And
 from botocore.exceptions import ClientError
 from datetime import datetime
+from decimal import Decimal
 
 dynamodb = boto3.resource('dynamodb')
 table_name = 'lazone'
 table = dynamodb.Table(table_name)
 MAX_ITEMS = 128
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)
 
 def create_response(status_code, body):
     return {
@@ -19,7 +26,7 @@ def create_response(status_code, body):
             'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
             'Access-Control-Allow-Methods': 'OPTIONS,GET,POST'
         },
-        'body': json.dumps(body)
+        'body': json.dumps(body, cls=DecimalEncoder)  # Use the custom encoder
     }
 
 def scan_all():
@@ -38,6 +45,7 @@ def scan_specific(filter_expression):
     items = []
     response = table.scan(FilterExpression=filter_expression, Limit=MAX_ITEMS)
     items.extend(response.get('Items', []))
+    print(items)
     while 'LastEvaluatedKey' in response and len(items) < MAX_ITEMS:
         response = table.scan(
             FilterExpression=filter_expression,
@@ -46,6 +54,18 @@ def scan_specific(filter_expression):
         )
         items.extend(response.get('Items', []))
     return items[:MAX_ITEMS]
+
+# DO NOT TOUCH!
+def get_filter_expression(filter_expression_list):
+    filter_expression = None
+    first = True
+    for filter in filter_expression_list:
+        if first:
+            filter_expression = filter
+            first = False
+        else:
+            filter_expression = filter_expression & filter
+    return filter_expression
 
 def lambda_handler(event, context):
     print(f"Received event: {event}")
@@ -59,31 +79,35 @@ def lambda_handler(event, context):
     start_date = query_params.get('startDate')
     end_date = query_params.get('endDate')
     search = query_params.get('search')
-    column_exists = query_params.get('columnExists')  # New parameter
+    source = query_params.get('source')
+
     print(f"Start Date: {start_date}")
     print(f"End Date: {end_date}")
     print(f"Search: {search}")
-    print(f"Column Exists: {column_exists}")
-
+    print(f"Source: {source}")
+    
     try:
         filter_expressions = []
         # Validate date formats
         if start_date:
             datetime.strptime(start_date, "%Y-%m-%dT%H:%M:%SZ")
-            filter_expressions.append(Attr('publishedAt').gte(start_date))
+            filter_expressions.append(Attr('dateTime').gte(start_date))
         if end_date:
             datetime.strptime(end_date, "%Y-%m-%dT%H:%M:%SZ")
-            filter_expressions.append(Attr('publishedAt').lte(end_date))
+            filter_expressions.append(Attr('dateTime').lte(end_date))
         if search:
-            filter_expressions.append(Attr('content').contains(search))
-        if column_exists:
-            filter_expressions.append(Attr(column_exists).exists())  # New filter
+            filter_expressions.append(Attr('body').contains(search))
+        if source:
+            filter_expressions.append(Attr('source').contains(source))
 
         if filter_expressions:
             if len(filter_expressions) > 1:
-                filter_expression = And(*filter_expressions)
+                filter_expression = get_filter_expression(filter_expressions)
+                print("2 filters")
+                # filter_expression = And(*filter_expressions)
             else:
                 filter_expression = filter_expressions[0]
+                print("1 filter")
             
             print(f"Filter expression: {filter_expression.get_expression()}")
             items = scan_specific(filter_expression)
