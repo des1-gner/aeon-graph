@@ -10,7 +10,13 @@ import { dummyArticles } from './types/article';
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
     const [showBottomControls, setShowBottomControls] = useState(true);
-    const {articles, highlightedWord, highlightColor, clusterColor, edgeColor } = useArticles();
+    const {
+        articles,
+        highlightedWord,
+        highlightColor,
+        clusterColor,
+        edgeColor,
+    } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false);
@@ -81,7 +87,7 @@ function App() {
 
     return (
         <div className='bg-black min-h-screen relative'>
-            <AnimatePresence>
+            {/* <AnimatePresence>
                 {!isDisclaimerAccepted && (
                     <motion.div
                         initial={{ opacity: 1 }}
@@ -93,15 +99,15 @@ function App() {
                         <DisclaimerPopup onAccept={handleDisclaimerAccept} />
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence> */}
 
             <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ opacity: isDisclaimerAccepted ? 1 : 0 }}
+                animate={{ opacity: !isDisclaimerAccepted ? 1 : 0 }}
                 transition={{ duration: 2 }}
-                className="absolute inset-0 z-0"
+                className='absolute inset-0 z-0'
             >
-                <ArticleParticle 
+                <ArticleParticle
                     articles={articles ? articles : dummyArticles}
                     highlightedWord={highlightedWord}
                     highlightColor={highlightColor}
@@ -111,7 +117,7 @@ function App() {
             </motion.div>
 
             <AnimatePresence>
-                {showSideControls && isDisclaimerAccepted && (
+                {showSideControls && !isDisclaimerAccepted && (
                     <motion.div
                         initial={{ opacity: 0, x: '100%' }}
                         animate={{ opacity: 1, x: 0 }}
@@ -128,7 +134,7 @@ function App() {
                 )}
             </AnimatePresence>
 
-            <AnimatePresence>
+            {/* <AnimatePresence>
                 {showBottomControls && isDisclaimerAccepted && (
                     <motion.div
                         initial={{ opacity: 0, y: '100%' }}
@@ -148,7 +154,7 @@ function App() {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence> */}
 
             <audio ref={audioRef} src='/music/ambient-spring-forest.mp3' loop />
         </div>
