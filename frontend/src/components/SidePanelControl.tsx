@@ -3,7 +3,6 @@ import { Toggle } from './Toggle';
 import {
     AdjustmentsHorizontalIcon,
     CircleStackIcon,
-    CubeTransparentIcon,
     PaintBrushIcon,
     MagnifyingGlassIcon,
     ShareIcon,
@@ -22,7 +21,7 @@ import {
 } from '../types/article';
 import { QuerySummaryModal } from './modals/QuerySummaryModal';
 import { HexColorPicker } from 'react-colorful';
-import { SearchModal } from './modals/SearchModal';
+import { ArticleSearchModal } from './modals/ArticleSearchModal';
 
 type SidePanelControlProps = {
     onClose?: () => void;
@@ -31,7 +30,7 @@ type SidePanelControlProps = {
 export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [nodeLimitIndex, setNodeLimitIndex] = useState(0);
-    const [showSearchModal, setShowSearchModal] = useState(false);
+    const [showArticleSearchModal, setShowArticleSearchModal] = useState(false);
     const [visualisationOption, setVisualisationOption] = useState(0);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -79,6 +78,10 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [selectedSubClaim, setSelectedSubClaim] = useState('');
     const [selectedSource, setSelectedSource] = useState('');
 
+    useEffect(() => {
+        setShowArticleSearchModal(true);
+    }, []);
+
     const handleDataSourceChange = (index: number) => {
         setDataSourceIndex(index);
         if (index === 1) {
@@ -90,7 +93,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
         setNodeQty(articles?.length || 0);
     }, [articles]);
 
-    const handleStartPlayback = () => {
+    const handleLimitNodes = () => {
         if (nodeQty! < articles!.length) {
             let limitedArticles;
             switch (nodeLimitIndex) {
@@ -346,16 +349,18 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     selectedIndex={dataSourceIndex}
                     onClick={(index) => handleDataSourceChange(index)}
                 >
-                    <div className='p-2'>
-                        <Button
-                            variant='secondary'
-                            className='flex items-center gap-2 justify-center w-full'
-                            onClick={() => setShowSearchModal(true)}
-                        >
-                            <MagnifyingGlassIcon className='size-4' />
-                            Search
-                        </Button>
-                    </div>
+                    {dataSourceIndex === 0 && (
+                        <div className='p-2'>
+                            <Button
+                                variant='secondary'
+                                className='flex items-center gap-2 justify-center w-full'
+                                onClick={() => setShowArticleSearchModal(true)}
+                            >
+                                <MagnifyingGlassIcon className='size-4' />
+                                Search
+                            </Button>
+                        </div>
+                    )}
                 </Toggle>
 
                 <Toggle
@@ -381,19 +386,12 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                 </div>
 
                 {articles?.length! > 0 && (
-                    <div className='dark-card p-2 space-y-1 text-light'>
+                    <div className='dark-card p-2 space-y-3 text-light'>
                         <p className='flex gap-2 items-center pb-1 font-semibold '>
                             <ShareIcon className='size-4' />
                             Node quantity
                         </p>
-
-                        <div className='flex justify-between'>
-                            <p>Limited by</p>
-                            <p className='flex gap-1 items-center text-sm hover:underline hover:cursor-pointer'>
-                                Clear
-                                <XMarkIcon className='size-4' />
-                            </p>
-                        </div>
+                        <p>Limited by</p>
                         <Toggle
                             toggleLabels={['Latest', 'Oldest', 'Random']}
                             selectedIndex={nodeLimitIndex}
@@ -412,30 +410,28 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                             />
                             <p className='w-5'>{nodeQty}</p>
                         </div>
+                        <Button
+                            variant='secondary'
+                            className='flex items-center gap-2 justify-center w-full text-dark'
+                            onClick={handleLimitNodes}
+                        >
+                            <ShareIcon className='size-4' />
+                            Reduce nodes
+                        </Button>
                     </div>
                 )}
 
-                <div className='space-y-2'>
-                    <Button
-                        variant='action'
-                        className='flex items-center gap-2 justify-center w-full'
-                        onClick={handleStartPlayback}
-                    >
-                        <CubeTransparentIcon className='size-4' />
-                        Start playback
-                    </Button>
-                    <Button
-                        variant='primary'
-                        className='flex items-center gap-2 justify-center w-full'
-                        onClick={() => setShowQuerySummaryModal(true)}
-                    >
-                        <DocumentTextIcon className='size-4' />
-                        Query summary
-                    </Button>
-                </div>
+                <Button
+                    variant='primary'
+                    className='flex items-center gap-2 justify-center w-full'
+                    onClick={() => setShowQuerySummaryModal(true)}
+                >
+                    <DocumentTextIcon className='size-4' />
+                    Query summary
+                </Button>
             </div>
             <AnimatePresence>
-                {showSearchModal && (
+                {showArticleSearchModal && (
                     <motion.div
                         initial={{ opacity: 0, scale: 0.97 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -443,8 +439,8 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         transition={{ duration: 0.2 }}
                         className='fixed inset-0 z-50 flex items-center justify-center'
                     >
-                        <SearchModal
-                            onClose={() => setShowSearchModal(false)}
+                        <ArticleSearchModal
+                            onClose={() => setShowArticleSearchModal(false)}
                         />
                     </motion.div>
                 )}

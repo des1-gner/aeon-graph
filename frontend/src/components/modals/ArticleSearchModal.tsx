@@ -1,6 +1,7 @@
 import {
     ArrowUpRightIcon,
     CalendarDateRangeIcon,
+    CubeTransparentIcon,
     MagnifyingGlassIcon,
     XMarkIcon,
 } from '@heroicons/react/24/solid';
@@ -13,11 +14,11 @@ import { useArticles } from '../../contexts/ArticlesContext';
 import { fetchArticle } from '../../api';
 import { ArticleTableModal } from './ArticleTableModal';
 
-type SearchModalProps = {
+type ArticleSearchModalProps = {
     onClose: () => void;
 };
 
-export const SearchModal = ({ onClose }: SearchModalProps) => {
+export const ArticleSearchModal = ({ onClose }: ArticleSearchModalProps) => {
     const { articles, setArticles } = useArticles();
     const [searchQuery, setSearchQuery] = useState('');
     const [dateRangeIndex, setDateRangeIndex] = useState(0);
@@ -193,8 +194,23 @@ export const SearchModal = ({ onClose }: SearchModalProps) => {
                                 isLoading={isLoading}
                             >
                                 <p className='flex gap-2 justify-center items-center'>
-                                    {articles?.length} articles found
+                                    {articles?.length} articles currently loaded
                                     <ArrowUpRightIcon className='w-4 h-4' />
+                                </p>
+                            </Button>
+                        </div>
+                    )}
+
+                    {articles?.length! > 0 && (
+                        <div className='flex justify-center'>
+                            <Button
+                                variant='action'
+                                onClick={onClose}
+                                className='w-full'
+                            >
+                                <p className='flex gap-2 justify-center items-center'>
+                                    Start visualisation
+                                    <CubeTransparentIcon className='w-4 h-4' />
                                 </p>
                             </Button>
                         </div>
