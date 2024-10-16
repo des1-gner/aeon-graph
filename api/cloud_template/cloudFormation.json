@@ -1,25 +1,136 @@
 {
-    "Resources": {
-        "Table": {
-            "Type": "AWS::DynamoDB::Table",
-            "Properties": {
-                "AttributeDefinitions": [
-                    {
-                        "AttributeName": "articleId",
-                        "AttributeType": "N"
-                    }
-                ],
-                "BillingMode": "PAY_PER_REQUEST",
-                "KeySchema": [
-                    {
-                        "AttributeName": "articleId",
-                        "KeyType": "HASH"
-                    }
-                ],
-                "StreamSpecification": {
-                    "StreamViewType": "NEW_AND_OLD_IMAGES"
-                }
-            }
-        }
-    }
+	"Resources": {
+		"Function": {
+			"Type": "AWS::Serverless::Function",
+			"Properties": {
+				"Description": {
+					"Fn::Sub": [
+						"Stack ${AWS::StackName} Function ${ResourceName}",
+						{
+							"ResourceName": "Function"
+						}
+					]
+				},
+				"CodeUri": "src/Function",
+				"Handler": "index.handler",
+				"Runtime": "nodejs20.x",
+				"MemorySize": 3008,
+				"Timeout": 30,
+				"Tracing": "Active",
+				"Events": {
+					"lazoneAPIGatewayGET": {
+						"Type": "Api",
+						"Properties": {
+							"Path": "/",
+							"Method": "GET",
+							"RestApiId": {
+								"Ref": "lazoneAPIGateway"
+							}
+						}
+					}
+				},
+				"Environment": {
+					"Variables": {
+						"LAZONEDYNAMODB_TABLE_NAME": {
+							"Ref": "lazoneDynamodb"
+						},
+						"LAZONEDYNAMODB_TABLE_ARN": {
+							"Fn::GetAtt": [
+								"lazoneDynamodb",
+								"Arn"
+							]
+						}
+					}
+				},
+				"Policies": [
+					{
+						"DynamoDBCrudPolicy": {
+							"TableName": {
+								"Ref": "lazoneDynamodb"
+							}
+						}
+					}
+				]
+			}
+		},
+		"FunctionLogGroup": {
+			"Type": "AWS::Logs::LogGroup",
+			"DeletionPolicy": "Retain",
+			"Properties": {
+				"LogGroupName": {
+					"Fn::Sub": "/aws/lambda/${Function}"
+				}
+			}
+		},
+		"lazoneAPIGateway": {
+			"Type": "AWS::Serverless::Api",
+			"Properties": {
+				"Name": {
+					"Fn::Sub": [
+						"${ResourceName} From Stack ${AWS::StackName}",
+						{
+							"ResourceName": "lazoneAPIGateway"
+						}
+					]
+				},
+				"StageName": "Prod",
+				"DefinitionBody": {
+					"openapi": "3.0",
+					"info": {},
+					"paths": {
+						"/": {
+							"get": {
+								"x-amazon-apigateway-integration": {
+									"httpMethod": "POST",
+									"type": "aws_proxy",
+									"uri": {
+										"Fn::Sub": "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Function.Arn}/invocations"
+									}
+								},
+								"responses": {}
+							}
+						}
+					}
+				},
+				"EndpointConfiguration": "REGIONAL",
+				"TracingEnabled": true,
+				"Cors": {
+					"MaxAge": 5
+				}
+			}
+		},
+		"lazoneS3": {
+			"Type": "AWS::S3::Bucket",
+			"Properties": {
+				"BucketName": {
+					"Fn::Sub": "${AWS::StackName}-lazones3-${AWS::AccountId}"
+				},
+				"WebsiteConfiguration": {
+					"IndexDocument": "index.html"
+				}
+			}
+		},
+		"lazoneDynamodb": {
+			"Type": "AWS::DynamoDB::Table",
+			"Properties": {
+				"AttributeDefinitions": [
+					{
+						"AttributeName": "articleId",
+						"AttributeType": "N"
+					}
+				],
+				"BillingMode": "PAY_PER_REQUEST",
+				"KeySchema": [
+					{
+						"AttributeName": "articleId",
+						"KeyType": "HASH"
+					}
+				],
+				"StreamSpecification": {
+					"StreamViewType": "NEW_AND_OLD_IMAGES"
+				}
+			}
+		}
+	},
+	"Transform": "AWS::Serverless-2016-10-31"
 }
