@@ -50,7 +50,7 @@ interface ParticleProps {
     setHoveredParticle: (index: number | null) => void;
     setSelectedArticle: (article: Article | null) => void;
     highlightedWord: string;
-    highlightColor: string;  // Add this line
+    highlightColor: string; // Add this line
     clusterColor: string;
 }
 
@@ -72,7 +72,9 @@ const Particle: React.FC<ParticleProps> = ({
     const article = articles[index];
     const originalColor = useMemo(() => {
         if (!color) {
-            console.warn(`Color is undefined for particle ${index}. Using default color.`);
+            console.warn(
+                `Color is undefined for particle ${index}. Using default color.`
+            );
             return DEFAULT_COLOR.clone();
         }
         return color.clone();
@@ -87,8 +89,11 @@ const Particle: React.FC<ParticleProps> = ({
         [highlightedWord, article.body]
     );
 
-    const isInCluster = useMemo(() => 
-        viewMode !== 'soup' && article.broadClaims && article.broadClaims[viewMode],
+    const isInCluster = useMemo(
+        () =>
+            viewMode !== 'soup' &&
+            article.broadClaims &&
+            article.broadClaims[viewMode],
         [viewMode, article.broadClaims]
     );
 
@@ -122,8 +127,8 @@ const Particle: React.FC<ParticleProps> = ({
                 targetOpacity = 0.7;
                 targetEmissiveIntensity = 0.5;
             } else if (isInCluster) {
-                targetColor = new THREE.Color(clusterColor);  // Use the clusterColor prop here
-                targetEmissive = new THREE.Color(clusterColor);  // And here
+                targetColor = new THREE.Color(clusterColor); // Use the clusterColor prop here
+                targetEmissive = new THREE.Color(clusterColor); // And here
                 targetOpacity = 0.7;
                 targetEmissiveIntensity = 1;
             } else {
@@ -135,8 +140,16 @@ const Particle: React.FC<ParticleProps> = ({
 
             materialRef.current.color.lerp(targetColor, 0.1);
             materialRef.current.emissive.lerp(targetEmissive, 0.1);
-            materialRef.current.opacity = THREE.MathUtils.lerp(materialRef.current.opacity, targetOpacity, 0.1);
-            materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(materialRef.current.emissiveIntensity, targetEmissiveIntensity, 0.1);
+            materialRef.current.opacity = THREE.MathUtils.lerp(
+                materialRef.current.opacity,
+                targetOpacity,
+                0.1
+            );
+            materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
+                materialRef.current.emissiveIntensity,
+                targetEmissiveIntensity,
+                0.1
+            );
         }
     });
 
@@ -276,9 +289,15 @@ const Swarm: React.FC<SwarmProps> = ({
     clusterColor,
     edgeColor,
 }) => {
-    const positionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
-    const velocitiesRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
-    const targetPositionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
+    const positionsRef = useRef<Float32Array>(
+        new Float32Array(articles.length * 3)
+    );
+    const velocitiesRef = useRef<Float32Array>(
+        new Float32Array(articles.length * 3)
+    );
+    const targetPositionsRef = useRef<Float32Array>(
+        new Float32Array(articles.length * 3)
+    );
     const colorsRef = useRef<THREE.Color[]>([]);
     const targetColorsRef = useRef<THREE.Color[]>([]);
     const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
@@ -312,9 +331,11 @@ const Swarm: React.FC<SwarmProps> = ({
             targetPositionsRef.current[i * 3 + 1] = point.y;
             targetPositionsRef.current[i * 3 + 2] = point.z;
             velocitiesRef.current[i * 3] = (Math.random() - 0.5) * defaultSpeed;
-            velocitiesRef.current[i * 3 + 1] = (Math.random() - 0.5) * defaultSpeed;
-            velocitiesRef.current[i * 3 + 2] = (Math.random() - 0.5) * defaultSpeed;
-            
+            velocitiesRef.current[i * 3 + 1] =
+                (Math.random() - 0.5) * defaultSpeed;
+            velocitiesRef.current[i * 3 + 2] =
+                (Math.random() - 0.5) * defaultSpeed;
+
             colorsRef.current[i] = DEFAULT_COLOR.clone();
             targetColorsRef.current[i] = DEFAULT_COLOR.clone();
         }
@@ -324,19 +345,23 @@ const Swarm: React.FC<SwarmProps> = ({
     useEffect(() => {
         for (let i = 0; i < articles.length; i++) {
             const article = articles[i];
-            if (viewMode !== 'soup' && article.broadClaims && article.broadClaims[viewMode]) {
+            if (
+                viewMode !== 'soup' &&
+                article.broadClaims &&
+                article.broadClaims[viewMode]
+            ) {
                 const clusterPoint = generateRandomPointOnSphere(clusterRadius);
                 targetPositionsRef.current[i * 3] = clusterPoint.x;
                 targetPositionsRef.current[i * 3 + 1] = clusterPoint.y;
                 targetPositionsRef.current[i * 3 + 2] = clusterPoint.z;
-                
+
                 targetColorsRef.current[i] = new THREE.Color(clusterColor);
             } else {
                 const soupPoint = generateRandomPointOnSphere(sphereRadius);
                 targetPositionsRef.current[i * 3] = soupPoint.x;
                 targetPositionsRef.current[i * 3 + 1] = soupPoint.y;
                 targetPositionsRef.current[i * 3 + 2] = soupPoint.z;
-                
+
                 targetColorsRef.current[i] = DEFAULT_COLOR.clone();
             }
         }
@@ -374,11 +399,13 @@ const Swarm: React.FC<SwarmProps> = ({
                 particleVelocity.lerp(direction, 0.1);
             } else {
                 // If close to target, add some random movement
-                particleVelocity.add(new THREE.Vector3(
-                    (Math.random() - 0.5) * 0.001,
-                    (Math.random() - 0.5) * 0.001,
-                    (Math.random() - 0.5) * 0.001
-                ));
+                particleVelocity.add(
+                    new THREE.Vector3(
+                        (Math.random() - 0.5) * 0.001,
+                        (Math.random() - 0.5) * 0.001,
+                        (Math.random() - 0.5) * 0.001
+                    )
+                );
             }
 
             // Update position based on velocity
@@ -406,14 +433,21 @@ const Swarm: React.FC<SwarmProps> = ({
 
             // Update color
             if (!colorsRef.current[i]) {
-                console.warn(`Color is undefined for particle ${i}. Initializing with default color.`);
+                console.warn(
+                    `Color is undefined for particle ${i}. Initializing with default color.`
+                );
                 colorsRef.current[i] = DEFAULT_COLOR.clone();
             }
             if (!targetColorsRef.current[i]) {
-                console.warn(`Target color is undefined for particle ${i}. Initializing with default color.`);
+                console.warn(
+                    `Target color is undefined for particle ${i}. Initializing with default color.`
+                );
                 targetColorsRef.current[i] = DEFAULT_COLOR.clone();
             }
-            colorsRef.current[i].lerp(targetColorsRef.current[i], colorTransitionSpeed);
+            colorsRef.current[i].lerp(
+                targetColorsRef.current[i],
+                colorTransitionSpeed
+            );
         }
     });
 
@@ -444,7 +478,11 @@ const Swarm: React.FC<SwarmProps> = ({
                 edgeColor={edgeColor}
             />
             {/* Add a plane to receive shadows */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -sphereRadius, 0]} receiveShadow>
+            <mesh
+                rotation={[-Math.PI / 2, 0, 0]}
+                position={[0, -sphereRadius, 0]}
+                receiveShadow
+            >
                 <planeGeometry args={[100, 100]} />
                 <shadowMaterial transparent opacity={0.2} />
             </mesh>
@@ -473,19 +511,40 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ article, onClose }) => {
                     {article.title || 'Untitled'}
                 </h2>
                 {article.url && (
-                    <p><strong>URL:</strong> <a href={article.url} target="_blank" rel="noopener noreferrer" className="text-blue-300 hover:underline">{article.url}</a></p>
+                    <p>
+                        <strong>URL:</strong>{' '}
+                        <a
+                            href={article.url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='text-blue-300 hover:underline'
+                        >
+                            {article.url}
+                        </a>
+                    </p>
                 )}
-                <p><strong>Author(s):</strong> {article.authors || 'Unknown'}</p>
-                <p><strong>Source:</strong> {article.source || 'Unknown'}</p>
-                <p><strong>Date:</strong> {new Date(article.dateTime).toLocaleDateString()}</p>
+                <p>
+                    <strong>Author(s):</strong> {article.authors || 'Unknown'}
+                </p>
+                <p>
+                    <strong>Source:</strong> {article.source || 'Unknown'}
+                </p>
+                <p>
+                    <strong>Date:</strong>{' '}
+                    {new Date(article.dateTime).toLocaleDateString()}
+                </p>
                 <div>
                     <strong>Content:</strong>
-                    <p className="mt-2">{article.body}</p>
+                    <p className='mt-2'>{article.body}</p>
                 </div>
                 {article.image && (
                     <div>
                         <strong>Image:</strong>
-                        <img src={article.image} alt="Article image" className="mt-2 w-full h-auto rounded" />
+                        <img
+                            src={article.image}
+                            alt='Article image'
+                            className='mt-2 w-full h-auto rounded'
+                        />
                     </div>
                 )}
                 <div>
@@ -528,8 +587,8 @@ interface ArticleParticleProps {
     articles: Article[];
     highlightedWord?: string;
     highlightColor: string;
-    clusterColor: string;  // Add this line
-    edgeColor: string;  // Add this line
+    clusterColor: string; // Add this line
+    edgeColor: string; // Add this line
 }
 
 const Scene: React.FC<{
@@ -541,9 +600,16 @@ const Scene: React.FC<{
     highlightColor: string;
     clusterColor: string;
     edgeColor: string;
-}> = ({ articles, viewMode, colorMap, setSelectedArticle, highlightedWord, highlightColor, clusterColor, edgeColor }) => {
-    console.log('Scene props:', { highlightColor, clusterColor, edgeColor });
-
+}> = ({
+    articles,
+    viewMode,
+    colorMap,
+    setSelectedArticle,
+    highlightedWord,
+    highlightColor,
+    clusterColor,
+    edgeColor,
+}) => {
     return (
         <>
             <ambientLight intensity={0.2} />
@@ -581,10 +647,11 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     clusterColor,
     edgeColor,
 }) => {
-    console.log('ArticleParticle props:', { highlightColor, clusterColor, edgeColor });
     const [viewMode, setViewMode] = useState<ViewMode>('soup');
     const [broadClaims, setBroadClaims] = useState<ViewMode[]>(['soup']);
-    const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+    const [selectedArticle, setSelectedArticle] = useState<Article | null>(
+        null
+    );
     const [error, setError] = useState<string | null>(null);
 
     const colorMap = useMemo(() => {
@@ -602,7 +669,7 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
 
     useEffect(() => {
         if (!articles || articles.length === 0) {
-            setError("No articles available");
+            setError('No articles available');
             return;
         }
 
@@ -643,11 +710,11 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     };
 
     if (error) {
-        return <div className="text-white p-4">{error}</div>;
+        return <div className='text-white p-4'>{error}</div>;
     }
 
     if (!articles || articles.length === 0) {
-        return <div className="text-white p-4">No articles to display</div>;
+        return <div className='text-white p-4'>No articles to display</div>;
     }
 
     return (
@@ -666,9 +733,9 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
                 />
             </Canvas>
             <Button
-                variant='glass'
+                variant='primary'
                 onClick={handleToggle}
-                className='absolute top-10 left-10 p-10 text-xl text-white font-semibold'
+                className='absolute bottom-10 left-1/2 transform -translate-x-1/2 p-10 text-xl text-white font-semibold'
             >
                 {viewMode.charAt(0).toUpperCase() +
                     viewMode.slice(1).replace(/_/g, ' ')}

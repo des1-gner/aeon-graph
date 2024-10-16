@@ -1,5 +1,5 @@
 import { BaseModal } from './BaseModal';
-import { DocumentTextIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import { XMarkIcon } from '@heroicons/react/24/solid';
 import { useArticles } from '../../contexts/ArticlesContext';
 
 type QuerySummaryModalProps = {
