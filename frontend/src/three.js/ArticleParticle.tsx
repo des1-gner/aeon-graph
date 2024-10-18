@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useMemo, forwardRef, ForwardedRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Button } from '../components/Button';
 import { Article } from '../types/article';
-import { Html } from '@react-three/drei';
+import { Text } from '@react-three/drei';
 
 const generateVibrantColor = (index: number, total: number): THREE.Color => {
     const hue = (index / total) * 360;
@@ -55,29 +55,65 @@ interface ParticleProps {
     clusterColor: string;
 }
 
-const Label: React.FC<{ title: string }> = ({ title }) => {
-    return (
-        <Html
-            center
-            distanceFactor={10}
-            style={{
-                fontSize: '8px',
-                color: 'white',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                maxWidth: '100px',
-                pointerEvents: 'none',
-                userSelect: 'none',
-                textShadow: '0 0 3px black'
-            }}
+interface LabelProps {
+    title: string;
+    position: THREE.Vector3;
+  }
+  
+  const Label = forwardRef<THREE.Mesh, LabelProps>(
+    ({ title, position }: LabelProps, ref: ForwardedRef<THREE.Mesh>) => {
+      const truncatedTitle = useMemo(() => {
+        return title.length > 30 ? title.substring(0, 27) + '...' : title;
+      }, [title]);
+  
+      const material = useMemo(() => {
+        return new THREE.MeshBasicMaterial({
+          color: 'white',
+          depthTest: false,
+          depthWrite: false,
+          transparent: true,
+        });
+      }, []);
+  
+      useFrame(({ camera }) => {
+        if (ref && 'current' in ref && ref.current) {
+          ref.current.quaternion.copy(camera.quaternion);
+        }
+      });
+  
+      return (
+        <Text
+          ref={ref}
+          position={position}
+          fontSize={0.1}
+          anchorX="center"
+          anchorY="top"
+          renderOrder={1}
+          material={material}
         >
-            {title}
-        </Html>
-    );
-};
-
-const Particle: React.FC<ParticleProps> = ({
+          {truncatedTitle}
+        </Text>
+      );
+    }
+  );
+  
+  Label.displayName = 'Label';
+  
+  interface ParticleProps {
+    index: number;
+    positions: Float32Array;
+    velocities: Float32Array;
+    articles: Article[];
+    viewMode: ViewMode;
+    color: THREE.Color;
+    setHoveredParticle: (index: number | null) => void;
+    setSelectedArticle: (article: Article | null) => void;
+    highlightedWord: string;
+    highlightColor: string;
+    clusterColor: string;
+  }
+  
+  const Particle: React.FC<ParticleProps> = ({
     index,
     positions,
     velocities,
@@ -89,119 +125,137 @@ const Particle: React.FC<ParticleProps> = ({
     highlightedWord,
     highlightColor,
     clusterColor,
-}) => {
+  }) => {
     const meshRef = useRef<THREE.Mesh>(null);
+    const labelRef = useRef<THREE.Mesh>(null);
     const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
+    const positionRef = useRef(new THREE.Vector3());
+    const velocityRef = useRef(new THREE.Vector3());
     const article = articles[index];
+  
     const originalColor = useMemo(() => {
-        if (!color) {
-            console.warn(
-                `Color is undefined for particle ${index}. Using default color.`
-            );
-            return DEFAULT_COLOR.clone();
-        }
-        return color.clone();
-    }, [color, index]);
-    const greyColor = new THREE.Color(0.5, 0.5, 0.5);
-    const whiteColor = new THREE.Color(1, 1, 1);
-
+      return color ? color.clone() : new THREE.Color(0.5, 0.5, 0.5);
+    }, [color]);
+  
     const isHighlighted = useMemo(
-        () =>
-            highlightedWord !== '' &&
-            article.body?.toLowerCase().includes(highlightedWord.toLowerCase()),
-        [highlightedWord, article.body]
+      () =>
+        highlightedWord !== '' &&
+        article.body?.toLowerCase().includes(highlightedWord.toLowerCase()),
+      [highlightedWord, article.body]
     );
-
+  
     const isInCluster = useMemo(
-        () =>
-            viewMode !== 'soup' &&
-            article.broadClaims &&
-            article.broadClaims[viewMode],
-        [viewMode, article.broadClaims]
+      () =>
+        viewMode !== 'soup' &&
+        article.broadClaims &&
+        article.broadClaims[viewMode],
+      [viewMode, article.broadClaims]
     );
-
-    useEffect(() => {
-        if (materialRef.current) {
-            materialRef.current.transparent = true;
-        }
-    }, []);
-
+  
     useFrame(() => {
-        if (meshRef.current && materialRef.current) {
-            const targetX = positions[index * 3];
-            const targetY = positions[index * 3 + 1];
-            const targetZ = positions[index * 3 + 2];
-
-            meshRef.current.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), 0.1);
-
-            let targetColor: THREE.Color;
-            let targetEmissive: THREE.Color;
-            let targetOpacity: number;
-            let targetEmissiveIntensity: number;
-
-            if (isHighlighted) {
-                targetColor = new THREE.Color(highlightColor);
-                targetEmissive = new THREE.Color(highlightColor);
-                targetOpacity = 1;
-                targetEmissiveIntensity = 2;
-            } else if (viewMode === 'soup') {
-                targetColor = originalColor;
-                targetEmissive = originalColor;
-                targetOpacity = 0.7;
-                targetEmissiveIntensity = 0.5;
-            } else if (isInCluster) {
-                targetColor = new THREE.Color(clusterColor); // Use the clusterColor prop here
-                targetEmissive = new THREE.Color(clusterColor); // And here
-                targetOpacity = 0.7;
-                targetEmissiveIntensity = 1;
-            } else {
-                targetColor = greyColor;
-                targetEmissive = greyColor;
-                targetOpacity = 0.3;
-                targetEmissiveIntensity = 0.2;
-            }
-
-            materialRef.current.color.lerp(targetColor, 0.1);
-            materialRef.current.emissive.lerp(targetEmissive, 0.1);
-            materialRef.current.opacity = THREE.MathUtils.lerp(
-                materialRef.current.opacity,
-                targetOpacity,
-                0.1
-            );
-            materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
-                materialRef.current.emissiveIntensity,
-                targetEmissiveIntensity,
-                0.1
-            );
+      if (meshRef.current && materialRef.current) {
+        const targetX = positions[index * 3];
+        const targetY = positions[index * 3 + 1];
+        const targetZ = positions[index * 3 + 2];
+  
+        const targetPosition = new THREE.Vector3(targetX, targetY, targetZ);
+        const currentPosition = positionRef.current;
+  
+        // Update velocity
+        velocityRef.current.add(
+          targetPosition.clone().sub(currentPosition).multiplyScalar(0.05)
+        );
+  
+        // Apply damping to smooth out the motion
+        velocityRef.current.multiplyScalar(0.95);
+  
+        // Update position
+        currentPosition.add(velocityRef.current);
+  
+        // Apply the updated position to the mesh
+        meshRef.current.position.copy(currentPosition);
+  
+        // Update label position
+        if (labelRef.current) {
+          labelRef.current.position.copy(currentPosition).add(new THREE.Vector3(0, -0.25, 0));
         }
+  
+        // Update material properties (color, opacity, etc.)
+        let targetColor: THREE.Color;
+        let targetEmissive: THREE.Color;
+        let targetOpacity: number;
+        let targetEmissiveIntensity: number;
+  
+        if (isHighlighted) {
+          targetColor = new THREE.Color(highlightColor);
+          targetEmissive = new THREE.Color(highlightColor);
+          targetOpacity = 1;
+          targetEmissiveIntensity = 2;
+        } else if (viewMode === 'soup') {
+          targetColor = originalColor;
+          targetEmissive = originalColor;
+          targetOpacity = 0.7;
+          targetEmissiveIntensity = 0.5;
+        } else if (isInCluster) {
+          targetColor = new THREE.Color(clusterColor);
+          targetEmissive = new THREE.Color(clusterColor);
+          targetOpacity = 0.7;
+          targetEmissiveIntensity = 1;
+        } else {
+          targetColor = new THREE.Color(0.5, 0.5, 0.5);
+          targetEmissive = new THREE.Color(0.5, 0.5, 0.5);
+          targetOpacity = 0.3;
+          targetEmissiveIntensity = 0.2;
+        }
+  
+        materialRef.current.color.lerp(targetColor, 0.1);
+        materialRef.current.emissive.lerp(targetEmissive, 0.1);
+        materialRef.current.opacity = THREE.MathUtils.lerp(
+          materialRef.current.opacity,
+          targetOpacity,
+          0.1
+        );
+        materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
+          materialRef.current.emissiveIntensity,
+          targetEmissiveIntensity,
+          0.1
+        );
+      }
     });
-
+  
     return (
-        <group>
-            <mesh
-                ref={meshRef}
-                onPointerOver={() => setHoveredParticle(index)}
-                onPointerOut={() => setHoveredParticle(null)}
-                onClick={(event) => {
-                    event.stopPropagation();
-                    setSelectedArticle(article);
-                }}
-            >
-                <sphereGeometry args={[0.2, 32, 32]} />
-                <meshPhysicalMaterial
-                    ref={materialRef}
-                    color={originalColor}
-                    emissive={originalColor}
-                    emissiveIntensity={0.5}
-                    transparent
-                    roughness={0.5}
-                    metalness={0.8}
-                />
-                <Label title={article.title || 'Untitled'} />
-            </mesh>
-        </group>
+      <group>
+        <mesh
+          ref={meshRef}
+          onPointerOver={() => setHoveredParticle(index)}
+          onPointerOut={() => setHoveredParticle(null)}
+          onClick={(event) => {
+            event.stopPropagation();
+            setSelectedArticle(article);
+          }}
+        >
+          <sphereGeometry args={[0.2, 32, 32]} />
+          <meshPhysicalMaterial
+            ref={materialRef}
+            color={originalColor}
+            emissive={originalColor}
+            emissiveIntensity={0.5}
+            transparent
+            roughness={0.5}
+            metalness={0.8}
+          />
+        </mesh>
+        <Label 
+          ref={labelRef}
+          title={article.title || 'Untitled'} 
+          position={new THREE.Vector3(0, -0.25, 0)} 
+        />
+      </group>
     );
-};
+  };
+  
+  export { Particle, Label };
+  export type { ViewMode };
 
 interface ConnectionLinesProps {
     articles: Article[];
