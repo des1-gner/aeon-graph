@@ -671,54 +671,106 @@ interface ArticleParticleProps {
     edgeColor: string; // Add this line
 }
 
-const Scene: React.FC<{
-    articles: Article[];
-    viewMode: ViewMode;
-    colorMap: Map<string, THREE.Color>;
-    setSelectedArticle: (article: Article | null) => void;
-    highlightedWord: string;
-    highlightColor: string;
-    clusterColor: string;
-    edgeColor: string;
-}> = ({
-    articles,
-    viewMode,
-    colorMap,
-    setSelectedArticle,
-    highlightedWord,
-    highlightColor,
-    clusterColor,
-    edgeColor,
-}) => {
-    return (
-        <>
-            <ambientLight intensity={0.2} />
-            <pointLight position={[10, 10, 10]} intensity={0.8} castShadow />
-            <directionalLight
-                position={[5, 5, 5]}
-                intensity={0.5}
-                castShadow
-                shadow-mapSize-width={1024}
-                shadow-mapSize-height={1024}
-            />
-            <Swarm
-                articles={articles}
-                viewMode={viewMode}
-                colorMap={colorMap}
-                setSelectedArticle={setSelectedArticle}
-                highlightedWord={highlightedWord}
-                highlightColor={highlightColor}
-                clusterColor={clusterColor}
-                edgeColor={edgeColor}
-            />
-            <OrbitControls
-                enablePan={true}
-                enableZoom={true}
-                enableRotate={true}
-            />
-        </>
-    );
-};
+// Add this new custom hook for keyboard controls
+const useKeyboardControls = (speed = 0.5) => {
+    const { camera } = useThree();
+    const keys = useRef({
+      ArrowUp: false,
+      ArrowDown: false,
+      ArrowLeft: false,
+      ArrowRight: false,
+      KeyW: false,
+      KeyS: false,
+      KeyA: false,
+      KeyD: false,
+    });
+  
+    useEffect(() => {
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.code in keys.current) {
+          keys.current[event.code as keyof typeof keys.current] = true;
+        }
+      };
+  
+      const handleKeyUp = (event: KeyboardEvent) => {
+        if (event.code in keys.current) {
+          keys.current[event.code as keyof typeof keys.current] = false;
+        }
+      };
+  
+      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener('keyup', handleKeyUp);
+  
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keyup', handleKeyUp);
+      };
+    }, []);
+  
+    useFrame(() => {
+      const moveForward = keys.current.ArrowUp || keys.current.KeyW;
+      const moveBackward = keys.current.ArrowDown || keys.current.KeyS;
+      const moveLeft = keys.current.ArrowLeft || keys.current.KeyA;
+      const moveRight = keys.current.ArrowRight || keys.current.KeyD;
+  
+      if (moveForward) camera.translateZ(-speed);
+      if (moveBackward) camera.translateZ(speed);
+      if (moveLeft) camera.translateX(-speed);
+      if (moveRight) camera.translateX(speed);
+    });
+  };
+  
+  // Modify the Scene component to include the new hook
+  const Scene: React.FC<{
+      articles: Article[];
+      viewMode: ViewMode;
+      colorMap: Map<string, THREE.Color>;
+      setSelectedArticle: (article: Article | null) => void;
+      highlightedWord: string;
+      highlightColor: string;
+      clusterColor: string;
+      edgeColor: string;
+  }> = ({
+      articles,
+      viewMode,
+      colorMap,
+      setSelectedArticle,
+      highlightedWord,
+      highlightColor,
+      clusterColor,
+      edgeColor,
+  }) => {
+      useKeyboardControls(); // Add this line to enable keyboard controls
+  
+      return (
+          <>
+              <ambientLight intensity={0.2} />
+              <pointLight position={[10, 10, 10]} intensity={0.8} castShadow />
+              <directionalLight
+                  position={[5, 5, 5]}
+                  intensity={0.5}
+                  castShadow
+                  shadow-mapSize-width={1024}
+                  shadow-mapSize-height={1024}
+              />
+              <Swarm
+                  articles={articles}
+                  viewMode={viewMode}
+                  colorMap={colorMap}
+                  setSelectedArticle={setSelectedArticle}
+                  highlightedWord={highlightedWord}
+                  highlightColor={highlightColor}
+                  clusterColor={clusterColor}
+                  edgeColor={edgeColor}
+              />
+              <OrbitControls
+                  enablePan={true}
+                  enableZoom={true}
+                  enableRotate={true}
+              />
+          </>
+      );
+  };
 
 export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     articles,
