@@ -4,6 +4,7 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Button } from '../components/Button';
 import { Article } from '../types/article';
+import { Text } from '@react-three/drei';
 
 const generateVibrantColor = (index: number, total: number): THREE.Color => {
     const hue = (index / total) * 360;
@@ -50,9 +51,23 @@ interface ParticleProps {
     setHoveredParticle: (index: number | null) => void;
     setSelectedArticle: (article: Article | null) => void;
     highlightedWord: string;
-    highlightColor: string; // Add this line
+    highlightColor: string;
     clusterColor: string;
 }
+
+const Label: React.FC<{ position: THREE.Vector3; title: string }> = ({ position, title }) => {
+    return (
+        <Text
+            position={[position.x, position.y - 0.3, position.z]}
+            fontSize={0.2}
+            color="white"
+            anchorX="center"
+            anchorY="top"
+        >
+            {title}
+        </Text>
+    );
+};
 
 const Particle: React.FC<ParticleProps> = ({
     index,
@@ -154,26 +169,36 @@ const Particle: React.FC<ParticleProps> = ({
     });
 
     return (
-        <mesh
-            ref={meshRef}
-            onPointerOver={() => setHoveredParticle(index)}
-            onPointerOut={() => setHoveredParticle(null)}
-            onClick={(event) => {
-                event.stopPropagation();
-                setSelectedArticle(article);
-            }}
-        >
-            <sphereGeometry args={[0.2, 32, 32]} />
-            <meshPhysicalMaterial
-                ref={materialRef}
-                color={originalColor}
-                emissive={originalColor}
-                emissiveIntensity={0.5}
-                transparent
-                roughness={0.5}
-                metalness={0.8}
+        <>
+            <mesh
+                ref={meshRef}
+                onPointerOver={() => setHoveredParticle(index)}
+                onPointerOut={() => setHoveredParticle(null)}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    setSelectedArticle(article);
+                }}
+            >
+                <sphereGeometry args={[0.2, 32, 32]} />
+                <meshPhysicalMaterial
+                    ref={materialRef}
+                    color={originalColor}
+                    emissive={originalColor}
+                    emissiveIntensity={0.5}
+                    transparent
+                    roughness={0.5}
+                    metalness={0.8}
+                />
+            </mesh>
+            <Label
+                position={new THREE.Vector3(
+                    positions[index * 3],
+                    positions[index * 3 + 1],
+                    positions[index * 3 + 2]
+                )}
+                title={article.title || 'Untitled'}
             />
-        </mesh>
+        </>
     );
 };
 
