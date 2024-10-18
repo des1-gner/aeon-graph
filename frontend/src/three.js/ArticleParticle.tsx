@@ -369,17 +369,12 @@ const Swarm: React.FC<SwarmProps> = ({
     clusterColor,
     edgeColor,
 }) => {
-    const positionsRef = useRef<Float32Array>(
-        new Float32Array(articles.length * 3)
-    );
-    const velocitiesRef = useRef<Float32Array>(
-        new Float32Array(articles.length * 3)
-    );
-    const targetPositionsRef = useRef<Float32Array>(
-        new Float32Array(articles.length * 3)
-    );
+    const positionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
+    const velocitiesRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
+    const targetPositionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
     const colorsRef = useRef<THREE.Color[]>([]);
     const targetColorsRef = useRef<THREE.Color[]>([]);
+    const timeRef = useRef(0);
     const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
 
     const sphereRadius = 10;
@@ -411,10 +406,8 @@ const Swarm: React.FC<SwarmProps> = ({
             targetPositionsRef.current[i * 3 + 1] = point.y;
             targetPositionsRef.current[i * 3 + 2] = point.z;
             velocitiesRef.current[i * 3] = (Math.random() - 0.5) * defaultSpeed;
-            velocitiesRef.current[i * 3 + 1] =
-                (Math.random() - 0.5) * defaultSpeed;
-            velocitiesRef.current[i * 3 + 2] =
-                (Math.random() - 0.5) * defaultSpeed;
+            velocitiesRef.current[i * 3 + 1] = (Math.random() - 0.5) * defaultSpeed;
+            velocitiesRef.current[i * 3 + 2] = (Math.random() - 0.5) * defaultSpeed;
 
             colorsRef.current[i] = DEFAULT_COLOR.clone();
             targetColorsRef.current[i] = DEFAULT_COLOR.clone();
@@ -425,11 +418,7 @@ const Swarm: React.FC<SwarmProps> = ({
     useEffect(() => {
         for (let i = 0; i < articles.length; i++) {
             const article = articles[i];
-            if (
-                viewMode !== 'soup' &&
-                article.broadClaims &&
-                article.broadClaims[viewMode]
-            ) {
+            if (viewMode !== 'soup' && article.broadClaims && article.broadClaims[viewMode]) {
                 const clusterPoint = generateRandomPointOnSphere(clusterRadius);
                 targetPositionsRef.current[i * 3] = clusterPoint.x;
                 targetPositionsRef.current[i * 3 + 1] = clusterPoint.y;
@@ -447,11 +436,14 @@ const Swarm: React.FC<SwarmProps> = ({
         }
     }, [viewMode, articles, clusterColor]);
 
-    useFrame(() => {
+    useFrame((state, delta) => {
+        timeRef.current += delta;
+        const intensityFactor = Math.min(timeRef.current / 5, 1); // Ramp up over 5 seconds
+    
         const positions = positionsRef.current;
         const velocities = velocitiesRef.current;
         const targetPositions = targetPositionsRef.current;
-
+    
         for (let i = 0; i < articles.length; i++) {
             const particlePosition = new THREE.Vector3(
                 positions[i * 3],
@@ -468,41 +460,45 @@ const Swarm: React.FC<SwarmProps> = ({
                 targetPositions[i * 3 + 1],
                 targetPositions[i * 3 + 2]
             );
-
+    
             // Calculate direction to target
             const direction = targetPosition.clone().sub(particlePosition);
             const distance = direction.length();
-
+    
             if (distance > 0.1) {
                 // If not very close to target, move towards it
-                direction.normalize().multiplyScalar(transitionSpeed);
-                particleVelocity.lerp(direction, 0.1);
+                direction.normalize().multiplyScalar(transitionSpeed * intensityFactor);
+                particleVelocity.lerp(direction, 0.05 * intensityFactor);
             } else {
-                // If close to target, add some random movement
+                // If close to target, add very subtle random movement
+                const wobbleFactor = Math.max(0, (0.1 - distance) / 0.1); // 0 at distance 0.1, 1 at distance 0
                 particleVelocity.add(
                     new THREE.Vector3(
-                        (Math.random() - 0.5) * 0.001,
-                        (Math.random() - 0.5) * 0.001,
-                        (Math.random() - 0.5) * 0.001
+                        (Math.random() - 0.5) * 0.0001 * intensityFactor * (1 - wobbleFactor),
+                        (Math.random() - 0.5) * 0.0001 * intensityFactor * (1 - wobbleFactor),
+                        (Math.random() - 0.5) * 0.0001 * intensityFactor * (1 - wobbleFactor)
                     )
                 );
+                
+                // Apply stronger damping when close to target
+                particleVelocity.multiplyScalar(0.9 + 0.1 * wobbleFactor);
             }
-
+    
             // Update position based on velocity
             particlePosition.add(particleVelocity);
-
+    
             // Limit the speed of the particle
             const speed = particleVelocity.length();
             if (speed > maxSpeed) {
                 particleVelocity.multiplyScalar(maxSpeed / speed);
             }
-
+    
             // Keep particles within the sphere
             if (particlePosition.length() > sphereRadius) {
                 particlePosition.normalize().multiplyScalar(sphereRadius);
                 particleVelocity.reflect(particlePosition.clone().normalize());
             }
-
+    
             // Update positions and velocities
             positions[i * 3] = particlePosition.x;
             positions[i * 3 + 1] = particlePosition.y;
@@ -526,7 +522,7 @@ const Swarm: React.FC<SwarmProps> = ({
             }
             colorsRef.current[i].lerp(
                 targetColorsRef.current[i],
-                colorTransitionSpeed
+                colorTransitionSpeed * intensityFactor
             );
         }
     });
@@ -672,7 +668,7 @@ interface ArticleParticleProps {
 }
 
 // Add this new custom hook for keyboard controls
-const useKeyboardControls = (speed = 0.5) => {
+const useKeyboardControls = (speed = 0.1) => {
     const { camera } = useThree();
     const keys = useRef({
       ArrowUp: false,
@@ -740,7 +736,7 @@ const useKeyboardControls = (speed = 0.5) => {
       clusterColor,
       edgeColor,
   }) => {
-      useKeyboardControls(); // Add this line to enable keyboard controls
+      // useKeyboardControls(); // disable keyboard controls
   
       return (
           <>
