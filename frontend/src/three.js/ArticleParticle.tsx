@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Button } from '../components/Button';
 import { Article } from '../types/article';
-import { Text } from '@react-three/drei';
+import { Html } from '@react-three/drei';
 
 const generateVibrantColor = (index: number, total: number): THREE.Color => {
     const hue = (index / total) * 360;
@@ -55,17 +55,25 @@ interface ParticleProps {
     clusterColor: string;
 }
 
-const Label: React.FC<{ position: THREE.Vector3; title: string }> = ({ position, title }) => {
+const Label: React.FC<{ title: string }> = ({ title }) => {
     return (
-        <Text
-            position={[position.x, position.y - 0.3, position.z]}
-            fontSize={0.2}
-            color="white"
-            anchorX="center"
-            anchorY="top"
+        <Html
+            center
+            distanceFactor={10}
+            style={{
+                fontSize: '8px',
+                color: 'white',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '100px',
+                pointerEvents: 'none',
+                userSelect: 'none',
+                textShadow: '0 0 3px black'
+            }}
         >
             {title}
-        </Text>
+        </Html>
     );
 };
 
@@ -120,11 +128,11 @@ const Particle: React.FC<ParticleProps> = ({
 
     useFrame(() => {
         if (meshRef.current && materialRef.current) {
-            meshRef.current.position.set(
-                positions[index * 3],
-                positions[index * 3 + 1],
-                positions[index * 3 + 2]
-            );
+            const targetX = positions[index * 3];
+            const targetY = positions[index * 3 + 1];
+            const targetZ = positions[index * 3 + 2];
+
+            meshRef.current.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), 0.1);
 
             let targetColor: THREE.Color;
             let targetEmissive: THREE.Color;
@@ -169,7 +177,7 @@ const Particle: React.FC<ParticleProps> = ({
     });
 
     return (
-        <>
+        <group>
             <mesh
                 ref={meshRef}
                 onPointerOver={() => setHoveredParticle(index)}
@@ -189,16 +197,9 @@ const Particle: React.FC<ParticleProps> = ({
                     roughness={0.5}
                     metalness={0.8}
                 />
+                <Label title={article.title || 'Untitled'} />
             </mesh>
-            <Label
-                position={new THREE.Vector3(
-                    positions[index * 3],
-                    positions[index * 3 + 1],
-                    positions[index * 3 + 2]
-                )}
-                title={article.title || 'Untitled'}
-            />
-        </>
+        </group>
     );
 };
 
