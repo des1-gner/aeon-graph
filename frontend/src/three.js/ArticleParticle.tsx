@@ -331,7 +331,7 @@ const Swarm: React.FC<SwarmProps> = ({
     const sphereRadius = 10;
     const maxSpeed = 0.05;
     const defaultSpeed = 0.01;
-    const transitionSpeed = 0.02;
+    const transitionSpeed = 0.05;
     const clusterRadius = 4;
     const colorTransitionSpeed = 0.1;
 
