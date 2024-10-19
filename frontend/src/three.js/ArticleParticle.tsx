@@ -57,42 +57,50 @@ interface ParticleProps {
 
 interface LabelProps {
     title: string;
+    source: string;
     position: THREE.Vector3;
+    color: THREE.Color;
   }
   
-  const Label = forwardRef<THREE.Mesh, LabelProps>(
-    ({ title, position }: LabelProps, ref: ForwardedRef<THREE.Mesh>) => {
-      const truncatedTitle = useMemo(() => {
-        return title.length > 30 ? title.substring(0, 27) + '...' : title;
-      }, [title]);
+  const Label = forwardRef<THREE.Group, LabelProps>(
+    ({ title, source, position, color }: LabelProps, ref: ForwardedRef<THREE.Group>) => {
+      const textRef = useRef<THREE.Mesh>(null);
+      const materialRef = useRef<THREE.MeshBasicMaterial>(null);
   
       const material = useMemo(() => {
         return new THREE.MeshBasicMaterial({
-          color: 'white',
+          color: color,
           depthTest: false,
           depthWrite: false,
           transparent: true,
         });
-      }, []);
+      }, [color]);
   
       useFrame(({ camera }) => {
         if (ref && 'current' in ref && ref.current) {
           ref.current.quaternion.copy(camera.quaternion);
         }
+        if (materialRef.current) {
+          materialRef.current.color = color;
+        }
       });
   
       return (
-        <Text
-          ref={ref}
-          position={position}
-          fontSize={0.1}
-          anchorX="center"
-          anchorY="top"
-          renderOrder={1}
-          material={material}
-        >
-          {truncatedTitle}
-        </Text>
+        <group ref={ref} position={position}>
+          <Text
+            ref={textRef}
+            material={material}
+            position={[0, 0, 0]}
+            fontSize={0.15}
+            maxWidth={5}
+            anchorX="center"
+            anchorY="middle"
+            renderOrder={1}
+            font="fonts/BulletinGothic.otf"
+          >
+            {`${title} | ${source}`}
+          </Text>
+        </group>
       );
     }
   );
@@ -127,7 +135,7 @@ interface LabelProps {
     clusterColor,
   }) => {
     const meshRef = useRef<THREE.Mesh>(null);
-    const labelRef = useRef<THREE.Mesh>(null);
+    const labelRef = useRef<THREE.Group>(null);
     const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
     const positionRef = useRef(new THREE.Vector3());
     const velocityRef = useRef(new THREE.Vector3());
@@ -153,7 +161,7 @@ interface LabelProps {
     );
   
     useFrame(() => {
-      if (meshRef.current && materialRef.current) {
+      if (meshRef.current && materialRef.current && labelRef.current) {
         const targetX = positions[index * 3];
         const targetY = positions[index * 3 + 1];
         const targetZ = positions[index * 3 + 2];
@@ -176,9 +184,7 @@ interface LabelProps {
         meshRef.current.position.copy(currentPosition);
   
         // Update label position
-        if (labelRef.current) {
-          labelRef.current.position.copy(currentPosition).add(new THREE.Vector3(0, -0.25, 0));
-        }
+        labelRef.current.position.copy(currentPosition).add(new THREE.Vector3(0, -0.3, 0));
   
         // Update material properties (color, opacity, etc.)
         let targetColor: THREE.Color;
@@ -220,6 +226,12 @@ interface LabelProps {
           targetEmissiveIntensity,
           0.1
         );
+  
+        // Update label color
+        if (labelRef.current.children[0] instanceof THREE.Mesh) {
+          const labelMaterial = labelRef.current.children[0].material as THREE.MeshBasicMaterial;
+          labelMaterial.color.copy(targetColor);
+        }
       }
     });
   
@@ -248,7 +260,9 @@ interface LabelProps {
         <Label 
           ref={labelRef}
           title={article.title || 'Untitled'} 
-          position={new THREE.Vector3(0, -0.25, 0)} 
+          source={article.source || 'Unknown'}
+          position={new THREE.Vector3(0, -0.3, 0)}
+          color={originalColor}
         />
       </group>
     );
