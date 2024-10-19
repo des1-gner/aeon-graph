@@ -41,20 +41,6 @@ const fragmentShader = `
 
 type ViewMode = 'soup' | keyof Article['broadClaims'];
 
-interface ParticleProps {
-    index: number;
-    positions: Float32Array;
-    velocities: Float32Array;
-    articles: Article[];
-    viewMode: ViewMode;
-    color: THREE.Color;
-    setHoveredParticle: (index: number | null) => void;
-    setSelectedArticle: (article: Article | null) => void;
-    highlightedWord: string;
-    highlightColor: string;
-    clusterColor: string;
-}
-
 interface LabelProps {
     title: string;
     source: string;
@@ -96,7 +82,7 @@ interface LabelProps {
             anchorX="center"
             anchorY="middle"
             renderOrder={1}
-            font="fonts/BulletinGothic.otf"
+            font="fonts/EurostileBQ-Italic.otf"
           >
             {`${title} | ${source}`}
           </Text>
@@ -115,12 +101,12 @@ interface LabelProps {
     viewMode: ViewMode;
     color: THREE.Color;
     setHoveredParticle: (index: number | null) => void;
-    setSelectedArticle: (article: Article | null) => void;
+    setSelectedArticle: (article: Article, position: THREE.Vector3) => void;
     highlightedWord: string;
     highlightColor: string;
     clusterColor: string;
-  }
-  
+}
+
   const Particle: React.FC<ParticleProps> = ({
     index,
     positions,
@@ -133,13 +119,14 @@ interface LabelProps {
     highlightedWord,
     highlightColor,
     clusterColor,
-  }) => {
+}) => {
     const meshRef = useRef<THREE.Mesh>(null);
     const labelRef = useRef<THREE.Group>(null);
     const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
     const positionRef = useRef(new THREE.Vector3());
     const velocityRef = useRef(new THREE.Vector3());
     const article = articles[index];
+
   
     const originalColor = useMemo(() => {
       return color ? color.clone() : new THREE.Color(0.5, 0.5, 0.5);
@@ -236,37 +223,39 @@ interface LabelProps {
     });
   
     return (
-      <group>
-        <mesh
-          ref={meshRef}
-          onPointerOver={() => setHoveredParticle(index)}
-          onPointerOut={() => setHoveredParticle(null)}
-          onClick={(event) => {
-            event.stopPropagation();
-            setSelectedArticle(article);
-          }}
-        >
-          <sphereGeometry args={[0.2, 32, 32]} />
-          <meshPhysicalMaterial
-            ref={materialRef}
-            color={originalColor}
-            emissive={originalColor}
-            emissiveIntensity={0.5}
-            transparent
-            roughness={0.5}
-            metalness={0.8}
-          />
-        </mesh>
-        <Label 
-          ref={labelRef}
-          title={article.title || 'Untitled'} 
-          source={article.source || 'Unknown'}
-          position={new THREE.Vector3(0, -0.3, 0)}
-          color={originalColor}
-        />
-      </group>
+        <group>
+            <mesh
+                ref={meshRef}
+                onPointerOver={() => setHoveredParticle(index)}
+                onPointerOut={() => setHoveredParticle(null)}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    if (meshRef.current) {
+                        setSelectedArticle(article, meshRef.current.position);
+                    }
+                }}
+            >
+                <sphereGeometry args={[0.2, 32, 32]} />
+                <meshPhysicalMaterial
+                    ref={materialRef}
+                    color={color}
+                    emissive={color}
+                    emissiveIntensity={0.5}
+                    transparent
+                    roughness={0.5}
+                    metalness={0.8}
+                />
+            </mesh>
+            <Label 
+                ref={labelRef}
+                title={article.title || 'Untitled'} 
+                source={article.source || 'Unknown'}
+                position={new THREE.Vector3(0, -0.3, 0)}
+                color={color}
+            />
+        </group>
     );
-  };
+};
   
   export { Particle, Label };
   export type { ViewMode };
@@ -364,7 +353,7 @@ interface SwarmProps {
     articles: Article[];
     viewMode: ViewMode;
     colorMap: Map<string, THREE.Color>;
-    setSelectedArticle: (article: Article | null) => void;
+    setSelectedArticle: (article: Article, position: THREE.Vector3) => void;
     highlightedWord: string;
     highlightColor: string;
     clusterColor: string;
@@ -672,13 +661,12 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ article, onClose }) => {
 };
 
 export default InfoPanel;
-
 interface ArticleParticleProps {
     articles: Article[];
     highlightedWord?: string;
     highlightColor: string;
-    clusterColor: string; // Add this line
-    edgeColor: string; // Add this line
+    clusterColor: string;
+    edgeColor: string;
 }
 
 // Add this new custom hook for keyboard controls
@@ -729,58 +717,123 @@ const useKeyboardControls = (speed = 0.1) => {
       if (moveRight) camera.translateX(speed);
     });
   };
+
+  const CameraController: React.FC<{
+    target: THREE.Vector3 | null;
+    resetView: boolean;
+}> = ({ target, resetView }) => {
+    const { camera, gl } = useThree();
+    const controlsRef = useRef<any>(null);
+    const [isTransitioning, setIsTransitioning] = useState(false);
+    const targetRef = useRef<THREE.Vector3 | null>(null);
+
+    useEffect(() => {
+        if (target || resetView) {
+            setIsTransitioning(true);
+            targetRef.current = target ? target.clone() : new THREE.Vector3(0, 0, 0);
+        }
+    }, [target, resetView]);
+
+    useFrame(() => {
+        if (controlsRef.current && isTransitioning) {
+            const controls = controlsRef.current;
+
+            if (targetRef.current) {
+                const targetPosition = targetRef.current.clone().add(new THREE.Vector3(0, 0, 5));
+                camera.position.lerp(targetPosition, 0.05);
+                controls.target.lerp(targetRef.current, 0.05);
+
+                if (camera.position.distanceTo(targetPosition) < 0.1 &&
+                    controls.target.distanceTo(targetRef.current) < 0.1) {
+                    setIsTransitioning(false);
+                    targetRef.current = null;
+                }
+            }
+
+            controls.update();
+        }
+    });
+
+    return (
+        <OrbitControls
+            ref={controlsRef}
+            args={[camera, gl.domElement]}
+            enableDamping
+            dampingFactor={0.25}
+            enableZoom={true}
+            enableRotate={true}
+            enablePan={true}
+        />
+    );
+};
+
   
-  // Modify the Scene component to include the new hook
-  const Scene: React.FC<{
-      articles: Article[];
-      viewMode: ViewMode;
-      colorMap: Map<string, THREE.Color>;
-      setSelectedArticle: (article: Article | null) => void;
-      highlightedWord: string;
-      highlightColor: string;
-      clusterColor: string;
-      edgeColor: string;
-  }> = ({
-      articles,
-      viewMode,
-      colorMap,
-      setSelectedArticle,
-      highlightedWord,
-      highlightColor,
-      clusterColor,
-      edgeColor,
-  }) => {
-      // useKeyboardControls(); // disable keyboard controls
-  
-      return (
-          <>
-              <ambientLight intensity={0.2} />
-              <pointLight position={[10, 10, 10]} intensity={0.8} castShadow />
-              <directionalLight
-                  position={[5, 5, 5]}
-                  intensity={0.5}
-                  castShadow
-                  shadow-mapSize-width={1024}
-                  shadow-mapSize-height={1024}
-              />
-              <Swarm
-                  articles={articles}
-                  viewMode={viewMode}
-                  colorMap={colorMap}
-                  setSelectedArticle={setSelectedArticle}
-                  highlightedWord={highlightedWord}
-                  highlightColor={highlightColor}
-                  clusterColor={clusterColor}
-                  edgeColor={edgeColor}
-              />
-              <OrbitControls
-                  enablePan={true}
-                  enableZoom={true}
-                  enableRotate={true}
-              />
-          </>
-      );
-  };
+interface SceneProps {
+    articles: Article[];
+    viewMode: ViewMode;
+    colorMap: Map<string, THREE.Color>;
+    setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
+    highlightedWord: string;
+    highlightColor: string;
+    clusterColor: string;
+    edgeColor: string;
+}
+
+const Scene: React.FC<SceneProps> = ({
+    articles,
+    viewMode,
+    colorMap,
+    setSelectedArticle,
+    highlightedWord,
+    highlightColor,
+    clusterColor,
+    edgeColor,
+}) => {
+    const [cameraTarget, setCameraTarget] = useState<THREE.Vector3 | null>(null);
+    const [resetView, setResetView] = useState(false);
+
+    const handleBackgroundClick = () => {
+        setSelectedArticle(null);
+        setResetView(true);
+        setCameraTarget(null);
+    };
+
+    const handleParticleClick = (article: Article, position: THREE.Vector3) => {
+        setSelectedArticle(article, position);
+        setCameraTarget(position);
+        setResetView(false);
+    };
+
+    return (
+        <>
+            <ambientLight intensity={0.2} />
+            <pointLight position={[10, 10, 10]} intensity={0.8} castShadow />
+            <directionalLight
+                position={[5, 5, 5]}
+                intensity={0.5}
+                castShadow
+                shadow-mapSize-width={1024}
+                shadow-mapSize-height={1024}
+            />
+            <Swarm
+                articles={articles}
+                viewMode={viewMode}
+                colorMap={colorMap}
+                setSelectedArticle={handleParticleClick}
+                highlightedWord={highlightedWord}
+                highlightColor={highlightColor}
+                clusterColor={clusterColor}
+                edgeColor={edgeColor}
+            />
+            <CameraController target={cameraTarget} resetView={resetView} />
+            <mesh position={[0, 0, -1]} onClick={handleBackgroundClick}>
+                <planeGeometry args={[1000, 1000]} />
+                <meshBasicMaterial transparent opacity={0} />
+            </mesh>
+        </>
+    );
+};
+
 
 export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     articles,
@@ -791,9 +844,7 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
 }) => {
     const [viewMode, setViewMode] = useState<ViewMode>('soup');
     const [broadClaims, setBroadClaims] = useState<ViewMode[]>(['soup']);
-    const [selectedArticle, setSelectedArticle] = useState<Article | null>(
-        null
-    );
+    const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     const colorMap = useMemo(() => {
@@ -808,6 +859,7 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
         });
         return map;
     }, [broadClaims]);
+
 
     useEffect(() => {
         if (!articles || articles.length === 0) {
@@ -847,7 +899,7 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
         });
     };
 
-    const handleArticleSelect = (article: Article | null) => {
+    const handleArticleSelect = (article: Article | null, position?: THREE.Vector3) => {
         setSelectedArticle(article);
     };
 
