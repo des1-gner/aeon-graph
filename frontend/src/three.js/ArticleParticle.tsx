@@ -136,9 +136,9 @@ export const Particle: React.FC<ParticleProps> = ({
   const isInCluster = useMemo(() => matchesFilter(article, clusterOptions), [article, clusterOptions]);
 
   const getTargetColor = () => {
-    if (isInCluster) return new THREE.Color(clusterColor);
     if (isHighlighted) return new THREE.Color(highlightColor);
-    return new THREE.Color(0.8, 0.8, 0.8); // Light grey for non-highlighted nodes
+    if (isInCluster) return new THREE.Color(clusterColor);
+    return new THREE.Color(0.8, 0.8, 0.8); // Light grey for non-highlighted, non-clustered nodes
   };
 
   useFrame(({ camera }) => {
@@ -154,8 +154,8 @@ export const Particle: React.FC<ParticleProps> = ({
       labelRef.current.quaternion.copy(camera.quaternion);
 
       const targetColor = getTargetColor();
-      const targetOpacity = isInCluster || isHighlighted ? 1 : 0.3;
-      const targetEmissiveIntensity = isInCluster ? 1.5 : (isHighlighted ? 1 : 0.2);
+      const targetOpacity = isHighlighted || isInCluster ? 1 : 0.3;
+      const targetEmissiveIntensity = isHighlighted ? 1 : (isInCluster ? 0.5 : 0.2);
 
       materialRef.current.color.lerp(targetColor, 0.1);
       materialRef.current.emissive.lerp(targetColor, 0.1);
@@ -286,8 +286,8 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
   );
 };
   
-const SPHERE_RADIUS = 10;
-const CLUSTER_RADIUS = 4; // Reduced from 8 to 5 to keep cluster more central
+const SPHERE_RADIUS = 15;
+const CLUSTER_RADIUS = 6; // Reduced from 8 to 5 to keep cluster more central
 const OUTER_SPHERE_PADDING = 2; // Add padding to keep outer nodes away from the sphere's edge
 const MIN_DISTANCE_BETWEEN_NODES = 1; // Minimum distance between nodes
   
@@ -613,7 +613,7 @@ const CameraController: React.FC<{ target: THREE.Vector3 | null; resetView: bool
       const controls = controlsRef.current;
 
       if (targetRef.current) {
-        const targetPosition = targetRef.current.clone().add(new THREE.Vector3(0, 0, 5));
+        const targetPosition = targetRef.current.clone().add(new THREE.Vector3(0, 0, 15));
         camera.position.lerp(targetPosition, 0.05);
         controls.target.lerp(targetRef.current, 0.05);
 
@@ -637,8 +637,8 @@ const CameraController: React.FC<{ target: THREE.Vector3 | null; resetView: bool
       enableZoom={true}
       enableRotate={true}
       enablePan={true}
-      minDistance={5} // Add minimum distance to prevent nodes from disappearing
-      maxDistance={50} // Add maximum distance to keep the scene in view
+      minDistance={10}
+      maxDistance={50}
     />
   );
 };
@@ -668,6 +668,76 @@ const Scene: React.FC<SceneProps> = ({
 }) => {
   const [cameraTarget, setCameraTarget] = useState<THREE.Vector3 | null>(null);
   const [resetView, setResetView] = useState(false);
+  const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
+  
+  const positionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
+  const targetPositionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
+
+  const initializePositions = () => {
+    articles.forEach((_, i) => {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos((Math.random() * 2) - 1);
+      const x = SPHERE_RADIUS * Math.sin(phi) * Math.cos(theta);
+      const y = SPHERE_RADIUS * Math.sin(phi) * Math.sin(theta);
+      const z = SPHERE_RADIUS * Math.cos(phi);
+      
+      positionsRef.current[i * 3] = x;
+      positionsRef.current[i * 3 + 1] = y;
+      positionsRef.current[i * 3 + 2] = z;
+      
+      targetPositionsRef.current[i * 3] = x;
+      targetPositionsRef.current[i * 3 + 1] = y;
+      targetPositionsRef.current[i * 3 + 2] = z;
+    });
+  };
+
+  useEffect(initializePositions, [articles]);
+
+  useEffect(() => {
+    const isClusterActive = Object.values(clusterOptions).some(value => value !== '');
+
+    if (isClusterActive) {
+      const clusterCenter = new THREE.Vector3(0, 0, 0);
+      const clusterArticles = articles.filter(article => matchesFilter(article, clusterOptions));
+      const nonClusterArticles = articles.filter(article => !matchesFilter(article, clusterOptions));
+      
+      clusterArticles.forEach((article, i) => {
+        const index = articles.indexOf(article);
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos((Math.random() * 2) - 1);
+        const x = CLUSTER_RADIUS * Math.sin(phi) * Math.cos(theta);
+        const y = CLUSTER_RADIUS * Math.sin(phi) * Math.sin(theta);
+        const z = CLUSTER_RADIUS * Math.cos(phi);
+        
+        targetPositionsRef.current[index * 3] = x;
+        targetPositionsRef.current[index * 3 + 1] = y;
+        targetPositionsRef.current[index * 3 + 2] = z;
+      });
+      
+      nonClusterArticles.forEach((article, i) => {
+        const index = articles.indexOf(article);
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos((Math.random() * 2) - 1);
+        const x = SPHERE_RADIUS * Math.sin(phi) * Math.cos(theta);
+        const y = SPHERE_RADIUS * Math.sin(phi) * Math.sin(theta);
+        const z = SPHERE_RADIUS * Math.cos(phi);
+        
+        targetPositionsRef.current[index * 3] = x;
+        targetPositionsRef.current[index * 3 + 1] = y;
+        targetPositionsRef.current[index * 3 + 2] = z;
+      });
+    } else {
+      initializePositions();
+    }
+  }, [articles, clusterOptions]);
+
+  useFrame(() => {
+    for (let i = 0; i < articles.length; i++) {
+      positionsRef.current[i * 3] += (targetPositionsRef.current[i * 3] - positionsRef.current[i * 3]) * 0.05;
+      positionsRef.current[i * 3 + 1] += (targetPositionsRef.current[i * 3 + 1] - positionsRef.current[i * 3 + 1]) * 0.05;
+      positionsRef.current[i * 3 + 2] += (targetPositionsRef.current[i * 3 + 2] - positionsRef.current[i * 3 + 2]) * 0.05;
+    }
+  });
 
   const handleBackgroundClick = () => {
     setSelectedArticle(null);
@@ -685,24 +755,35 @@ const Scene: React.FC<SceneProps> = ({
 
   return (
     <>
-      <ambientLight intensity={0.2} />
-      <pointLight position={[10, 10, 10]} intensity={0.8} castShadow />
+      <ambientLight intensity={0.4} />
+      <pointLight position={[10, 10, 10]} intensity={0.6} />
       <directionalLight
         position={[5, 5, 5]}
         intensity={0.5}
         castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
       />
-      <Swarm
+      {articles.map((article, index) => (
+        <Particle
+          key={index}
+          index={index}
+          positions={positionsRef.current}
+          articles={articles}
+          highlightOptions={highlightOptions}
+          clusterOptions={clusterOptions}
+          edgeOptions={edgeOptions}
+          highlightColor={highlightColor}
+          clusterColor={clusterColor}
+          edgeColor={edgeColor}
+          setSelectedArticle={handleParticleClick}
+          setHoveredParticle={setHoveredParticle}
+        />
+      ))}
+      <ConnectionLines
         articles={articles}
-        setSelectedArticle={handleParticleClick}
-        highlightOptions={highlightOptions}
-        clusterOptions={clusterOptions}
+        positions={positionsRef.current}
         edgeOptions={edgeOptions}
-        highlightColor={highlightColor}
-        clusterColor={clusterColor}
         edgeColor={edgeColor}
+        hoveredParticle={hoveredParticle}
       />
       <CameraController target={cameraTarget} resetView={resetView} />
       <mesh position={[0, 0, -1]} onClick={handleBackgroundClick}>
@@ -712,6 +793,7 @@ const Scene: React.FC<SceneProps> = ({
     </>
   );
 };
+
 
 interface ArticleParticleProps {
   articles: Article[];
@@ -755,10 +837,12 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     setSelectedArticle(article);
   };
 
-
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-      <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
+      <Canvas
+        camera={{ position: [0, 0, 30], fov: 60, near: 0.1, far: 1000 }}
+        gl={{ antialias: true }}
+      >
         <Scene
           articles={articles}
           setSelectedArticle={handleArticleSelect}
