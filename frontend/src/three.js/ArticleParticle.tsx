@@ -95,159 +95,101 @@ interface LabelProps {
   );
   
   Label.displayName = 'Label';
-  
-  interface ParticleProps {
+// Update ParticleProps to include opacity
+interface ParticleProps {
     index: number;
     positions: Float32Array;
-    velocities: Float32Array;
     articles: Article[];
-    color: THREE.Color;
-    setHoveredParticle: (index: number | null) => void;
-    setSelectedArticle: (article: Article, position: THREE.Vector3) => void;
     highlightOptions: HighlightOptions;
     clusterOptions: FilterOptions;
     edgeOptions: EdgeOptions;
     highlightColor: string;
     clusterColor: string;
     edgeColor: string;
-  }
+    setSelectedArticle: (article: Article, position: THREE.Vector3) => void;
+}
   
   const Particle: React.FC<ParticleProps> = ({
     index,
     positions,
-    velocities,
     articles,
-    color,
-    setHoveredParticle,
-    setSelectedArticle,
     highlightOptions,
     clusterOptions,
     edgeOptions,
     highlightColor,
     clusterColor,
     edgeColor,
-  }) => {
+    setSelectedArticle,
+}) => {
     const meshRef = useRef<THREE.Mesh>(null);
-    const labelRef = useRef<THREE.Group>(null);
     const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
-    const positionRef = useRef(new THREE.Vector3());
-    const velocityRef = useRef(new THREE.Vector3());
     const article = articles[index];
 
-  
-    const originalColor = useMemo(() => {
-      return color ? color.clone() : new THREE.Color(0.5, 0.5, 0.5);
-    }, [color]);
-  
-    const isHighlighted = useMemo(
-        () => matchesFilter(article, highlightOptions),
-        [article, highlightOptions]
-      );
-    
-      const isInCluster = useMemo(
-        () => matchesFilter(article, clusterOptions),
-        [article, clusterOptions]
-      );
-    
-      const isEdgeVisible = useMemo(
-        () => matchesFilter(article, edgeOptions),
-        [article, edgeOptions]
-      );
+    const DEFAULT_COLOR = new THREE.Color(0.5, 0.5, 0.5);
+    const DEFAULT_OPACITY = 0.3;
+    const ACTIVE_OPACITY = 1;
 
-      useFrame(() => {
-        if (meshRef.current && materialRef.current && labelRef.current) {
-        const targetX = positions[index * 3];
-        const targetY = positions[index * 3 + 1];
-        const targetZ = positions[index * 3 + 2];
-  
-        const targetPosition = new THREE.Vector3(targetX, targetY, targetZ);
-        const currentPosition = positionRef.current;
-  
-        // Update velocity
-        velocityRef.current.add(
-          targetPosition.clone().sub(currentPosition).multiplyScalar(0.05)
-        );
-  
-        // Apply damping to smooth out the motion
-        velocityRef.current.multiplyScalar(0.95);
-  
-        // Update position
-        currentPosition.add(velocityRef.current);
-  
-        // Apply the updated position to the mesh
-        meshRef.current.position.copy(currentPosition);
-  
-        // Update label position
-        labelRef.current.position.copy(currentPosition).add(new THREE.Vector3(0, -0.3, 0));
-  
-        // Update material properties (color, opacity, etc.)
-      let targetColor: THREE.Color;
-      let targetEmissive: THREE.Color;
-      let targetOpacity: number;
-      let targetEmissiveIntensity: number;
+    useFrame(() => {
+        if (meshRef.current && materialRef.current) {
+            meshRef.current.position.set(
+                positions[index * 3],
+                positions[index * 3 + 1],
+                positions[index * 3 + 2]
+            );
 
-      if (isHighlighted) {
-        targetColor = new THREE.Color(highlightColor);
-        targetOpacity = 1;
-        targetEmissiveIntensity = 2;
-      } else {
-        targetColor = DEFAULT_COLOR.clone();
-        targetOpacity = 0.3;
-        targetEmissiveIntensity = 0.2;
-      }
+            let targetColor: THREE.Color;
+            let targetOpacity: number;
+            let targetEmissiveIntensity: number;
 
-      materialRef.current.color.lerp(targetColor, 0.1);
-      materialRef.current.opacity = THREE.MathUtils.lerp(
-        materialRef.current.opacity,
-        targetOpacity,
-        0.1
-      );
-      materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
-        materialRef.current.emissiveIntensity,
-        targetEmissiveIntensity,
-        0.1
-      );
-  
-        // Update label color
-        if (labelRef.current.children[0] instanceof THREE.Mesh) {
-          const labelMaterial = labelRef.current.children[0].material as THREE.MeshBasicMaterial;
-          labelMaterial.color.copy(targetColor);
+            if (matchesFilter(article, highlightOptions)) {
+                targetColor = new THREE.Color(highlightColor);
+                targetOpacity = ACTIVE_OPACITY;
+                targetEmissiveIntensity = 2;
+            } else if (matchesFilter(article, clusterOptions)) {
+                targetColor = new THREE.Color(clusterColor);
+                targetOpacity = ACTIVE_OPACITY;
+                targetEmissiveIntensity = 1;
+            } else if (matchesFilter(article, edgeOptions)) {
+                targetColor = new THREE.Color(edgeColor);
+                targetOpacity = ACTIVE_OPACITY;
+                targetEmissiveIntensity = 0.5;
+            } else {
+                targetColor = DEFAULT_COLOR;
+                targetOpacity = DEFAULT_OPACITY;
+                targetEmissiveIntensity = 0.2;
+            }
+
+            materialRef.current.color.lerp(targetColor, 0.1);
+            materialRef.current.emissive.lerp(targetColor, 0.1);
+            materialRef.current.opacity = THREE.MathUtils.lerp(materialRef.current.opacity, targetOpacity, 0.1);
+            materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(materialRef.current.emissiveIntensity, targetEmissiveIntensity, 0.1);
         }
-      }
     });
-  
+
     return (
-        <group>
-            <mesh
-                ref={meshRef}
-                onPointerOver={() => setHoveredParticle(index)}
-                onPointerOut={() => setHoveredParticle(null)}
-                onClick={(event) => {
-                    event.stopPropagation();
-                    if (meshRef.current) {
-                        setSelectedArticle(article, meshRef.current.position);
-                    }
-                }}
-            >
-                <sphereGeometry args={[0.2, 32, 32]} />
-                <meshPhysicalMaterial
-                    ref={materialRef}
-                    color={color}
-                    emissive={color}
-                    emissiveIntensity={0.5}
-                    transparent
-                    roughness={0.5}
-                    metalness={0.8}
-                />
-            </mesh>
-            <Label 
-                ref={labelRef}
-                title={article.title || 'Untitled'} 
-                source={article.source || 'Unknown'}
-                position={new THREE.Vector3(0, -0.3, 0)}
-                color={color}
+        <mesh
+            ref={meshRef}
+            onClick={(event) => {
+                event.stopPropagation();
+                setSelectedArticle(article, new THREE.Vector3(
+                    positions[index * 3],
+                    positions[index * 3 + 1],
+                    positions[index * 3 + 2]
+                ));
+            }}
+        >
+            <sphereGeometry args={[0.2, 32, 32]} />
+            <meshPhysicalMaterial
+                ref={materialRef}
+                color={DEFAULT_COLOR}
+                emissive={DEFAULT_COLOR}
+                emissiveIntensity={0.2}
+                transparent
+                opacity={DEFAULT_OPACITY}
+                roughness={0.5}
+                metalness={0.8}
             />
-        </group>
+        </mesh>
     );
 };
   
@@ -257,10 +199,10 @@ interface LabelProps {
   interface ConnectionLinesProps {
     articles: Article[];
     positions: Float32Array;
-    hoveredParticle: number | null;
-    colorMap: Map<string, THREE.Color>;
     edgeOptions: EdgeOptions;
     edgeColor: string;
+    hoveredParticle: number | null;
+    colorMap: Map<string, THREE.Color>;
   }
   
   const ConnectionLines: React.FC<ConnectionLinesProps> = ({
@@ -268,6 +210,8 @@ interface LabelProps {
     positions,
     edgeOptions,
     edgeColor,
+    hoveredParticle,
+    colorMap,
   }) => {
     const lineRef = useRef<THREE.LineSegments>(null);
     const materialRef = useRef<THREE.LineBasicMaterial>(null);
@@ -304,8 +248,9 @@ interface LabelProps {
       </lineSegments>
     );
   };
+  export { ConnectionLines };
 
-interface SwarmProps {
+  interface SwarmProps {
     articles: Article[];
     colorMap: Map<string, THREE.Color>;
     setSelectedArticle: (article: Article, position: THREE.Vector3) => void;
@@ -317,7 +262,8 @@ interface SwarmProps {
     edgeColor: string;
   }
   
-  export const Swarm: React.FC<SwarmProps> = ({
+// Update the Swarm component to initialize colors
+export const Swarm: React.FC<SwarmProps> = ({
     articles,
     colorMap,
     setSelectedArticle,
@@ -327,198 +273,133 @@ interface SwarmProps {
     highlightColor,
     clusterColor,
     edgeColor,
-  }) => {
+}) => {
     const positionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
-    const velocitiesRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
     const targetPositionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
     const colorsRef = useRef<THREE.Color[]>([]);
-    const targetColorsRef = useRef<THREE.Color[]>([]);
-    const timeRef = useRef(0);
+    const opacityRef = useRef<number[]>(new Array(articles.length).fill(1));
     const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
-
     const sphereRadius = 10;
-    const maxSpeed = 0.05;
-    const defaultSpeed = 0.01;
-    const transitionSpeed = 0.05;
-    const clusterRadius = 4;
-    const colorTransitionSpeed = 0.1;
-
-    const generateRandomPointOnSphere = (radius: number): THREE.Vector3 => {
-        const u = Math.random();
-        const v = Math.random();
-        const theta = 2 * Math.PI * u;
-        const phi = Math.acos(2 * v - 1);
-        const x = radius * Math.sin(phi) * Math.cos(theta);
-        const y = radius * Math.sin(phi) * Math.sin(theta);
-        const z = radius * Math.cos(phi);
-        return new THREE.Vector3(x, y, z);
-    };
-
+    const clusterRadius = 5;
+  
     const clusterCenters = useMemo(() => {
-        const centers: { [key: string]: THREE.Vector3 } = {};
-        if (clusterOptions.broadClaim || clusterOptions.subClaim) {
-          articles.forEach((article) => {
-            const claimKey = clusterOptions.broadClaim || clusterOptions.subClaim;
-            if (claimKey && article.broadClaims && article.broadClaims[claimKey as keyof typeof article.broadClaims]) {
-              if (!centers[claimKey]) {
-                centers[claimKey] = generateRandomPointOnSphere(clusterRadius);
-              }
-            }
-          });
+      const centers: { [key: string]: THREE.Vector3 } = {};
+      if (clusterOptions.broadClaim || clusterOptions.subClaim) {
+        const claimKey = clusterOptions.broadClaim || clusterOptions.subClaim;
+        if (claimKey) {
+          centers[claimKey] = new THREE.Vector3(0, 0, 0);
         }
-        return centers;
-      }, [articles, clusterOptions, clusterRadius]);
+      }
+      return centers;
+    }, [clusterOptions]);
 
-    // Initialize positions, velocities, and colors
+    // Initialize colors
+  useEffect(() => {
+    colorsRef.current = articles.map(() => new THREE.Color(DEFAULT_COLOR));
+  }, [articles]);
+
+    // Add the missing function
+const generateRandomPointOnSphere = (radius: number): THREE.Vector3 => {
+    const u = Math.random();
+    const v = Math.random();
+    const theta = 2 * Math.PI * u;
+    const phi = Math.acos(2 * v - 1);
+    const x = radius * Math.sin(phi) * Math.cos(theta);
+    const y = radius * Math.sin(phi) * Math.sin(theta);
+    const z = radius * Math.cos(phi);
+    return new THREE.Vector3(x, y, z);
+  };
+  
     useEffect(() => {
-        for (let i = 0; i < articles.length; i++) {
-            const point = generateRandomPointOnSphere(sphereRadius);
-            positionsRef.current[i * 3] = point.x;
-            positionsRef.current[i * 3 + 1] = point.y;
-            positionsRef.current[i * 3 + 2] = point.z;
-            targetPositionsRef.current[i * 3] = point.x;
-            targetPositionsRef.current[i * 3 + 1] = point.y;
-            targetPositionsRef.current[i * 3 + 2] = point.z;
-            velocitiesRef.current[i * 3] = (Math.random() - 0.5) * defaultSpeed;
-            velocitiesRef.current[i * 3 + 1] = (Math.random() - 0.5) * defaultSpeed;
-            velocitiesRef.current[i * 3 + 2] = (Math.random() - 0.5) * defaultSpeed;
-
-            colorsRef.current[i] = DEFAULT_COLOR.clone();
-            targetColorsRef.current[i] = DEFAULT_COLOR.clone();
+      articles.forEach((_, i) => {
+        const randomPosition = generateRandomPointOnSphere(sphereRadius);
+        positionsRef.current[i * 3] = randomPosition.x;
+        positionsRef.current[i * 3 + 1] = randomPosition.y;
+        positionsRef.current[i * 3 + 2] = randomPosition.z;
+        colorsRef.current[i] = new THREE.Color(0.5, 0.5, 0.5);
+      });
+    }, [articles, sphereRadius]);
+  
+    useEffect(() => {
+      articles.forEach((article, i) => {
+        let targetPosition: THREE.Vector3;
+        if (clusterOptions.broadClaim || clusterOptions.subClaim) {
+          const claimKey = clusterOptions.broadClaim || clusterOptions.subClaim;
+          if (claimKey && article.broadClaims && article.broadClaims[claimKey as keyof typeof article.broadClaims]) {
+            const clusterCenter = clusterCenters[claimKey];
+            if (clusterCenter) {
+              targetPosition = clusterCenter.clone().add(new THREE.Vector3(
+                (Math.random() - 0.5) * clusterRadius,
+                (Math.random() - 0.5) * clusterRadius,
+                (Math.random() - 0.5) * clusterRadius
+              ));
+            } else {
+              targetPosition = generateRandomPointOnSphere(sphereRadius);
+            }
+          } else {
+            targetPosition = generateRandomPointOnSphere(sphereRadius);
+          }
+        } else {
+          targetPosition = generateRandomPointOnSphere(sphereRadius);
         }
-    }, [articles]);
-
-    useFrame((state, delta) => {
-        timeRef.current += delta;
-        const intensityFactor = Math.min(timeRef.current / 5, 1); // Ramp up over 5 seconds
-    
-        const positions = positionsRef.current;
-        const velocities = velocitiesRef.current;
-        const targetPositions = targetPositionsRef.current;
-    
-        for (let i = 0; i < articles.length; i++) {
-            const particlePosition = new THREE.Vector3(
-                positions[i * 3],
-                positions[i * 3 + 1],
-                positions[i * 3 + 2]
-            );
-            const particleVelocity = new THREE.Vector3(
-                velocities[i * 3],
-                velocities[i * 3 + 1],
-                velocities[i * 3 + 2]
+        targetPositionsRef.current[i * 3] = targetPosition.x;
+        targetPositionsRef.current[i * 3 + 1] = targetPosition.y;
+        targetPositionsRef.current[i * 3 + 2] = targetPosition.z;
+      });
+    }, [articles, clusterOptions, clusterCenters, sphereRadius, clusterRadius]);
+  
+    useFrame(() => {
+        articles.forEach((article, i) => {
+            // Update positions
+            const currentPosition = new THREE.Vector3(
+                positionsRef.current[i * 3],
+                positionsRef.current[i * 3 + 1],
+                positionsRef.current[i * 3 + 2]
             );
             const targetPosition = new THREE.Vector3(
-                targetPositions[i * 3],
-                targetPositions[i * 3 + 1],
-                targetPositions[i * 3 + 2]
+                targetPositionsRef.current[i * 3],
+                targetPositionsRef.current[i * 3 + 1],
+                targetPositionsRef.current[i * 3 + 2]
             );
-    
-            // Calculate direction to target
-            const direction = targetPosition.clone().sub(particlePosition);
-            const distance = direction.length();
-    
-            if (distance > 0.1) {
-                // If not very close to target, move towards it
-                direction.normalize().multiplyScalar(transitionSpeed * intensityFactor);
-                particleVelocity.lerp(direction, 0.05 * intensityFactor);
-            } else {
-                // If close to target, add very subtle random movement
-                const wobbleFactor = Math.max(0, (0.1 - distance) / 0.1); // 0 at distance 0.1, 1 at distance 0
-                particleVelocity.add(
-                    new THREE.Vector3(
-                        (Math.random() - 0.5) * 0.0001 * intensityFactor * (1 - wobbleFactor),
-                        (Math.random() - 0.5) * 0.0001 * intensityFactor * (1 - wobbleFactor),
-                        (Math.random() - 0.5) * 0.0001 * intensityFactor * (1 - wobbleFactor)
-                    )
-                );
-                
-                // Apply stronger damping when close to target
-                particleVelocity.multiplyScalar(0.9 + 0.1 * wobbleFactor);
-            }
-    
-            // Update position based on velocity
-            particlePosition.add(particleVelocity);
-    
-            // Limit the speed of the particle
-            const speed = particleVelocity.length();
-            if (speed > maxSpeed) {
-                particleVelocity.multiplyScalar(maxSpeed / speed);
-            }
-    
-            // Keep particles within the sphere
-            if (particlePosition.length() > sphereRadius) {
-                particlePosition.normalize().multiplyScalar(sphereRadius);
-                particleVelocity.reflect(particlePosition.clone().normalize());
-            }
-    
-            // Update positions and velocities
-            positions[i * 3] = particlePosition.x;
-            positions[i * 3 + 1] = particlePosition.y;
-            positions[i * 3 + 2] = particlePosition.z;
-            velocities[i * 3] = particleVelocity.x;
-            velocities[i * 3 + 1] = particleVelocity.y;
-            velocities[i * 3 + 2] = particleVelocity.z;
 
-            /// Update color based on filtering options
-      const article = articles[i];
-      let targetColor: THREE.Color;
+            currentPosition.lerp(targetPosition, 0.05);
 
-      if (matchesFilter(article, highlightOptions)) {
-        targetColor = new THREE.Color(highlightColor);
-      } else if (matchesFilter(article, clusterOptions)) {
-        targetColor = new THREE.Color(clusterColor);
-      } else if (matchesFilter(article, edgeOptions)) {
-        targetColor = new THREE.Color(edgeColor);
-      } else {
-        targetColor = DEFAULT_COLOR.clone();
-      }
-
-      targetColorsRef.current[i] = targetColor;
-      colorsRef.current[i].lerp(targetColor, colorTransitionSpeed * intensityFactor);
-      
-    }
-  });
-
+            positionsRef.current[i * 3] = currentPosition.x;
+            positionsRef.current[i * 3 + 1] = currentPosition.y;
+            positionsRef.current[i * 3 + 2] = currentPosition.z;
+        });
+    });
+  
   return (
     <>
-      {articles.map((article: Article, index: number) => (
-        <Particle
-          key={index}
-          index={index}
-          positions={positionsRef.current}
-          velocities={velocitiesRef.current}
-          articles={articles}
-          color={colorsRef.current[index] || DEFAULT_COLOR}
-          setHoveredParticle={setHoveredParticle}
-          setSelectedArticle={setSelectedArticle}
-          highlightOptions={highlightOptions}
-          clusterOptions={clusterOptions}
-          edgeOptions={edgeOptions}
-          highlightColor={highlightColor}
-          clusterColor={clusterColor}
-          edgeColor={edgeColor}
+        {articles.map((article, index) => (
+            <Particle
+                key={index}
+                index={index}
+                positions={positionsRef.current}
+                articles={articles}
+                highlightOptions={highlightOptions}
+                clusterOptions={clusterOptions}
+                edgeOptions={edgeOptions}
+                highlightColor={highlightColor}
+                clusterColor={clusterColor}
+                edgeColor={edgeColor}
+                setSelectedArticle={setSelectedArticle}
+            />
+        ))}
+        <ConnectionLines
+            articles={articles}
+            hoveredParticle={hoveredParticle}
+            positions={positionsRef.current}
+            edgeOptions={edgeOptions}
+            edgeColor={edgeColor}
+            colorMap={colorMap}
         />
-      ))}
-      <ConnectionLines
-        articles={articles}
-        positions={positionsRef.current}
-        hoveredParticle={hoveredParticle}
-        colorMap={colorMap}
-        edgeOptions={edgeOptions}
-        edgeColor={edgeColor}
-      />
-            {/* Add a plane to receive shadows */}
-            <mesh
-                rotation={[-Math.PI / 2, 0, 0]}
-                position={[0, -sphereRadius, 0]}
-                receiveShadow
-            >
-                <planeGeometry args={[100, 100]} />
-                <shadowMaterial transparent opacity={0.2} />
-            </mesh>
-        </>
-    );
+    </>
+);
 };
+
+  
 
 interface InfoPanelProps {
     article: Article | null;
@@ -795,15 +676,15 @@ interface ArticleParticleProps {
     source: string;
     hasThinktankReference: string;
     isDuplicate: string;
-  }
-  
-  interface HighlightOptions extends FilterOptions {
+}
+
+interface HighlightOptions extends FilterOptions {
     articleBody: string;
-  }
-  
-  interface EdgeOptions extends FilterOptions {
+}
+
+interface EdgeOptions extends FilterOptions {
     visibility: string;
-  }
+}
   
   
   export const ArticleParticle: React.FC<ArticleParticleProps> = ({
