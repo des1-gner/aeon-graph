@@ -876,8 +876,10 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
         return false;
       }
       if (filterOptions.think_tank_ref !== '') {
-        const think_tank_ref = article.think_tank_ref && article.think_tank_ref.trim() !== '';
-        if (think_tank_ref !== (filterOptions.think_tank_ref === 'yes')) {
+        const hasThinkTankRef = article.think_tank_ref !== null && 
+                                article.think_tank_ref !== undefined && 
+                                article.think_tank_ref.trim() !== '';
+        if (hasThinkTankRef !== (filterOptions.think_tank_ref === 'yes')) {
           return false;
         }
       }
