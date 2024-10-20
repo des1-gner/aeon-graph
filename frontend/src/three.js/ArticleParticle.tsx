@@ -130,8 +130,16 @@ export const Particle: React.FC<ParticleProps> = ({
   const labelRef = useRef<THREE.Group>(null);
   const article = articles[index];
 
+  const [isHovered, setIsHovered] = useState(false);
+
   const isHighlighted = useMemo(() => matchesFilter(article, highlightOptions), [article, highlightOptions]);
   const isInCluster = useMemo(() => matchesFilter(article, clusterOptions), [article, clusterOptions]);
+
+  const getTargetColor = () => {
+    if (isInCluster) return new THREE.Color(clusterColor);
+    if (isHighlighted) return new THREE.Color(highlightColor);
+    return new THREE.Color(0.8, 0.8, 0.8); // Light grey for non-highlighted nodes
+  };
 
   useFrame(({ camera }) => {
     if (meshRef.current && materialRef.current && labelRef.current) {
@@ -145,24 +153,9 @@ export const Particle: React.FC<ParticleProps> = ({
       labelRef.current.position.copy(meshRef.current.position).add(new THREE.Vector3(0, -0.5, 0));
       labelRef.current.quaternion.copy(camera.quaternion);
 
-      let targetColor: THREE.Color;
-      let targetOpacity: number;
-      let targetEmissiveIntensity: number;
-
-      if (isInCluster) {
-        // Prioritize cluster color
-        targetColor = new THREE.Color(clusterColor);
-        targetOpacity = 1;
-        targetEmissiveIntensity = 1.5;
-      } else if (isHighlighted) {
-        targetColor = new THREE.Color(highlightColor);
-        targetOpacity = 1;
-        targetEmissiveIntensity = 1;
-      } else {
-        targetColor = new THREE.Color(0.8, 0.8, 0.8); // Light grey for non-highlighted nodes
-        targetOpacity = 0.3;
-        targetEmissiveIntensity = 0.2;
-      }
+      const targetColor = getTargetColor();
+      const targetOpacity = isInCluster || isHighlighted ? 1 : 0.3;
+      const targetEmissiveIntensity = isInCluster ? 1.5 : (isHighlighted ? 1 : 0.2);
 
       materialRef.current.color.lerp(targetColor, 0.1);
       materialRef.current.emissive.lerp(targetColor, 0.1);
@@ -181,24 +174,30 @@ export const Particle: React.FC<ParticleProps> = ({
             setSelectedArticle(article, meshRef.current.position);
           }
         }}
-        onPointerOver={() => setHoveredParticle(index)}
-        onPointerOut={() => setHoveredParticle(null)}
+        onPointerOver={() => {
+          setHoveredParticle(index);
+          setIsHovered(true);
+        }}
+        onPointerOut={() => {
+          setHoveredParticle(null);
+          setIsHovered(false);
+        }}
       >
         <sphereGeometry args={[0.2, 32, 32]} />
         <meshPhysicalMaterial
           ref={materialRef}
-          color={new THREE.Color(0.8, 0.8, 0.8)}
-          emissive={new THREE.Color(0.8, 0.8, 0.8)}
-          emissiveIntensity={0.2}
+          color={getTargetColor()}
+          emissive={getTargetColor()}
+          emissiveIntensity={isInCluster ? 1.5 : (isHighlighted ? 1 : 0.2)}
           transparent
-          opacity={0.3}
+          opacity={isInCluster || isHighlighted ? 1 : 0.3}
           roughness={0.5}
           metalness={0.8}
         />
       </mesh>
       <group ref={labelRef}>
         <Text
-          color={isInCluster ? clusterColor : (isHighlighted ? highlightColor : new THREE.Color(0.8, 0.8, 0.8))}
+          color={getTargetColor()}
           fontSize={0.15}
           maxWidth={2}
           lineHeight={1}
