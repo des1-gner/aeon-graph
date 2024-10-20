@@ -154,8 +154,8 @@ interface LabelProps {
         [article, edgeOptions]
       );
 
-    useFrame(() => {
-      if (meshRef.current && materialRef.current && labelRef.current) {
+      useFrame(() => {
+        if (meshRef.current && materialRef.current && labelRef.current) {
         const targetX = positions[index * 3];
         const targetY = positions[index * 3 + 1];
         const targetZ = positions[index * 3 + 2];
@@ -188,38 +188,25 @@ interface LabelProps {
 
       if (isHighlighted) {
         targetColor = new THREE.Color(highlightColor);
-        targetEmissive = new THREE.Color(highlightColor);
         targetOpacity = 1;
         targetEmissiveIntensity = 2;
-      } else if (isInCluster) {
-        targetColor = new THREE.Color(clusterColor);
-        targetEmissive = new THREE.Color(clusterColor);
-        targetOpacity = 0.7;
-        targetEmissiveIntensity = 1;
-      } else if (isEdgeVisible) {
-        targetColor = new THREE.Color(edgeColor);
-        targetEmissive = new THREE.Color(edgeColor);
-        targetOpacity = 0.5;
-        targetEmissiveIntensity = 0.5;
       } else {
-        targetColor = new THREE.Color(0.5, 0.5, 0.5);
-        targetEmissive = new THREE.Color(0.5, 0.5, 0.5);
+        targetColor = DEFAULT_COLOR.clone();
         targetOpacity = 0.3;
         targetEmissiveIntensity = 0.2;
       }
-  
-        materialRef.current.color.lerp(targetColor, 0.1);
-        materialRef.current.emissive.lerp(targetEmissive, 0.1);
-        materialRef.current.opacity = THREE.MathUtils.lerp(
-          materialRef.current.opacity,
-          targetOpacity,
-          0.1
-        );
-        materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
-          materialRef.current.emissiveIntensity,
-          targetEmissiveIntensity,
-          0.1
-        );
+
+      materialRef.current.color.lerp(targetColor, 0.1);
+      materialRef.current.opacity = THREE.MathUtils.lerp(
+        materialRef.current.opacity,
+        targetOpacity,
+        0.1
+      );
+      materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
+        materialRef.current.emissiveIntensity,
+        targetEmissiveIntensity,
+        0.1
+      );
   
         // Update label color
         if (labelRef.current.children[0] instanceof THREE.Mesh) {
@@ -279,68 +266,44 @@ interface LabelProps {
   const ConnectionLines: React.FC<ConnectionLinesProps> = ({
     articles,
     positions,
-    hoveredParticle,
-    colorMap,
     edgeOptions,
     edgeColor,
   }) => {
     const lineRef = useRef<THREE.LineSegments>(null);
     const materialRef = useRef<THREE.LineBasicMaterial>(null);
-
+  
     useFrame(() => {
-        if (lineRef.current && materialRef.current) {
-          const geometry = lineRef.current.geometry as THREE.BufferGeometry;
-    
-          if (hoveredParticle !== null) {
-            const hoveredArticle = articles[hoveredParticle];
-            const vertices: number[] = [];
-    
-            if (matchesFilter(hoveredArticle, edgeOptions)) {
-              articles.forEach((article, index) => {
-                if (
-                  index !== hoveredParticle &&
-                  matchesFilter(article, edgeOptions) &&
-                            article.broadClaims &&
-                            article.subClaims &&
-                            hoveredArticle.subClaims && // Add this check
-                            Object.keys(hoveredArticle.subClaims).some(
-                                (subclaim) => article.subClaims && subclaim in article.subClaims
-                            )
-                        ) {
-                            vertices.push(
-                                positions[hoveredParticle * 3],
-                                positions[hoveredParticle * 3 + 1],
-                                positions[hoveredParticle * 3 + 2],
-                                positions[index * 3],
-                                positions[index * 3 + 1],
-                                positions[index * 3 + 2]
-                              );
-                            }
-                          });
-                        }
-                
-                        geometry.setAttribute(
-                          'position',
-                          new THREE.Float32BufferAttribute(vertices, 3)
-                        );
-                        geometry.attributes.position.needsUpdate = true;
-                
-                        materialRef.current.color = new THREE.Color(edgeColor);
-                        materialRef.current.visible = edgeOptions.visibility !== 'off';
-                        materialRef.current.opacity = edgeOptions.visibility === 'hover' ? 0.5 : 1;
-                      } else {
-                        materialRef.current.visible = edgeOptions.visibility === 'on';
-                      }
-                    }
-                  });
-
+      if (lineRef.current && materialRef.current) {
+        const geometry = lineRef.current.geometry as THREE.BufferGeometry;
+        const vertices: number[] = [];
+  
+        articles.forEach((article1, i) => {
+          articles.forEach((article2, j) => {
+            if (i < j && matchesFilter(article1, edgeOptions) && matchesFilter(article2, edgeOptions)) {
+              vertices.push(
+                positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2],
+                positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2]
+              );
+            }
+          });
+        });
+  
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.attributes.position.needsUpdate = true;
+  
+        materialRef.current.color = new THREE.Color(edgeColor);
+        materialRef.current.visible = edgeOptions.visibility !== 'off';
+        materialRef.current.opacity = edgeOptions.visibility === 'hover' ? 0.5 : 1;
+      }
+    });
+  
     return (
-        <lineSegments ref={lineRef}>
-            <bufferGeometry />
-            <lineBasicMaterial ref={materialRef} transparent opacity={1} />
-        </lineSegments>
+      <lineSegments ref={lineRef}>
+        <bufferGeometry />
+        <lineBasicMaterial ref={materialRef} transparent opacity={1} />
+      </lineSegments>
     );
-};
+  };
 
 interface SwarmProps {
     articles: Article[];
@@ -391,6 +354,21 @@ interface SwarmProps {
         return new THREE.Vector3(x, y, z);
     };
 
+    const clusterCenters = useMemo(() => {
+        const centers: { [key: string]: THREE.Vector3 } = {};
+        if (clusterOptions.broadClaim || clusterOptions.subClaim) {
+          articles.forEach((article) => {
+            const claimKey = clusterOptions.broadClaim || clusterOptions.subClaim;
+            if (claimKey && article.broadClaims && article.broadClaims[claimKey as keyof typeof article.broadClaims]) {
+              if (!centers[claimKey]) {
+                centers[claimKey] = generateRandomPointOnSphere(clusterRadius);
+              }
+            }
+          });
+        }
+        return centers;
+      }, [articles, clusterOptions, clusterRadius]);
+
     // Initialize positions, velocities, and colors
     useEffect(() => {
         for (let i = 0; i < articles.length; i++) {
@@ -409,19 +387,6 @@ interface SwarmProps {
             targetColorsRef.current[i] = DEFAULT_COLOR.clone();
         }
     }, [articles]);
-
-    // Remove the useEffect that was using viewMode
-  useEffect(() => {
-    for (let i = 0; i < articles.length; i++) {
-      const article = articles[i];
-      const point = generateRandomPointOnSphere(sphereRadius);
-      targetPositionsRef.current[i * 3] = point.x;
-      targetPositionsRef.current[i * 3 + 1] = point.y;
-      targetPositionsRef.current[i * 3 + 2] = point.z;
-
-      targetColorsRef.current[i] = DEFAULT_COLOR.clone();
-    }
-  }, [articles]);
 
     useFrame((state, delta) => {
         timeRef.current += delta;
@@ -510,6 +475,7 @@ interface SwarmProps {
 
       targetColorsRef.current[i] = targetColor;
       colorsRef.current[i].lerp(targetColor, colorTransitionSpeed * intensityFactor);
+      
     }
   });
 
@@ -867,22 +833,22 @@ interface ArticleParticleProps {
     }, [articles, highlightOptions, clusterOptions, edgeOptions]);
   
     const colorMap = useMemo(() => {
-      const map = new Map<string, THREE.Color>();
-      articles.forEach((article, index) => {
-        if (article.broadClaims) {
-          Object.keys(article.broadClaims).forEach((claim) => {
-            if (!map.has(claim)) {
-              map.set(claim, new THREE.Color().setHSL(index / articles.length, 1, 0.5));
-            }
-          });
-        }
-      });
-      return map;
-    }, [articles]);
-  
-    const handleArticleSelect = (article: Article | null, position?: THREE.Vector3) => {
-      setSelectedArticle(article);
-    };
+        const map = new Map<string, THREE.Color>();
+        articles.forEach((article, index) => {
+          if (article.broadClaims) {
+            Object.keys(article.broadClaims).forEach((claim) => {
+              if (!map.has(claim)) {
+                map.set(claim, new THREE.Color().setHSL(index / articles.length, 1, 0.5));
+              }
+            });
+          }
+        });
+        return map;
+      }, [articles]);
+    
+      const handleArticleSelect = (article: Article | null, position?: THREE.Vector3) => {
+        setSelectedArticle(article);
+      };
   
     return (
       <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>

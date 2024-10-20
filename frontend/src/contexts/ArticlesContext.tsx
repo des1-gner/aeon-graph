@@ -77,7 +77,7 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
         source: '',
         hasThinktankReference: '',
         isDuplicate: '',
-        visibility: 'on',
+        visibility: 'off',
     });
 
     useEffect(() => {
