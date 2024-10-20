@@ -39,7 +39,10 @@ const fragmentShader = `
   }
 `;
 
-type ViewMode = 'soup' | keyof Article['broadClaims'];
+// Define ViewMode once at the top of the file
+type ViewMode = 'highlight' | 'cluster';
+
+const DEFAULT_COLOR = new THREE.Color(0.5, 0.5, 0.5);
 
 interface LabelProps {
     title: string;
@@ -107,7 +110,7 @@ interface LabelProps {
     clusterColor: string;
 }
 
-  const Particle: React.FC<ParticleProps> = ({
+const Particle: React.FC<ParticleProps> = ({
     index,
     positions,
     velocities,
@@ -140,13 +143,13 @@ interface LabelProps {
     );
   
     const isInCluster = useMemo(
-      () =>
-        viewMode !== 'soup' &&
-        article.broadClaims &&
-        article.broadClaims[viewMode],
-      [viewMode, article.broadClaims]
+        () =>
+            viewMode === 'cluster' &&
+            article.broadClaims &&
+            article.broadClaims[viewMode as keyof Article['broadClaims']],
+        [viewMode, article.broadClaims]
     );
-  
+
     useFrame(() => {
       if (meshRef.current && materialRef.current && labelRef.current) {
         const targetX = positions[index * 3];
@@ -184,11 +187,11 @@ interface LabelProps {
           targetEmissive = new THREE.Color(highlightColor);
           targetOpacity = 1;
           targetEmissiveIntensity = 2;
-        } else if (viewMode === 'soup') {
-          targetColor = originalColor;
-          targetEmissive = originalColor;
-          targetOpacity = 0.7;
-          targetEmissiveIntensity = 0.5;
+        } else if (viewMode === 'highlight') {
+            targetColor = originalColor;
+            targetEmissive = originalColor;
+            targetOpacity = 0.7;
+            targetEmissiveIntensity = 0.5;
         } else if (isInCluster) {
           targetColor = new THREE.Color(clusterColor);
           targetEmissive = new THREE.Color(clusterColor);
@@ -293,26 +296,19 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
         if (lineRef.current && materialRef.current) {
             const geometry = lineRef.current.geometry as THREE.BufferGeometry;
 
-            if (hoveredParticle !== null && viewMode !== 'soup') {
+            if (hoveredParticle !== null) {
                 const hoveredArticle = articles[hoveredParticle];
                 const vertices: number[] = [];
 
-                if (
-                    hoveredArticle.broadClaims &&
-                    hoveredArticle.broadClaims[viewMode] &&
-                    hoveredArticle.subClaims
-                ) {
+                if (hoveredArticle.broadClaims && hoveredArticle.subClaims) {
                     articles.forEach((article, index) => {
                         if (
                             index !== hoveredParticle &&
                             article.broadClaims &&
-                            article.broadClaims[viewMode] &&
                             article.subClaims &&
-                            Object.keys(hoveredArticle.subClaims!).some(
-                                (subclaim) =>
-                                    article.subClaims![
-                                        subclaim as keyof Article['subClaims']
-                                    ]
+                            hoveredArticle.subClaims && // Add this check
+                            Object.keys(hoveredArticle.subClaims).some(
+                                (subclaim) => article.subClaims && subclaim in article.subClaims
                             )
                         ) {
                             vertices.push(
@@ -360,9 +356,7 @@ interface SwarmProps {
     edgeColor: string;
 }
 
-const DEFAULT_COLOR = new THREE.Color(0.5, 0.5, 0.5);
-
-const Swarm: React.FC<SwarmProps> = ({
+export const Swarm: React.FC<SwarmProps> = ({
     articles,
     viewMode,
     colorMap,
@@ -421,7 +415,7 @@ const Swarm: React.FC<SwarmProps> = ({
     useEffect(() => {
         for (let i = 0; i < articles.length; i++) {
             const article = articles[i];
-            if (viewMode !== 'soup' && article.broadClaims && article.broadClaims[viewMode]) {
+            if (viewMode === 'cluster' && article.broadClaims && article.broadClaims[viewMode as keyof Article['broadClaims']]) {
                 const clusterPoint = generateRandomPointOnSphere(clusterRadius);
                 targetPositionsRef.current[i * 3] = clusterPoint.x;
                 targetPositionsRef.current[i * 3 + 1] = clusterPoint.y;
@@ -429,10 +423,10 @@ const Swarm: React.FC<SwarmProps> = ({
 
                 targetColorsRef.current[i] = new THREE.Color(clusterColor);
             } else {
-                const soupPoint = generateRandomPointOnSphere(sphereRadius);
-                targetPositionsRef.current[i * 3] = soupPoint.x;
-                targetPositionsRef.current[i * 3 + 1] = soupPoint.y;
-                targetPositionsRef.current[i * 3 + 2] = soupPoint.z;
+                const highlightPoint = generateRandomPointOnSphere(sphereRadius);
+                targetPositionsRef.current[i * 3] = highlightPoint.x;
+                targetPositionsRef.current[i * 3 + 1] = highlightPoint.y;
+                targetPositionsRef.current[i * 3 + 2] = highlightPoint.z;
 
                 targetColorsRef.current[i] = DEFAULT_COLOR.clone();
             }
@@ -510,23 +504,20 @@ const Swarm: React.FC<SwarmProps> = ({
             velocities[i * 3 + 1] = particleVelocity.y;
             velocities[i * 3 + 2] = particleVelocity.z;
 
-            // Update color
-            if (!colorsRef.current[i]) {
-                console.warn(
-                    `Color is undefined for particle ${i}. Initializing with default color.`
-                );
-                colorsRef.current[i] = DEFAULT_COLOR.clone();
+            // Update color based on viewMode and article properties
+            const article = articles[i];
+            let targetColor: THREE.Color;
+
+            if (viewMode === 'highlight' && highlightedWord && article.body && article.body.toLowerCase().includes(highlightedWord.toLowerCase())) {
+                targetColor = new THREE.Color(highlightColor);
+            } else if (viewMode === 'cluster' && article.broadClaims && article.broadClaims[viewMode as keyof Article['broadClaims']]) {
+                targetColor = new THREE.Color(clusterColor);
+            } else {
+                targetColor = DEFAULT_COLOR.clone();
             }
-            if (!targetColorsRef.current[i]) {
-                console.warn(
-                    `Target color is undefined for particle ${i}. Initializing with default color.`
-                );
-                targetColorsRef.current[i] = DEFAULT_COLOR.clone();
-            }
-            colorsRef.current[i].lerp(
-                targetColorsRef.current[i],
-                colorTransitionSpeed * intensityFactor
-            );
+
+            targetColorsRef.current[i] = targetColor;
+            colorsRef.current[i].lerp(targetColor, colorTransitionSpeed * intensityFactor);
         }
     });
 
@@ -661,13 +652,6 @@ const InfoPanel: React.FC<InfoPanelProps> = ({ article, onClose }) => {
 };
 
 export default InfoPanel;
-interface ArticleParticleProps {
-    articles: Article[];
-    highlightedWord?: string;
-    highlightColor: string;
-    clusterColor: string;
-    edgeColor: string;
-}
 
 // Add this new custom hook for keyboard controls
 const useKeyboardControls = (speed = 0.1) => {
@@ -718,10 +702,8 @@ const useKeyboardControls = (speed = 0.1) => {
     });
   };
 
-  const CameraController: React.FC<{
-    target: THREE.Vector3 | null;
-    resetView: boolean;
-}> = ({ target, resetView }) => {
+// CameraController component
+const CameraController: React.FC<{ target: THREE.Vector3 | null; resetView: boolean }> = ({ target, resetView }) => {
     const { camera, gl } = useThree();
     const controlsRef = useRef<any>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
@@ -834,112 +816,134 @@ const Scene: React.FC<SceneProps> = ({
     );
 };
 
+interface ArticleParticleProps {
+    articles: Article[];
+    highlightedWord: string | undefined;
+    highlightColor: string;
+    clusterColor: string;
+    edgeColor: string;
+    selectedBroadClaim: string;
+    selectedSubClaim: string;
+    selectedSource: string;
+    hasThinktankReference: string;
+    isDuplicate: string;
+}
 
 export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     articles,
-    highlightedWord = '',
+    highlightedWord,
     highlightColor,
     clusterColor,
     edgeColor,
+    selectedBroadClaim,
+    selectedSubClaim,
+    selectedSource,
+    hasThinktankReference,
+    isDuplicate,
 }) => {
-    const [viewMode, setViewMode] = useState<ViewMode>('soup');
-    const [broadClaims, setBroadClaims] = useState<ViewMode[]>(['soup']);
     const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [viewMode, setViewMode] = useState<ViewMode>('highlight');
+    const [cameraTarget, setCameraTarget] = useState<THREE.Vector3 | null>(null);
+    const [resetView, setResetView] = useState(false);
+
+    const filteredArticles = useMemo(() => {
+        return articles.filter((article) => {
+            if (selectedBroadClaim && (!article.broadClaims || !(selectedBroadClaim in article.broadClaims))) {
+                return false;
+            }
+            if (selectedSubClaim && (!article.subClaims || !(selectedSubClaim in article.subClaims))) {
+                return false;
+            }
+            if (selectedSource && article.source !== selectedSource) {
+                return false;
+            }
+            if (hasThinktankReference !== '') {
+                // Note: You might need to add this property to your Article type
+                const hasReference = (article as any).hasThinktankReference === (hasThinktankReference === 'yes');
+                if (!hasReference) {
+                    return false;
+                }
+            }
+            if (isDuplicate !== '') {
+                const isDuplicateMatch = article.isDuplicate === (isDuplicate === 'yes');
+                if (!isDuplicateMatch) {
+                    return false;
+                }
+            }
+            if (highlightedWord && article.body && !article.body.toLowerCase().includes(highlightedWord.toLowerCase())) {
+                return false;
+            }
+            return true;
+        });
+    }, [articles, selectedBroadClaim, selectedSubClaim, selectedSource, hasThinktankReference, isDuplicate, highlightedWord]);
+
+    const handleParticleClick = (article: Article, position: THREE.Vector3) => {
+        setSelectedArticle(article);
+        setCameraTarget(position);
+        setResetView(false);
+    };
 
     const colorMap = useMemo(() => {
         const map = new Map<string, THREE.Color>();
-        broadClaims.forEach((claim, index) => {
-            if (claim !== 'soup') {
-                map.set(
-                    claim,
-                    generateVibrantColor(index - 1, broadClaims.length - 1)
-                );
+        articles.forEach((article, index) => {
+            if (article.broadClaims) {
+                Object.keys(article.broadClaims).forEach((claim) => {
+                    if (!map.has(claim)) {
+                        map.set(claim, new THREE.Color().setHSL(index / articles.length, 1, 0.5));
+                    }
+                });
             }
         });
         return map;
-    }, [broadClaims]);
-
-
-    useEffect(() => {
-        if (!articles || articles.length === 0) {
-            setError('No articles available');
-            return;
-        }
-
-        try {
-            const uniqueClaims = new Set<string>(['soup']);
-            articles.forEach((article) => {
-                if (article.broadClaims) {
-                    Object.keys(article.broadClaims).forEach((claim) => {
-                        if (
-                            article.broadClaims![
-                                claim as keyof Article['broadClaims']
-                            ]
-                        ) {
-                            uniqueClaims.add(claim);
-                        }
-                    });
-                }
-            });
-            setBroadClaims(Array.from(uniqueClaims) as ViewMode[]);
-        } catch (err) {
-            setError(`Error processing articles: ${err}`);
-        }
     }, [articles]);
-
-    const handleToggle = () => {
-        setViewMode((current) => {
-            const currentIndex = broadClaims.indexOf(current);
-            if (currentIndex === broadClaims.length - 1) {
-                return broadClaims[0]; // Return to 'soup'
-            } else {
-                return broadClaims[currentIndex + 1];
-            }
-        });
-    };
 
     const handleArticleSelect = (article: Article | null, position?: THREE.Vector3) => {
         setSelectedArticle(article);
+        if (position) {
+            setCameraTarget(position);
+            setResetView(false);
+        }
     };
 
-    if (error) {
-        return <div className='text-white p-4'>{error}</div>;
-    }
+    const handleBackgroundClick = () => {
+        setSelectedArticle(null);
+        setResetView(true);
+        setCameraTarget(null);
+    };
 
-    if (!articles || articles.length === 0) {
-        return <div className='text-white p-4'>No articles to display</div>;
-    }
+    const toggleViewMode = () => {
+        setViewMode((prevMode) => (prevMode === 'highlight' ? 'cluster' : 'highlight'));
+    };
 
     return (
         <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
             <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
-                <color attach='background' args={['#000']} />
-                <Scene
-                    articles={articles}
+                <color attach="background" args={['#000']} />
+                <Swarm
+                    articles={filteredArticles}
                     viewMode={viewMode}
                     colorMap={colorMap}
-                    setSelectedArticle={handleArticleSelect}
-                    highlightedWord={highlightedWord}
+                    setSelectedArticle={handleParticleClick}
+                    highlightedWord={highlightedWord || ''}
                     highlightColor={highlightColor}
                     clusterColor={clusterColor}
                     edgeColor={edgeColor}
                 />
+                <CameraController target={cameraTarget} resetView={resetView} />
+                <mesh position={[0, 0, -1]} onClick={() => setSelectedArticle(null)}>
+                    <planeGeometry args={[1000, 1000]} />
+                    <meshBasicMaterial transparent opacity={0} />
+                </mesh>
             </Canvas>
-            <Button
-                variant='primary'
-                onClick={handleToggle}
-                className='absolute bottom-10 left-1/2 transform -translate-x-1/2 p-10 text-xl text-white font-semibold'
-            >
-                {viewMode.charAt(0).toUpperCase() +
-                    viewMode.slice(1).replace(/_/g, ' ')}
-            </Button>
             {selectedArticle && (
                 <InfoPanel
                     article={selectedArticle}
-                    onClose={() => handleArticleSelect(null)}
+                    onClose={() => setSelectedArticle(null)}
                 />
             )}
+            <button onClick={toggleViewMode} style={{ position: 'absolute', bottom: 20, left: 20 }}>
+                Toggle View Mode: {viewMode}
+            </button>
         </div>
     );
 };

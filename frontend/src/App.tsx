@@ -16,6 +16,11 @@ function App() {
         highlightColor,
         clusterColor,
         edgeColor,
+        selectedBroadClaim,
+        selectedSubClaim,
+        selectedSource,
+        hasThinktankReference,
+        isDuplicate,
     } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -128,11 +133,16 @@ function App() {
                 className='absolute inset-0 z-0'
             >
                 <ArticleParticle
-                    articles={articles ? articles : dummyArticles}
+                    articles={articles || dummyArticles}
                     highlightedWord={highlightedWord}
                     highlightColor={highlightColor}
                     clusterColor={clusterColor}
                     edgeColor={edgeColor}
+                    selectedBroadClaim={selectedBroadClaim}
+                    selectedSubClaim={selectedSubClaim}
+                    selectedSource={selectedSource}
+                    hasThinktankReference={hasThinktankReference}
+                    isDuplicate={isDuplicate}
                 />
 
                 <AnimatePresence>

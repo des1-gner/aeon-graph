@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Toggle } from './Toggle';
 import {
     AdjustmentsHorizontalIcon,
@@ -31,13 +31,17 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [dataSourceIndex, setDataSourceIndex] = useState(0);
     const [nodeLimitIndex, setNodeLimitIndex] = useState(0);
     const [showArticleSearchModal, setShowArticleSearchModal] = useState(false);
-    const [visualisationOption, setVisualisationOption] = useState(0);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [nodeQty, setNodeQty] = useState<number | undefined>(0);
     const [searchQuery, setSearchQuery] = useState('');
     const [showQuerySummaryModal, setShowQuerySummaryModal] = useState(false);
-    const [showColorPicker, setShowColorPicker] = useState(false);
+
+    const [selectedBroadClaim, setSelectedBroadClaim] = useState('');
+    const [selectedSubClaim, setSelectedSubClaim] = useState('');
+    const [selectedSource, setSelectedSource] = useState('');
+    const [hasThinktankReference, setHasThinktankReference] = useState('');
+    const [isDuplicate, setIsDuplicate] = useState('');
 
     const {
         articles,
@@ -52,31 +56,15 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
         setEdgeColor,
     } = useArticles();
 
-    // Separate state for showing each color picker
-    const [showHighlightColorPicker, setShowHighlightColorPicker] =
-        useState(false);
-    const [showClusterColorPicker, setShowClusterColorPicker] = useState(false);
-    const [showEdgeColorPicker, setShowEdgeColorPicker] = useState(false);
-
     // Separate refs for each color picker
     const highlightColorPickerRef = useRef<HTMLDivElement>(null);
     const clusterColorPickerRef = useRef<HTMLDivElement>(null);
     const edgeColorPickerRef = useRef<HTMLDivElement>(null);
 
-    // New state for visualization options
-    const [clusterBy, setClusterBy] = useState('');
-    const [edgeType, setEdgeType] = useState('');
-    const [claimsIdentified, setClaimsIdentified] = useState('');
-    const [subclaims, setSubclaims] = useState('');
-    const [author, setAuthor] = useState('');
-    const [source, setSource] = useState('');
-    const [hasThinktankReference, setHasThinktankReference] = useState('');
-    const [isDuplicate, setIsDuplicate] = useState('');
-
-    // New state variables for selections
-    const [selectedBroadClaim, setSelectedBroadClaim] = useState('');
-    const [selectedSubClaim, setSelectedSubClaim] = useState('');
-    const [selectedSource, setSelectedSource] = useState('');
+    // Separate state for showing each color picker
+    const [showHighlightColorPicker, setShowHighlightColorPicker] = useState(false);
+    const [showClusterColorPicker, setShowClusterColorPicker] = useState(false);
+    const [showEdgeColorPicker, setShowEdgeColorPicker] = useState(false);
 
     useEffect(() => {
         setShowArticleSearchModal(true);
@@ -153,116 +141,66 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
         };
     }, []);
 
-    const renderVisualisationOptions = () => {
-        switch (visualisationOption) {
-            case 0: // Highlight
-                return (
-                    <div className='space-y-3'>
-                        <div className='flex items-center gap-2'>
-                            <div
-                                className='relative'
-                                ref={highlightColorPickerRef}
-                            >
-                                <button
-                                    className='w-8 h-8 rounded-full border border-neutral-500'
-                                    style={{ backgroundColor: highlightColor }}
-                                    onClick={() =>
-                                        setShowHighlightColorPicker(
-                                            !showHighlightColorPicker
-                                        )
-                                    }
-                                />
-                                {showHighlightColorPicker && (
-                                    <div className='absolute left-0 mt-2 z-10'>
-                                        <HexColorPicker
-                                            color={highlightColor}
-                                            onChange={setHighlightColor}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                            <span className='text-light'>Highlight color</span>
+    const renderVisualisationOptions = () => (
+        <div className='space-y-3'>
+            <div className='flex items-center gap-2'>
+                <div className='relative' ref={highlightColorPickerRef}>
+                    <button
+                        className='w-8 h-8 rounded-full border border-neutral-500'
+                        style={{ backgroundColor: highlightColor }}
+                        onClick={() => setShowHighlightColorPicker(!showHighlightColorPicker)}
+                    />
+                    {showHighlightColorPicker && (
+                        <div className='absolute left-0 mt-2 z-10'>
+                            <HexColorPicker color={highlightColor} onChange={setHighlightColor} />
                         </div>
-                        <div>
-                            <p className='text-light mb-1'>
-                                Filter on Article Body:
-                            </p>
-                            <input
-                                type='text'
-                                value={highlightedWord}
-                                placeholder='E.g. wildfire'
-                                className='dark-text-field w-full'
-                                onChange={(e) =>
-                                    setHighlightedWord(e.target.value)
-                                }
-                            />
+                    )}
+                </div>
+                <span className='text-light'>Highlight color</span>
+            </div>
+            <div>
+                <p className='text-light mb-1'>Filter on Article Body:</p>
+                <input
+                    type='text'
+                    value={highlightedWord}
+                    placeholder='E.g. wildfire'
+                    className='dark-text-field w-full'
+                    onChange={(e) => setHighlightedWord(e.target.value)}
+                />
+            </div>
+            <div className='flex items-center gap-2'>
+                <div className='relative' ref={clusterColorPickerRef}>
+                    <button
+                        className='w-8 h-8 rounded-full border border-neutral-500'
+                        style={{ backgroundColor: clusterColor }}
+                        onClick={() => setShowClusterColorPicker(!showClusterColorPicker)}
+                    />
+                    {showClusterColorPicker && (
+                        <div className='absolute left-0 mt-2 z-10'>
+                            <HexColorPicker color={clusterColor} onChange={setClusterColor} />
                         </div>
-                        {renderCommonDropdowns()}
-                    </div>
-                );
-            case 1: // Cluster
-                return (
-                    <div className='space-y-3'>
-                        <div className='flex items-center gap-2'>
-                            <div
-                                className='relative'
-                                ref={clusterColorPickerRef}
-                            >
-                                <button
-                                    className='w-8 h-8 rounded-full border border-neutral-500'
-                                    style={{ backgroundColor: clusterColor }}
-                                    onClick={() =>
-                                        setShowClusterColorPicker(
-                                            !showClusterColorPicker
-                                        )
-                                    }
-                                />
-                                {showClusterColorPicker && (
-                                    <div className='absolute left-0 mt-2 z-10'>
-                                        <HexColorPicker
-                                            color={clusterColor}
-                                            onChange={setClusterColor}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                            <span className='text-light'>Cluster color</span>
+                    )}
+                </div>
+                <span className='text-light'>Cluster color</span>
+            </div>
+            <div className='flex items-center gap-2'>
+                <div className='relative' ref={edgeColorPickerRef}>
+                    <button
+                        className='w-8 h-8 rounded-full border border-neutral-500'
+                        style={{ backgroundColor: edgeColor }}
+                        onClick={() => setShowEdgeColorPicker(!showEdgeColorPicker)}
+                    />
+                    {showEdgeColorPicker && (
+                        <div className='absolute left-0 mt-2 z-10'>
+                            <HexColorPicker color={edgeColor} onChange={setEdgeColor} />
                         </div>
-                        {renderCommonDropdowns()}
-                    </div>
-                );
-            case 2: // Edges
-                return (
-                    <div className='space-y-3'>
-                        <div className='flex items-center gap-2'>
-                            <div className='relative' ref={edgeColorPickerRef}>
-                                <button
-                                    className='w-8 h-8 rounded-full border border-neutral-500'
-                                    style={{ backgroundColor: edgeColor }}
-                                    onClick={() =>
-                                        setShowEdgeColorPicker(
-                                            !showEdgeColorPicker
-                                        )
-                                    }
-                                />
-                                {showEdgeColorPicker && (
-                                    <div className='absolute left-0 mt-2 z-10'>
-                                        <HexColorPicker
-                                            color={edgeColor}
-                                            onChange={setEdgeColor}
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                            <span className='text-light'>Edge color</span>
-                        </div>
-                        {renderCommonDropdowns()}
-                    </div>
-                );
-            default:
-                return null;
-        }
-    };
+                    )}
+                </div>
+                <span className='text-light'>Edge color</span>
+            </div>
+            {renderCommonDropdowns()}
+        </div>
+    );
 
     const renderCommonDropdowns = () => (
         <div className='space-y-3'>
@@ -363,24 +301,10 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     )}
                 </Toggle>
 
-                <Toggle
-                    header={[
-                        'Visualisation options',
-                        <PaintBrushIcon className='size-4' />,
-                    ]}
-                    toggleLabels={['Highlight', 'Cluster', 'Edges']}
-                    selectedIndex={visualisationOption}
-                    onClick={(index) => setVisualisationOption(index)}
-                />
-
                 <div className='dark-card p-3 space-y-3'>
                     <h2 className='flex gap-2 items-center font-semibold text-light'>
-                        <EyeIcon className='size-4' />
-                        {visualisationOption === 0
-                            ? 'Highlight'
-                            : visualisationOption === 1
-                            ? 'Cluster'
-                            : 'Edges'}
+                        <PaintBrushIcon className='size-4' />
+                        Visualization options
                     </h2>
                     {renderVisualisationOptions()}
                 </div>
@@ -430,6 +354,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                     Query summary
                 </Button>
             </div>
+            
             <AnimatePresence>
                 {showArticleSearchModal && (
                     <motion.div

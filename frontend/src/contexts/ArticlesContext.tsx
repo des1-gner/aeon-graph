@@ -10,7 +10,7 @@ interface ArticlesProviderProps {
     children: ReactNode;
 }
 
-type ArticlesContextProps = {
+interface ArticlesContextProps {
     articles: Article[] | undefined;
     setArticles: (articles: Article[] | undefined) => void;
     deleteArticle: (article: Article) => void;
@@ -24,7 +24,17 @@ type ArticlesContextProps = {
     setClusterColor: (color: string) => void;
     edgeColor: string;
     setEdgeColor: (color: string) => void;
-};
+    selectedBroadClaim: string;
+    setSelectedBroadClaim: (claim: string) => void;
+    selectedSubClaim: string;
+    setSelectedSubClaim: (claim: string) => void;
+    selectedSource: string;
+    setSelectedSource: (source: string) => void;
+    hasThinktankReference: string;
+    setHasThinktankReference: (value: string) => void;
+    isDuplicate: string;
+    setIsDuplicate: (value: string) => void;
+}
 
 const ArticlesContext = createContext<ArticlesContextProps>({} as ArticlesContextProps);
 
@@ -34,23 +44,25 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
     const [highlightColor, setHighlightColor] = useState('#FFFFFF');
     const [clusterColor, setClusterColor] = useState('#FFFFFF');
     const [edgeColor, setEdgeColor] = useState('#FFFFFF');
+    const [selectedBroadClaim, setSelectedBroadClaim] = useState('');
+    const [selectedSubClaim, setSelectedSubClaim] = useState('');
+    const [selectedSource, setSelectedSource] = useState('');
+    const [hasThinktankReference, setHasThinktankReference] = useState('');
+    const [isDuplicate, setIsDuplicate] = useState('');
 
     useEffect(() => {
         const cachedArticles = localStorage.getItem(CACHED_ARTICLES_KEY);
         if (cachedArticles) {
             setArticles(JSON.parse(cachedArticles));
         }
-        
         const cachedHighlightColor = localStorage.getItem(CACHED_HIGHLIGHT_COLOR_KEY);
         if (cachedHighlightColor) {
             setHighlightColor(cachedHighlightColor);
         }
-        
         const cachedClusterColor = localStorage.getItem(CACHED_CLUSTER_COLOR_KEY);
         if (cachedClusterColor) {
             setClusterColor(cachedClusterColor);
         }
-        
         const cachedEdgeColor = localStorage.getItem(CACHED_EDGE_COLOR_KEY);
         if (cachedEdgeColor) {
             setEdgeColor(cachedEdgeColor);
@@ -109,6 +121,16 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
                 setClusterColor,
                 edgeColor,
                 setEdgeColor,
+                selectedBroadClaim,
+                setSelectedBroadClaim,
+                selectedSubClaim,
+                setSelectedSubClaim,
+                selectedSource,
+                setSelectedSource,
+                hasThinktankReference,
+                setHasThinktankReference,
+                isDuplicate,
+                setIsDuplicate,
             }}
         >
             {children}
