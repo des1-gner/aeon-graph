@@ -99,34 +99,36 @@ interface LabelProps {
   Label.displayName = 'Label';
 // Update ParticleProps to include opacity
 interface ParticleProps {
-    index: number;
-    positions: Float32Array;
-    articles: Article[];
-    highlightOptions: HighlightOptions;
-    clusterOptions: FilterOptions;
-    edgeOptions: EdgeOptions;
-    highlightColor: string;
-    clusterColor: string;
-    edgeColor: string;
-    setSelectedArticle: (article: Article, position: THREE.Vector3) => void;
+  index: number;
+  positions: Float32Array;
+  articles: Article[];
+  highlightOptions: HighlightOptions;
+  clusterOptions: FilterOptions;
+  edgeOptions: EdgeOptions;
+  highlightColor: string;
+  clusterColor: string;
+  edgeColor: string;
+  setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
+  setHoveredParticle: (index: number | null) => void;
 }
-  
-const Particle: React.FC<ParticleProps> = ({
-    index,
-    positions,
-    articles,
-    highlightOptions,
-    clusterOptions,
-    edgeOptions,
-    highlightColor,
-    clusterColor,
-    edgeColor,
-    setSelectedArticle,
+
+export const Particle: React.FC<ParticleProps> = ({
+  index,
+  positions,
+  articles,
+  highlightOptions,
+  clusterOptions,
+  edgeOptions,
+  highlightColor,
+  clusterColor,
+  edgeColor,
+  setSelectedArticle,
+  setHoveredParticle,
 }) => {
-    const meshRef = useRef<THREE.Mesh>(null);
-    const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
-    const labelRef = useRef<THREE.Group>(null);
-    const article = articles[index];
+  const meshRef = useRef<THREE.Mesh>(null);
+  const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
+  const labelRef = useRef<THREE.Group>(null);
+  const article = articles[index];
 
     const isHighlighted = useMemo(() => matchesFilter(article, highlightOptions), [article, highlightOptions]);
     const isInCluster = useMemo(() => matchesFilter(article, clusterOptions), [article, clusterOptions]);
@@ -174,46 +176,49 @@ const Particle: React.FC<ParticleProps> = ({
     });
 
     return (
-        <group>
-            <mesh
-                ref={meshRef}
-                onClick={(event) => {
-                    event.stopPropagation();
-                    setSelectedArticle(article, meshRef.current!.position);
-                }}
-            >
-                <sphereGeometry args={[0.2, 32, 32]} />
-                <meshPhysicalMaterial
-                    ref={materialRef}
-                    color={DEFAULT_COLOR}
-                    emissive={DEFAULT_COLOR}
-                    emissiveIntensity={0.2}
-                    transparent
-                    opacity={DEFAULT_OPACITY}
-                    roughness={0.5}
-                    metalness={0.8}
-                />
-            </mesh>
-            <group ref={labelRef} position={[0, -0.3, 0]}>
-                <Text
-                    color={DEFAULT_COLOR}
-                    fontSize={0.1}
-                    maxWidth={2}
-                    lineHeight={1}
-                    letterSpacing={0.02}
-                    textAlign="center"
-                    font="https://fonts.gstatic.com/s/raleway/v14/1Ptug8zYS_SKggPNyC0IT4ttDfA.woff2"
-                    anchorX="center"
-                    anchorY="middle"
-                >
-                    {article.title || 'Untitled'}
-                </Text>
-            </group>
-        </group>
-    );
+      <group>
+          <mesh
+              ref={meshRef}
+              onClick={(event) => {
+                  event.stopPropagation();
+                  if (meshRef.current) {
+                      setSelectedArticle(article, meshRef.current.position);
+                  }
+              }}
+              onPointerOver={() => setHoveredParticle(index)}
+              onPointerOut={() => setHoveredParticle(null)}
+          >
+              <sphereGeometry args={[0.2, 32, 32]} />
+              <meshPhysicalMaterial
+                  ref={materialRef}
+                  color={DEFAULT_COLOR}
+                  emissive={DEFAULT_COLOR}
+                  emissiveIntensity={0.2}
+                  transparent
+                  opacity={DEFAULT_OPACITY}
+                  roughness={0.5}
+                  metalness={0.8}
+              />
+          </mesh>
+          <group ref={labelRef} position={[0, -0.3, 0]}>
+        <Text
+          color={DEFAULT_COLOR}
+          fontSize={0.1}
+          maxWidth={2}
+          lineHeight={1}
+          letterSpacing={0.02}
+          textAlign="center"
+          font="fonts/EurostileBQ-Italic.otf"
+          anchorX="center"
+          anchorY="middle"
+        >
+          {article.title || 'Untitled'}
+        </Text>
+      </group>
+    </group>
+  );
 };
   
-  export { Particle, Label };
   export type { ViewMode };
 
   interface ConnectionLinesProps {
@@ -222,83 +227,110 @@ const Particle: React.FC<ParticleProps> = ({
     edgeOptions: EdgeOptions;
     edgeColor: string;
     hoveredParticle: number | null;
-    colorMap: Map<string, THREE.Color>;
-  }
-  
-  const ConnectionLines: React.FC<ConnectionLinesProps> = ({
+}
+
+export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
     articles,
     positions,
     edgeOptions,
     edgeColor,
     hoveredParticle,
-    colorMap,
-  }) => {
+}) => {
     const lineRef = useRef<THREE.LineSegments>(null);
     const materialRef = useRef<THREE.LineBasicMaterial>(null);
-  
-    useFrame(() => {
-      if (lineRef.current && materialRef.current) {
-        const geometry = lineRef.current.geometry as THREE.BufferGeometry;
-        const vertices: number[] = [];
-  
-        articles.forEach((article1, i) => {
-          articles.forEach((article2, j) => {
-            if (i < j && matchesFilter(article1, edgeOptions) && matchesFilter(article2, edgeOptions)) {
-              vertices.push(
-                positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2],
-                positions[j * 3], positions[j * 3 + 1], positions[j * 3 + 2]
-              );
-            }
-          });
-        });
-  
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-        geometry.attributes.position.needsUpdate = true;
-  
-        materialRef.current.color = new THREE.Color(edgeColor);
-        materialRef.current.visible = edgeOptions.visibility !== 'off';
-        materialRef.current.opacity = edgeOptions.visibility === 'hover' ? 0.5 : 1;
-      }
-    });
-  
-    return (
-      <lineSegments ref={lineRef}>
-        <bufferGeometry />
-        <lineBasicMaterial ref={materialRef} transparent opacity={1} />
-      </lineSegments>
-    );
-  };
-  export { ConnectionLines };
 
-  interface SwarmProps {
+    useFrame(() => {
+        if (lineRef.current && materialRef.current) {
+            const geometry = lineRef.current.geometry as THREE.BufferGeometry;
+            const vertices: number[] = [];
+
+            if (hoveredParticle !== null) {
+                const hoveredArticle = articles[hoveredParticle];
+                
+                articles.forEach((article, index) => {
+                    if (index !== hoveredParticle && 
+                        matchesFilter(hoveredArticle, edgeOptions) && 
+                        matchesFilter(article, edgeOptions)) {
+                        vertices.push(
+                            positions[hoveredParticle * 3],
+                            positions[hoveredParticle * 3 + 1],
+                            positions[hoveredParticle * 3 + 2],
+                            positions[index * 3],
+                            positions[index * 3 + 1],
+                            positions[index * 3 + 2]
+                        );
+                    }
+                });
+            }
+
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            geometry.attributes.position.needsUpdate = true;
+
+            materialRef.current.color = new THREE.Color(edgeColor);
+            materialRef.current.visible = edgeOptions.visibility !== 'off';
+            materialRef.current.opacity = edgeOptions.visibility === 'hover' ? 0.5 : 1;
+        }
+    });
+
+    return (
+        <lineSegments ref={lineRef}>
+            <bufferGeometry />
+            <lineBasicMaterial ref={materialRef} transparent opacity={1} />
+        </lineSegments>
+    );
+};
+
+interface SwarmProps {
+  articles: Article[];
+  setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
+  highlightOptions: HighlightOptions;
+  clusterOptions: FilterOptions;
+  edgeOptions: EdgeOptions;
+  highlightColor: string;
+  clusterColor: string;
+  edgeColor: string;
+}
+  
+  const SPHERE_RADIUS = 10;
+  const CLUSTER_RADIUS = 4;
+  
+  interface ArticleParticleProps {
     articles: Article[];
-    colorMap: Map<string, THREE.Color>;
-    setSelectedArticle: (article: Article, position: THREE.Vector3) => void;
+    highlightColor: string;
+    clusterColor: string;
+    edgeColor: string;
+    highlightOptions: HighlightOptions;
+    clusterOptions: FilterOptions;
+    edgeOptions: EdgeOptions;
+}
+
+interface SwarmProps {
+    articles: Article[];
+    setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
     highlightOptions: HighlightOptions;
     clusterOptions: FilterOptions;
     edgeOptions: EdgeOptions;
     highlightColor: string;
     clusterColor: string;
     edgeColor: string;
-  }
-  
-  const SPHERE_RADIUS = 10;
-  const CLUSTER_RADIUS = 4;
-  
-  export const Swarm: React.FC<SwarmProps> = ({
-    articles,
-    colorMap,
-    setSelectedArticle,
-    highlightOptions,
-    clusterOptions,
-    edgeOptions,
-    highlightColor,
-    clusterColor,
-    edgeColor,
+}
+
+export const Swarm: React.FC<SwarmProps> = ({
+  articles,
+  setSelectedArticle,
+  highlightOptions,
+  clusterOptions,
+  edgeOptions,
+  highlightColor,
+  clusterColor,
+  edgeColor,
 }) => {
-      const positionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
-      const targetPositionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
-  
+  const positionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
+  const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
+
+    const targetPositionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
+
+      
       const generateRandomPointOnSphere = (radius: number): THREE.Vector3 => {
           const u = Math.random();
           const v = Math.random();
@@ -371,34 +403,42 @@ const Particle: React.FC<ParticleProps> = ({
               positionsRef.current[i * 3 + 2] = currentPosition.z;
           });
       });
+
+      // Update the handleParticleClick function
+    const handleParticleClick = (article: Article | null, position?: THREE.Vector3) => {
+      setSelectedArticle(article, position);
+  };
+      
   
-      return (
-        <>
-            {articles.map((article, index) => (
-                <Particle
-                    key={index}
-                    index={index}
-                    positions={positionsRef.current}
-                    articles={articles}
-                    highlightOptions={highlightOptions}
-                    clusterOptions={clusterOptions}
-                    edgeOptions={edgeOptions}
-                    highlightColor={highlightColor}
-                    clusterColor={clusterColor}
-                    edgeColor={edgeColor}
-                    setSelectedArticle={setSelectedArticle}
-                />
-            ))}
-            <ConnectionLines
-                articles={articles}
+  return (
+    <>
+        {articles.map((article, index) => (
+            <Particle
+                key={index}
+                index={index}
                 positions={positionsRef.current}
+                articles={articles}
+                highlightOptions={highlightOptions}
+                clusterOptions={clusterOptions}
                 edgeOptions={edgeOptions}
+                highlightColor={highlightColor}
+                clusterColor={clusterColor}
                 edgeColor={edgeColor}
-                colorMap={colorMap}
+                setSelectedArticle={setSelectedArticle}
+                setHoveredParticle={setHoveredParticle}
             />
-        </>
-    );
+        ))}
+        <ConnectionLines
+            articles={articles}
+            positions={positionsRef.current}
+            edgeOptions={edgeOptions}
+            edgeColor={edgeColor}
+            hoveredParticle={hoveredParticle}
+        />
+    </>
+);
 };
+
 
 interface InfoPanelProps {
     article: Article | null;
@@ -591,83 +631,82 @@ const CameraController: React.FC<{ target: THREE.Vector3 | null; resetView: bool
 
   
 interface SceneProps {
-    articles: Article[];
-    colorMap: Map<string, THREE.Color>;
-    setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
-    highlightOptions: HighlightOptions;
-    clusterOptions: FilterOptions;
-    edgeOptions: EdgeOptions;
-    highlightColor: string;
-    clusterColor: string;
-    edgeColor: string;
+  articles: Article[];
+  setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
+  highlightOptions: HighlightOptions;
+  clusterOptions: FilterOptions;
+  edgeOptions: EdgeOptions;
+  highlightColor: string;
+  clusterColor: string;
+  edgeColor: string;
 }
 
 const Scene: React.FC<SceneProps> = ({
-    articles,
-    colorMap,
-    setSelectedArticle,
-    highlightOptions,
-    clusterOptions,
-    edgeOptions,
-    highlightColor,
-    clusterColor,
-    edgeColor,
+  articles,
+  setSelectedArticle,
+  highlightOptions,
+  clusterOptions,
+  edgeOptions,
+  highlightColor,
+  clusterColor,
+  edgeColor,
 }) => {
-    const [cameraTarget, setCameraTarget] = useState<THREE.Vector3 | null>(null);
-    const [resetView, setResetView] = useState(false);
+  const [cameraTarget, setCameraTarget] = useState<THREE.Vector3 | null>(null);
+  const [resetView, setResetView] = useState(false);
 
-    const handleBackgroundClick = () => {
-        setSelectedArticle(null);
-        setResetView(true);
-        setCameraTarget(null);
-    };
+  const handleBackgroundClick = () => {
+      setSelectedArticle(null);
+      setResetView(true);
+      setCameraTarget(null);
+  };
 
-    const handleParticleClick = (article: Article, position: THREE.Vector3) => {
-        setSelectedArticle(article, position);
-        setCameraTarget(position);
-        setResetView(false);
-    };
+  const handleParticleClick = (article: Article | null, position?: THREE.Vector3) => {
+      setSelectedArticle(article, position);
+      if (position) {
+          setCameraTarget(position);
+          setResetView(false);
+      }
+  };
 
-    return (
-        <>
-            <ambientLight intensity={0.2} />
-            <pointLight position={[10, 10, 10]} intensity={0.8} castShadow />
-            <directionalLight
-                position={[5, 5, 5]}
-                intensity={0.5}
-                castShadow
-                shadow-mapSize-width={1024}
-                shadow-mapSize-height={1024}
-            />
-            <Swarm
-                articles={articles}
-                colorMap={colorMap}
-                setSelectedArticle={handleParticleClick}
-                highlightOptions={highlightOptions}
-                clusterOptions={clusterOptions}
-                edgeOptions={edgeOptions}
-                highlightColor={highlightColor}
-                clusterColor={clusterColor}
-                edgeColor={edgeColor}
-            />
-            <CameraController target={cameraTarget} resetView={resetView} />
-            <mesh position={[0, 0, -1]} onClick={handleBackgroundClick}>
-                <planeGeometry args={[1000, 1000]} />
-                <meshBasicMaterial transparent opacity={0} />
-            </mesh>
-        </>
-    );
+  return (
+      <>
+          <ambientLight intensity={0.2} />
+          <pointLight position={[10, 10, 10]} intensity={0.8} castShadow />
+          <directionalLight
+              position={[5, 5, 5]}
+              intensity={0.5}
+              castShadow
+              shadow-mapSize-width={1024}
+              shadow-mapSize-height={1024}
+          />
+          <Swarm
+              articles={articles}
+              setSelectedArticle={handleParticleClick}
+              highlightOptions={highlightOptions}
+              clusterOptions={clusterOptions}
+              edgeOptions={edgeOptions}
+              highlightColor={highlightColor}
+              clusterColor={clusterColor}
+              edgeColor={edgeColor}
+          />
+          <CameraController target={cameraTarget} resetView={resetView} />
+          <mesh position={[0, 0, -1]} onClick={handleBackgroundClick}>
+              <planeGeometry args={[1000, 1000]} />
+              <meshBasicMaterial transparent opacity={0} />
+          </mesh>
+      </>
+  );
 };
 
 interface ArticleParticleProps {
-    articles: Article[];
-    highlightColor: string;
-    clusterColor: string;
-    edgeColor: string;
-    highlightOptions: HighlightOptions;
-    clusterOptions: FilterOptions;
-    edgeOptions: EdgeOptions;
-  }
+  articles: Article[];
+  highlightColor: string;
+  clusterColor: string;
+  edgeColor: string;
+  highlightOptions: HighlightOptions;
+  clusterOptions: FilterOptions;
+  edgeOptions: EdgeOptions;
+}
   
   interface FilterOptions {
     broadClaim: string;
@@ -686,7 +725,7 @@ interface EdgeOptions extends FilterOptions {
 }
   
   
-  export const ArticleParticle: React.FC<ArticleParticleProps> = ({
+export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     articles,
     highlightColor,
     clusterColor,
@@ -694,67 +733,36 @@ interface EdgeOptions extends FilterOptions {
     highlightOptions,
     clusterOptions,
     edgeOptions,
-  }) => {
+}) => {
     const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-  
-    const filteredArticles = useMemo(() => {
-      return articles.filter((article) => {
-        // Apply highlight filters
-        if (!matchesFilter(article, highlightOptions)) return false;
-        
-        // Apply cluster filters
-        if (!matchesFilter(article, clusterOptions)) return false;
-        
-        // Apply edge filters
-        if (!matchesFilter(article, edgeOptions)) return false;
-  
-        return true;
-      });
-    }, [articles, highlightOptions, clusterOptions, edgeOptions]);
-  
-    const colorMap = useMemo(() => {
-        const map = new Map<string, THREE.Color>();
-        articles.forEach((article, index) => {
-          if (article.broadClaims) {
-            Object.keys(article.broadClaims).forEach((claim) => {
-              if (!map.has(claim)) {
-                map.set(claim, new THREE.Color().setHSL(index / articles.length, 1, 0.5));
-              }
-            });
-          }
-        });
-        return map;
-      }, [articles]);
-    
-      const handleArticleSelect = (article: Article | null, position?: THREE.Vector3) => {
+
+    const handleArticleSelect = (article: Article | null, position?: THREE.Vector3) => {
         setSelectedArticle(article);
-      };
-  
+    };
+
     return (
-      <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-        <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
-          <color attach="background" args={['#000']} />
-          <Scene
-            articles={filteredArticles}
-            colorMap={colorMap}
-            setSelectedArticle={handleArticleSelect}
-            highlightOptions={highlightOptions}
-            clusterOptions={clusterOptions}
-            edgeOptions={edgeOptions}
-            highlightColor={highlightColor}
-            clusterColor={clusterColor}
-            edgeColor={edgeColor}
-          />
-        </Canvas>
-        {selectedArticle && (
-          <InfoPanel
-            article={selectedArticle}
-            onClose={() => setSelectedArticle(null)}
-          />
-        )}
-      </div>
+        <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+            <Canvas camera={{ position: [0, 0, 15], fov: 75 }}>
+                <Scene
+                    articles={articles}
+                    setSelectedArticle={handleArticleSelect}
+                    highlightOptions={highlightOptions}
+                    clusterOptions={clusterOptions}
+                    edgeOptions={edgeOptions}
+                    highlightColor={highlightColor}
+                    clusterColor={clusterColor}
+                    edgeColor={edgeColor}
+                />
+            </Canvas>
+            {selectedArticle && (
+                <InfoPanel
+                    article={selectedArticle}
+                    onClose={() => setSelectedArticle(null)}
+                />
+            )}
+        </div>
     );
-  };
+};
 
     // Helper function to check if an article matches the filter options
     function matchesFilter(article: Article, filterOptions: FilterOptions | HighlightOptions | EdgeOptions): boolean {
