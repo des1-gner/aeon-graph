@@ -723,20 +723,20 @@ interface ArticleParticleProps {
   edgeOptions: EdgeOptions;
 }
   
-  interface FilterOptions {
-    broadClaim: string;
-    subClaim: string;
-    source: string;
-    hasThinktankReference: string;
-    isDuplicate: string;
+interface FilterOptions {
+  broadClaim: string;
+  subClaim: string;
+  source: string;
+  think_tank_ref: string;
+  isDuplicate: string;
 }
 
 interface HighlightOptions extends FilterOptions {
-    articleBody: string;
+  articleBody: string;
 }
 
 interface EdgeOptions extends FilterOptions {
-    visibility: string;
+  visibility: string;
 }
   
   
@@ -781,31 +781,31 @@ export const ArticleParticle: React.FC<ArticleParticleProps> = ({
 };
 
     // Helper function to check if an article matches the filter options
-function matchesFilter(article: Article, filterOptions: FilterOptions | HighlightOptions | EdgeOptions): boolean {
-  if (filterOptions.broadClaim && (!article.broadClaims || !(filterOptions.broadClaim in article.broadClaims))) {
-    return false;
-  }
-  if (filterOptions.subClaim && (!article.subClaims || !(filterOptions.subClaim in article.subClaims))) {
-    return false;
-  }
-  if (filterOptions.source && article.source !== filterOptions.source) {
-    return false;
-  }
-  if (filterOptions.hasThinktankReference !== '') {
-    const hasReference = (article as any).hasThinktankReference === (filterOptions.hasThinktankReference === 'yes');
-    if (!hasReference) {
-      return false;
+    export function matchesFilter(article: Article, filterOptions: FilterOptions | HighlightOptions | EdgeOptions): boolean {
+      if (filterOptions.broadClaim && (!article.broadClaims || !(filterOptions.broadClaim in article.broadClaims))) {
+        return false;
+      }
+      if (filterOptions.subClaim && (!article.subClaims || !(filterOptions.subClaim in article.subClaims))) {
+        return false;
+      }
+      if (filterOptions.source && article.source !== filterOptions.source) {
+        return false;
+      }
+      if (filterOptions.think_tank_ref !== '') {
+        const think_tank_ref = article.think_tank_ref && article.think_tank_ref.trim() !== '';
+        if (think_tank_ref !== (filterOptions.think_tank_ref === 'yes')) {
+          return false;
+        }
+      }
+      if (filterOptions.isDuplicate !== '') {
+        const isDuplicateMatch = article.isDuplicate === (filterOptions.isDuplicate === 'yes');
+        if (!isDuplicateMatch) {
+          return false;
+        }
+      }
+      if ('articleBody' in filterOptions && filterOptions.articleBody && article.body && 
+          !article.body.toLowerCase().includes(filterOptions.articleBody.toLowerCase())) {
+        return false;
+      }
+      return true;
     }
-  }
-  if (filterOptions.isDuplicate !== '') {
-    const isDuplicateMatch = article.isDuplicate === (filterOptions.isDuplicate === 'yes');
-    if (!isDuplicateMatch) {
-      return false;
-    }
-  }
-  if ('articleBody' in filterOptions && filterOptions.articleBody && article.body && 
-      !article.body.toLowerCase().includes(filterOptions.articleBody.toLowerCase())) {
-    return false;
-  }
-  return true;
-}

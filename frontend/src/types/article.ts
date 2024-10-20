@@ -34,6 +34,7 @@ export type Article = {
         sc_movement_unreliable?: string;
         sc_hoax_conspiracy?: string;
     };
+    think_tank_ref?: string;
 };
 
 export const broadClaims = {

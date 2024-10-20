@@ -297,8 +297,8 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                 </select>
                 <div className='flex gap-2'>
                     <select
-                        value={options.hasThinktankReference}
-                        onChange={(e) => handleOptionChange(optionType, 'hasThinktankReference', e.target.value)}
+                        value={options.think_tank_ref}
+                        onChange={(e) => handleOptionChange(optionType, 'think_tank_ref', e.target.value)}
                         className='dark-text-field w-1/2'
                     >
                         <option value=''>Has thinktank reference</option>

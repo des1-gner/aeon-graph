@@ -14,7 +14,7 @@ interface FilterOptions {
     broadClaim: string;
     subClaim: string;
     source: string;
-    hasThinktankReference: string;
+    think_tank_ref: string;
     isDuplicate: string;
 }
 
@@ -60,7 +60,7 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
         broadClaim: '',
         subClaim: '',
         source: '',
-        hasThinktankReference: '',
+        think_tank_ref: '',
         isDuplicate: '',
         articleBody: '',
     });
@@ -68,14 +68,14 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
         broadClaim: '',
         subClaim: '',
         source: '',
-        hasThinktankReference: '',
+        think_tank_ref: '',
         isDuplicate: '',
     });
     const [edgeOptions, setEdgeOptions] = useState<EdgeOptions>({
         broadClaim: '',
         subClaim: '',
         source: '',
-        hasThinktankReference: '',
+        think_tank_ref: '',
         isDuplicate: '',
         visibility: 'off',
     });
