@@ -16,6 +16,9 @@ function App() {
         highlightColor,
         clusterColor,
         edgeColor,
+        highlightOptions,
+        clusterOptions,
+        edgeOptions,
     } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
@@ -128,11 +131,13 @@ function App() {
                 className='absolute inset-0 z-0'
             >
                 <ArticleParticle
-                    articles={articles ? articles : dummyArticles}
-                    highlightedWord={highlightedWord}
+                    articles={articles || dummyArticles}
                     highlightColor={highlightColor}
                     clusterColor={clusterColor}
                     edgeColor={edgeColor}
+                    highlightOptions={highlightOptions}
+                    clusterOptions={clusterOptions}
+                    edgeOptions={edgeOptions}
                 />
 
                 <AnimatePresence>
@@ -153,7 +158,7 @@ function App() {
                     )}
                 </AnimatePresence>
 
-                {/* <AnimatePresence>
+                <AnimatePresence>
                     {showBottomControls && (
                         <motion.div
                             initial={{ opacity: 0, y: '100%' }}
@@ -173,7 +178,7 @@ function App() {
                             </div>
                         </motion.div>
                     )}
-                </AnimatePresence> */}
+                </AnimatePresence>
 
                 <audio
                     ref={audioRef}
