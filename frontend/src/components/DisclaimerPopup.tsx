@@ -86,7 +86,7 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
       ctx.font = 'Bold 768px Arial';
       ctx.fillStyle = 'white';
       ctx.textAlign = 'center';
-      ctx.fillText('The Zone', canvas.width / 2, canvas.height / 2 + 100);
+      ctx.fillText('La Zona', canvas.width / 2, canvas.height / 2 + 100);
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;

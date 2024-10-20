@@ -10,7 +10,23 @@ interface ArticlesProviderProps {
     children: ReactNode;
 }
 
-type ArticlesContextProps = {
+interface FilterOptions {
+    broadClaim: string;
+    subClaim: string;
+    source: string;
+    think_tank_ref: string;
+    isDuplicate: string;
+}
+
+interface HighlightOptions extends FilterOptions {
+    articleBody: string;
+}
+
+interface EdgeOptions extends FilterOptions {
+    visibility: string;
+}
+
+interface ArticlesContextProps {
     articles: Article[] | undefined;
     setArticles: (articles: Article[] | undefined) => void;
     deleteArticle: (article: Article) => void;
@@ -24,7 +40,13 @@ type ArticlesContextProps = {
     setClusterColor: (color: string) => void;
     edgeColor: string;
     setEdgeColor: (color: string) => void;
-};
+    highlightOptions: HighlightOptions;
+    setHighlightOptions: React.Dispatch<React.SetStateAction<HighlightOptions>>;
+    clusterOptions: FilterOptions;
+    setClusterOptions: React.Dispatch<React.SetStateAction<FilterOptions>>;
+    edgeOptions: EdgeOptions;
+    setEdgeOptions: React.Dispatch<React.SetStateAction<EdgeOptions>>;
+}
 
 const ArticlesContext = createContext<ArticlesContextProps>({} as ArticlesContextProps);
 
@@ -34,23 +56,43 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
     const [highlightColor, setHighlightColor] = useState('#FFFFFF');
     const [clusterColor, setClusterColor] = useState('#FFFFFF');
     const [edgeColor, setEdgeColor] = useState('#FFFFFF');
+    const [highlightOptions, setHighlightOptions] = useState<HighlightOptions>({
+        broadClaim: '',
+        subClaim: '',
+        source: '',
+        think_tank_ref: '',
+        isDuplicate: '',
+        articleBody: '',
+    });
+    const [clusterOptions, setClusterOptions] = useState<FilterOptions>({
+        broadClaim: '',
+        subClaim: '',
+        source: '',
+        think_tank_ref: '',
+        isDuplicate: '',
+    });
+    const [edgeOptions, setEdgeOptions] = useState<EdgeOptions>({
+        broadClaim: '',
+        subClaim: '',
+        source: '',
+        think_tank_ref: '',
+        isDuplicate: '',
+        visibility: 'off',
+    });
 
     useEffect(() => {
         const cachedArticles = localStorage.getItem(CACHED_ARTICLES_KEY);
         if (cachedArticles) {
             setArticles(JSON.parse(cachedArticles));
         }
-        
         const cachedHighlightColor = localStorage.getItem(CACHED_HIGHLIGHT_COLOR_KEY);
         if (cachedHighlightColor) {
             setHighlightColor(cachedHighlightColor);
         }
-        
         const cachedClusterColor = localStorage.getItem(CACHED_CLUSTER_COLOR_KEY);
         if (cachedClusterColor) {
             setClusterColor(cachedClusterColor);
         }
-        
         const cachedEdgeColor = localStorage.getItem(CACHED_EDGE_COLOR_KEY);
         if (cachedEdgeColor) {
             setEdgeColor(cachedEdgeColor);
@@ -109,6 +151,12 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
                 setClusterColor,
                 edgeColor,
                 setEdgeColor,
+                highlightOptions,
+                setHighlightOptions,
+                clusterOptions,
+                setClusterOptions,
+                edgeOptions,
+                setEdgeOptions,
             }}
         >
             {children}

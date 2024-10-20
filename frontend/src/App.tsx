@@ -10,22 +10,45 @@ import { dummyArticles } from './types/article';
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
     const [showBottomControls, setShowBottomControls] = useState(true);
-    const {articles, highlightedWord, highlightColor, clusterColor, edgeColor } = useArticles();
+    const {
+        articles,
+        highlightedWord,
+        highlightColor,
+        clusterColor,
+        edgeColor,
+        highlightOptions,
+        clusterOptions,
+        edgeOptions,
+    } = useArticles();
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
-    const [isDisclaimerAccepted, setIsDisclaimerAccepted] = useState(false);
-    const [isTransitioning, setIsTransitioning] = useState(false);
+    const [disclaimerState, setDisclaimerState] = useState(() => {
+        const accepted =
+            sessionStorage.getItem('disclaimerAccepted') === 'true';
+        return {
+            accepted,
+            show: !accepted,
+            transitioning: false,
+        };
+    });
+    const [isLoading, setIsLoading] = useState(true);
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    const handleEnterSite = () => {
-        setIsDisclaimerAccepted(false);
-    };
+    useEffect(() => {
+        setTimeout(() => {
+            setIsLoading(false);
+        }, 100);
+    }, []);
 
     const handleDisclaimerAccept = () => {
-        setIsTransitioning(true);
+        setDisclaimerState((prev) => ({ ...prev, transitioning: true }));
         setTimeout(() => {
-            setIsDisclaimerAccepted(true);
-            setIsTransitioning(false);
+            setDisclaimerState({
+                accepted: true,
+                show: false,
+                transitioning: false,
+            });
+            sessionStorage.setItem('disclaimerAccepted', 'true');
         }, 2000);
     };
 
@@ -79,16 +102,22 @@ function App() {
         };
     }, []);
 
+    if (isLoading) {
+        return <div className='bg-black min-h-screen'></div>; // Or a loading spinner
+    }
+
     return (
         <div className='bg-black min-h-screen relative'>
             <AnimatePresence>
-                {!isDisclaimerAccepted && (
+                {disclaimerState.show && (
                     <motion.div
                         initial={{ opacity: 1 }}
-                        animate={{ opacity: isTransitioning ? 0 : 1 }}
+                        animate={{
+                            opacity: disclaimerState.transitioning ? 0 : 1,
+                        }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 2 }}
-                        className="absolute inset-0 z-50"
+                        className='absolute inset-0 z-50'
                     >
                         <DisclaimerPopup onAccept={handleDisclaimerAccept} />
                     </motion.div>
@@ -97,60 +126,66 @@ function App() {
 
             <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ opacity: isDisclaimerAccepted ? 1 : 0 }}
+                animate={{ opacity: disclaimerState.accepted ? 1 : 0 }}
                 transition={{ duration: 2 }}
-                className="absolute inset-0 z-0"
+                className='absolute inset-0 z-0'
             >
-                <ArticleParticle 
-                    articles={articles ? articles : dummyArticles}
-                    highlightedWord={highlightedWord}
+                <ArticleParticle
+                    articles={articles || dummyArticles}
                     highlightColor={highlightColor}
                     clusterColor={clusterColor}
                     edgeColor={edgeColor}
+                    highlightOptions={highlightOptions}
+                    clusterOptions={clusterOptions}
+                    edgeOptions={edgeOptions}
+                />
+
+                <AnimatePresence>
+                    {showSideControls && (
+                        <motion.div
+                            initial={{ opacity: 0, x: '100%' }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: '100%' }}
+                            transition={{ duration: 0.8 }}
+                            className='fixed top-0 right-0 z-20'
+                        >
+                            <div className='p-4'>
+                                <SidePanelControl
+                                    onClose={() => setShowSideControls(false)}
+                                />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <AnimatePresence>
+                    {showBottomControls && (
+                        <motion.div
+                            initial={{ opacity: 0, y: '100%' }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: '100%' }}
+                            transition={{ duration: 0.8 }}
+                            className='fixed bottom-0 flex justify-center left-0 right-0 z-20'
+                        >
+                            <div className='p-4'>
+                                <BottomPanelControl
+                                    onClose={() => setShowBottomControls(false)}
+                                    isPlaying={isPlaying}
+                                    toggleMusic={toggleMusic}
+                                    toggleFullScreen={toggleFullScreen}
+                                    isFullScreen={isFullScreen}
+                                />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <audio
+                    ref={audioRef}
+                    src='/music/ambient-spring-forest.mp3'
+                    loop
                 />
             </motion.div>
-
-            <AnimatePresence>
-                {showSideControls && isDisclaimerAccepted && (
-                    <motion.div
-                        initial={{ opacity: 0, x: '100%' }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: '100%' }}
-                        transition={{ duration: 0.8 }}
-                        className='fixed top-0 right-0 z-20'
-                    >
-                        <div className='p-4'>
-                            <SidePanelControl
-                                onClose={() => setShowSideControls(false)}
-                            />
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-                {showBottomControls && isDisclaimerAccepted && (
-                    <motion.div
-                        initial={{ opacity: 0, y: '100%' }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: '100%' }}
-                        transition={{ duration: 0.8 }}
-                        className='fixed bottom-0 flex justify-center left-0 right-0 z-20'
-                    >
-                        <div className='p-4'>
-                            <BottomPanelControl
-                                onClose={() => setShowBottomControls(false)}
-                                isPlaying={isPlaying}
-                                toggleMusic={toggleMusic}
-                                toggleFullScreen={toggleFullScreen}
-                                isFullScreen={isFullScreen}
-                            />
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <audio ref={audioRef} src='/music/ambient-spring-forest.mp3' loop />
         </div>
     );
 }
