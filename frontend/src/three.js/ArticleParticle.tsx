@@ -112,8 +112,7 @@ interface ParticleProps {
   setHoveredParticle: (index: number | null) => void;
 }
 
-export // Update the Particle component to ensure labels always face the camera
-const Particle: React.FC<ParticleProps> = ({
+export const Particle: React.FC<ParticleProps> = ({
   index,
   positions,
   articles,
@@ -133,7 +132,6 @@ const Particle: React.FC<ParticleProps> = ({
 
   const isHighlighted = useMemo(() => matchesFilter(article, highlightOptions), [article, highlightOptions]);
   const isInCluster = useMemo(() => matchesFilter(article, clusterOptions), [article, clusterOptions]);
-  const isEdgeVisible = useMemo(() => matchesFilter(article, edgeOptions), [article, edgeOptions]);
 
   useFrame(({ camera }) => {
     if (meshRef.current && materialRef.current && labelRef.current) {
@@ -143,34 +141,26 @@ const Particle: React.FC<ParticleProps> = ({
         positions[index * 3 + 2]
       );
 
-      // Smooth transition for position
       meshRef.current.position.lerp(targetPosition, 0.1);
-      
-      // Position label slightly below the node
       labelRef.current.position.copy(meshRef.current.position).add(new THREE.Vector3(0, -0.5, 0));
-      
-      // Make label face the camera
       labelRef.current.quaternion.copy(camera.quaternion);
 
       let targetColor: THREE.Color;
       let targetOpacity: number;
       let targetEmissiveIntensity: number;
 
-      if (isHighlighted) {
-        targetColor = new THREE.Color(highlightColor);
-        targetOpacity = ACTIVE_OPACITY;
-        targetEmissiveIntensity = 2;
-      } else if (isInCluster) {
+      if (isInCluster) {
+        // Prioritize cluster color
         targetColor = new THREE.Color(clusterColor);
-        targetOpacity = ACTIVE_OPACITY;
+        targetOpacity = 1;
+        targetEmissiveIntensity = 1.5;
+      } else if (isHighlighted) {
+        targetColor = new THREE.Color(highlightColor);
+        targetOpacity = 1;
         targetEmissiveIntensity = 1;
-      } else if (isEdgeVisible) {
-        targetColor = new THREE.Color(edgeColor);
-        targetOpacity = ACTIVE_OPACITY;
-        targetEmissiveIntensity = 0.5;
       } else {
-        targetColor = DEFAULT_COLOR;
-        targetOpacity = DEFAULT_OPACITY;
+        targetColor = new THREE.Color(0.8, 0.8, 0.8); // Light grey for non-highlighted nodes
+        targetOpacity = 0.3;
         targetEmissiveIntensity = 0.2;
       }
 
@@ -197,18 +187,18 @@ const Particle: React.FC<ParticleProps> = ({
         <sphereGeometry args={[0.2, 32, 32]} />
         <meshPhysicalMaterial
           ref={materialRef}
-          color={DEFAULT_COLOR}
-          emissive={DEFAULT_COLOR}
+          color={new THREE.Color(0.8, 0.8, 0.8)}
+          emissive={new THREE.Color(0.8, 0.8, 0.8)}
           emissiveIntensity={0.2}
           transparent
-          opacity={DEFAULT_OPACITY}
+          opacity={0.3}
           roughness={0.5}
           metalness={0.8}
         />
       </mesh>
       <group ref={labelRef}>
         <Text
-          color={isHighlighted ? highlightColor : (isInCluster ? clusterColor : DEFAULT_COLOR)}
+          color={isInCluster ? clusterColor : (isHighlighted ? highlightColor : new THREE.Color(0.8, 0.8, 0.8))}
           fontSize={0.15}
           maxWidth={2}
           lineHeight={1}
@@ -298,7 +288,9 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
 };
   
 const SPHERE_RADIUS = 10;
-const CLUSTER_RADIUS = 8; // Increased from 4 to 8 for less density
+const CLUSTER_RADIUS = 4; // Reduced from 8 to 5 to keep cluster more central
+const OUTER_SPHERE_PADDING = 2; // Add padding to keep outer nodes away from the sphere's edge
+const MIN_DISTANCE_BETWEEN_NODES = 1; // Minimum distance between nodes
   
   interface ArticleParticleProps {
     articles: Article[];
@@ -311,14 +303,14 @@ const CLUSTER_RADIUS = 8; // Increased from 4 to 8 for less density
 }
 
 interface SwarmProps {
-    articles: Article[];
-    setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
-    highlightOptions: HighlightOptions;
-    clusterOptions: FilterOptions;
-    edgeOptions: EdgeOptions;
-    highlightColor: string;
-    clusterColor: string;
-    edgeColor: string;
+  articles: Article[];
+  setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
+  highlightOptions: HighlightOptions;
+  clusterOptions: FilterOptions;
+  edgeOptions: EdgeOptions;
+  highlightColor: string;
+  clusterColor: string;
+  edgeColor: string;
 }
 
 export const Swarm: React.FC<SwarmProps> = ({
@@ -335,22 +327,34 @@ export const Swarm: React.FC<SwarmProps> = ({
   const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
   const targetPositionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
   
-  const generateRandomPointOnSphere = (radius: number): THREE.Vector3 => {
+  const generateRandomPointInSphere = (radius: number): THREE.Vector3 => {
     const u = Math.random();
     const v = Math.random();
     const theta = 2 * Math.PI * u;
     const phi = Math.acos(2 * v - 1);
-    const x = radius * Math.sin(phi) * Math.cos(theta);
-    const y = radius * Math.sin(phi) * Math.sin(theta);
-    const z = radius * Math.cos(phi);
+    const r = Math.cbrt(Math.random()) * radius;
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const y = r * Math.sin(phi) * Math.sin(theta);
+    const z = r * Math.cos(phi);
     return new THREE.Vector3(x, y, z);
   };
 
-  
-      // Initialize positions
+  const generateRandomPointOnOuterSphere = (innerRadius: number, outerRadius: number): THREE.Vector3 => {
+    const u = Math.random();
+    const v = Math.random();
+    const theta = 2 * Math.PI * u;
+    const phi = Math.acos(2 * v - 1);
+    const r = outerRadius - innerRadius; // Distance between inner and outer spheres
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const y = r * Math.sin(phi) * Math.sin(theta);
+    const z = r * Math.cos(phi);
+    return new THREE.Vector3(x, y, z).normalize().multiplyScalar(outerRadius);
+  };
+
+  // Initialize positions
   useEffect(() => {
     articles.forEach((_, i) => {
-      const point = generateRandomPointOnSphere(SPHERE_RADIUS);
+      const point = generateRandomPointInSphere(SPHERE_RADIUS - OUTER_SPHERE_PADDING);
       positionsRef.current[i * 3] = point.x;
       positionsRef.current[i * 3 + 1] = point.y;
       positionsRef.current[i * 3 + 2] = point.z;
@@ -359,35 +363,45 @@ export const Swarm: React.FC<SwarmProps> = ({
       targetPositionsRef.current[i * 3 + 2] = point.z;
     });
   }, [articles]);
-  
-      // Update target positions only when cluster options change
+
+  // Update target positions when cluster options change
   useEffect(() => {
-    if (Object.keys(clusterOptions).some(key => clusterOptions[key as keyof typeof clusterOptions])) {
-      const clusterCenter = generateRandomPointOnSphere(CLUSTER_RADIUS);
-      articles.forEach((article, i) => {
-        if (matchesFilter(article, clusterOptions)) {
-          const offset = new THREE.Vector3(
-            (Math.random() - 0.5) * 4, // Increased spread
-            (Math.random() - 0.5) * 4,
-            (Math.random() - 0.5) * 4
-          );
-          const targetPosition = clusterCenter.clone().add(offset);
-          targetPositionsRef.current[i * 3] = targetPosition.x;
-          targetPositionsRef.current[i * 3 + 1] = targetPosition.y;
-          targetPositionsRef.current[i * 3 + 2] = targetPosition.z;
-        }
+    const isClusterActive = Object.values(clusterOptions).some(value => value !== '');
+
+    if (isClusterActive) {
+      const clusterCenter = new THREE.Vector3(0, 0, 0);
+      const clusterArticles = articles.filter(article => matchesFilter(article, clusterOptions));
+      const nonClusterArticles = articles.filter(article => !matchesFilter(article, clusterOptions));
+      
+      // Position cluster articles
+      clusterArticles.forEach((article, i) => {
+        const index = articles.indexOf(article);
+        const offset = generateRandomPointInSphere(CLUSTER_RADIUS);
+        const targetPosition = clusterCenter.clone().add(offset);
+        targetPositionsRef.current[index * 3] = targetPosition.x;
+        targetPositionsRef.current[index * 3 + 1] = targetPosition.y;
+        targetPositionsRef.current[index * 3 + 2] = targetPosition.z;
+      });
+      
+      // Position non-cluster articles on the outer sphere
+      nonClusterArticles.forEach((article, i) => {
+        const index = articles.indexOf(article);
+        const outerPosition = generateRandomPointOnOuterSphere(CLUSTER_RADIUS, SPHERE_RADIUS - OUTER_SPHERE_PADDING);
+        targetPositionsRef.current[index * 3] = outerPosition.x;
+        targetPositionsRef.current[index * 3 + 1] = outerPosition.y;
+        targetPositionsRef.current[index * 3 + 2] = outerPosition.z;
       });
     } else {
       // Reset to original positions if no clustering
       articles.forEach((_, i) => {
-        const point = generateRandomPointOnSphere(SPHERE_RADIUS);
+        const point = generateRandomPointInSphere(SPHERE_RADIUS - OUTER_SPHERE_PADDING);
         targetPositionsRef.current[i * 3] = point.x;
         targetPositionsRef.current[i * 3 + 1] = point.y;
         targetPositionsRef.current[i * 3 + 2] = point.z;
       });
     }
   }, [articles, clusterOptions]);
-  
+
   useFrame(() => {
     articles.forEach((_, i) => {
       const currentPosition = new THREE.Vector3(
@@ -409,12 +423,6 @@ export const Swarm: React.FC<SwarmProps> = ({
     });
   });
 
-      // Update the handleParticleClick function
-    const handleParticleClick = (article: Article | null, position?: THREE.Vector3) => {
-      setSelectedArticle(article, position);
-  };
-      
-  
   return (
     <>
       {articles.map((article, index) => (
