@@ -37,25 +37,26 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const [nodeQty, setNodeQty] = useState<number | undefined>(0);
     const [searchQuery, setSearchQuery] = useState('');
     const [showQuerySummaryModal, setShowQuerySummaryModal] = useState(false);
-    const [showColorPicker, setShowColorPicker] = useState(false);
-    const [edgeVisibility, setEdgeVisibility] = useState('on');
 
     const {
         articles,
         setArticles,
-        highlightedWord,
-        setHighlightedWord,
         highlightColor,
         setHighlightColor,
         clusterColor,
         setClusterColor,
         edgeColor,
         setEdgeColor,
+        highlightOptions,
+        setHighlightOptions,
+        clusterOptions,
+        setClusterOptions,
+        edgeOptions,
+        setEdgeOptions,
     } = useArticles();
 
     // Separate state for showing each color picker
-    const [showHighlightColorPicker, setShowHighlightColorPicker] =
-        useState(false);
+    const [showHighlightColorPicker, setShowHighlightColorPicker] = useState(false);
     const [showClusterColorPicker, setShowClusterColorPicker] = useState(false);
     const [showEdgeColorPicker, setShowEdgeColorPicker] = useState(false);
 
@@ -63,21 +64,6 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
     const highlightColorPickerRef = useRef<HTMLDivElement>(null);
     const clusterColorPickerRef = useRef<HTMLDivElement>(null);
     const edgeColorPickerRef = useRef<HTMLDivElement>(null);
-
-    // New state for visualization options
-    const [clusterBy, setClusterBy] = useState('');
-    const [edgeType, setEdgeType] = useState('');
-    const [claimsIdentified, setClaimsIdentified] = useState('');
-    const [subclaims, setSubclaims] = useState('');
-    const [author, setAuthor] = useState('');
-    const [source, setSource] = useState('');
-    const [hasThinktankReference, setHasThinktankReference] = useState('');
-    const [isDuplicate, setIsDuplicate] = useState('');
-
-    // New state variables for selections
-    const [selectedBroadClaim, setSelectedBroadClaim] = useState('');
-    const [selectedSubClaim, setSelectedSubClaim] = useState('');
-    const [selectedSource, setSelectedSource] = useState('');
 
     useEffect(() => {
         setShowArticleSearchModal(true);
@@ -154,24 +140,35 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
         };
     }, []);
 
+    const handleOptionChange = (
+        optionType: 'highlight' | 'cluster' | 'edge',
+        field: string,
+        value: string
+    ) => {
+        switch (optionType) {
+            case 'highlight':
+                setHighlightOptions(prev => ({ ...prev, [field]: value }));
+                break;
+            case 'cluster':
+                setClusterOptions(prev => ({ ...prev, [field]: value }));
+                break;
+            case 'edge':
+                setEdgeOptions(prev => ({ ...prev, [field]: value }));
+                break;
+        }
+    };
+
     const renderVisualisationOptions = () => {
         switch (visualisationOption) {
             case 0: // Highlight
                 return (
                     <div className='space-y-3'>
                         <div className='flex items-center gap-2'>
-                            <div
-                                className='relative'
-                                ref={highlightColorPickerRef}
-                            >
+                            <div className='relative' ref={highlightColorPickerRef}>
                                 <button
                                     className='w-8 h-8 rounded-full border border-neutral-500'
                                     style={{ backgroundColor: highlightColor }}
-                                    onClick={() =>
-                                        setShowHighlightColorPicker(
-                                            !showHighlightColorPicker
-                                        )
-                                    }
+                                    onClick={() => setShowHighlightColorPicker(!showHighlightColorPicker)}
                                 />
                                 {showHighlightColorPicker && (
                                     <div className='absolute left-0 mt-2 z-10'>
@@ -185,38 +182,27 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                             <span className='text-light'>Highlight color</span>
                         </div>
                         <div>
-                            <p className='text-light mb-1'>
-                                Filter on Article Body:
-                            </p>
+                            <p className='text-light mb-1'>Filter on Article Body:</p>
                             <input
                                 type='text'
-                                value={highlightedWord}
+                                value={highlightOptions.articleBody}
                                 placeholder='E.g. wildfire'
                                 className='dark-text-field w-full'
-                                onChange={(e) =>
-                                    setHighlightedWord(e.target.value)
-                                }
+                                onChange={(e) => handleOptionChange('highlight', 'articleBody', e.target.value)}
                             />
                         </div>
-                        {renderCommonDropdowns()}
+                        {renderCommonDropdowns('highlight')}
                     </div>
                 );
             case 1: // Cluster
                 return (
                     <div className='space-y-3'>
                         <div className='flex items-center gap-2'>
-                            <div
-                                className='relative'
-                                ref={clusterColorPickerRef}
-                            >
+                            <div className='relative' ref={clusterColorPickerRef}>
                                 <button
                                     className='w-8 h-8 rounded-full border border-neutral-500'
                                     style={{ backgroundColor: clusterColor }}
-                                    onClick={() =>
-                                        setShowClusterColorPicker(
-                                            !showClusterColorPicker
-                                        )
-                                    }
+                                    onClick={() => setShowClusterColorPicker(!showClusterColorPicker)}
                                 />
                                 {showClusterColorPicker && (
                                     <div className='absolute left-0 mt-2 z-10'>
@@ -229,10 +215,10 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                             </div>
                             <span className='text-light'>Cluster color</span>
                         </div>
-                        {renderCommonDropdowns()}
+                        {renderCommonDropdowns('cluster')}
                     </div>
                 );
-                case 2: // Edges
+            case 2: // Edges
                 return (
                     <div className='space-y-3'>
                         <div className='flex items-center gap-2'>
@@ -240,11 +226,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                 <button
                                     className='w-8 h-8 rounded-full border border-neutral-500'
                                     style={{ backgroundColor: edgeColor }}
-                                    onClick={() =>
-                                        setShowEdgeColorPicker(
-                                            !showEdgeColorPicker
-                                        )
-                                    }
+                                    onClick={() => setShowEdgeColorPicker(!showEdgeColorPicker)}
                                 />
                                 {showEdgeColorPicker && (
                                     <div className='absolute left-0 mt-2 z-10'>
@@ -260,8 +242,8 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         <div>
                             <p className='text-light mb-1'>Edge Visibility:</p>
                             <select
-                                value={edgeVisibility}
-                                onChange={(e) => setEdgeVisibility(e.target.value)}
+                                value={edgeOptions.visibility}
+                                onChange={(e) => handleOptionChange('edge', 'visibility', e.target.value)}
                                 className='dark-text-field w-full'
                             >
                                 <option value='on'>On</option>
@@ -269,7 +251,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                 <option value='off'>Off</option>
                             </select>
                         </div>
-                        {renderCommonDropdowns()}
+                        {renderCommonDropdowns('edge')}
                     </div>
                 );
             default:
@@ -277,66 +259,65 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
         }
     };
 
-    const renderCommonDropdowns = () => (
-        <div className='space-y-3'>
-            <select
-                value={selectedBroadClaim}
-                onChange={(e) => setSelectedBroadClaim(e.target.value)}
-                className='dark-text-field w-full'
-            >
-                <option value=''>Select broad claim</option>
-                {Object.entries(broadClaims).map(([key, value]) => (
-                    <option key={key} value={key}>
-                        {value}
-                    </option>
-                ))}
-            </select>
-            <select
-                value={selectedSubClaim}
-                onChange={(e) => setSelectedSubClaim(e.target.value)}
-                className='dark-text-field w-full'
-            >
-                <option value=''>Select sub-claim</option>
-                {Object.entries(subClaims).map(([key, value]) => (
-                    <option key={key} value={key}>
-                        {value}
-                    </option>
-                ))}
-            </select>
-            <select
-                value={selectedSource}
-                onChange={(e) => setSelectedSource(e.target.value)}
-                className='dark-text-field w-full'
-            >
-                <option value=''>Select source</option>
-                {sources.map((source) => (
-                    <option key={source} value={source}>
-                        {source}
-                    </option>
-                ))}
-            </select>
-            <div className='flex gap-2'>
+    const renderCommonDropdowns = (optionType: 'highlight' | 'cluster' | 'edge') => {
+        const options = optionType === 'highlight' ? highlightOptions :
+                        optionType === 'cluster' ? clusterOptions : edgeOptions;
+
+        return (
+            <div className='space-y-3'>
                 <select
-                    value={hasThinktankReference}
-                    onChange={(e) => setHasThinktankReference(e.target.value)}
-                    className='dark-text-field w-1/2'
+                    value={options.broadClaim}
+                    onChange={(e) => handleOptionChange(optionType, 'broadClaim', e.target.value)}
+                    className='dark-text-field w-full'
                 >
-                    <option value=''>Has thinktank reference</option>
-                    <option value='yes'>Yes</option>
-                    <option value='no'>No</option>
+                    <option value=''>Select broad claim</option>
+                    {Object.entries(broadClaims).map(([key, value]) => (
+                        <option key={key} value={key}>{value}</option>
+                    ))}
                 </select>
                 <select
-                    value={isDuplicate}
-                    onChange={(e) => setIsDuplicate(e.target.value)}
-                    className='dark-text-field w-1/2'
+                    value={options.subClaim}
+                    onChange={(e) => handleOptionChange(optionType, 'subClaim', e.target.value)}
+                    className='dark-text-field w-full'
                 >
-                    <option value=''>Is a duplicate</option>
-                    <option value='yes'>Yes</option>
-                    <option value='no'>No</option>
+                    <option value=''>Select sub-claim</option>
+                    {Object.entries(subClaims).map(([key, value]) => (
+                        <option key={key} value={key}>{value}</option>
+                    ))}
                 </select>
+                <select
+                    value={options.source}
+                    onChange={(e) => handleOptionChange(optionType, 'source', e.target.value)}
+                    className='dark-text-field w-full'
+                >
+                    <option value=''>Select source</option>
+                    {sources.map((source) => (
+                        <option key={source} value={source}>{source}</option>
+                    ))}
+                </select>
+                <div className='flex gap-2'>
+                    <select
+                        value={options.hasThinktankReference}
+                        onChange={(e) => handleOptionChange(optionType, 'hasThinktankReference', e.target.value)}
+                        className='dark-text-field w-1/2'
+                    >
+                        <option value=''>Has thinktank reference</option>
+                        <option value='yes'>Yes</option>
+                        <option value='no'>No</option>
+                    </select>
+                    <select
+                        value={options.isDuplicate}
+                        onChange={(e) => handleOptionChange(optionType, 'isDuplicate', e.target.value)}
+                        className='dark-text-field w-1/2'
+                    >
+                        <option value=''>Is a duplicate</option>
+                        <option value='yes'>Yes</option>
+                        <option value='no'>No</option>
+                    </select>
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     return (
         <>

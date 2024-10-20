@@ -10,6 +10,22 @@ interface ArticlesProviderProps {
     children: ReactNode;
 }
 
+interface FilterOptions {
+    broadClaim: string;
+    subClaim: string;
+    source: string;
+    hasThinktankReference: string;
+    isDuplicate: string;
+}
+
+interface HighlightOptions extends FilterOptions {
+    articleBody: string;
+}
+
+interface EdgeOptions extends FilterOptions {
+    visibility: string;
+}
+
 interface ArticlesContextProps {
     articles: Article[] | undefined;
     setArticles: (articles: Article[] | undefined) => void;
@@ -24,16 +40,12 @@ interface ArticlesContextProps {
     setClusterColor: (color: string) => void;
     edgeColor: string;
     setEdgeColor: (color: string) => void;
-    selectedBroadClaim: string;
-    setSelectedBroadClaim: (claim: string) => void;
-    selectedSubClaim: string;
-    setSelectedSubClaim: (claim: string) => void;
-    selectedSource: string;
-    setSelectedSource: (source: string) => void;
-    hasThinktankReference: string;
-    setHasThinktankReference: (value: string) => void;
-    isDuplicate: string;
-    setIsDuplicate: (value: string) => void;
+    highlightOptions: HighlightOptions;
+    setHighlightOptions: React.Dispatch<React.SetStateAction<HighlightOptions>>;
+    clusterOptions: FilterOptions;
+    setClusterOptions: React.Dispatch<React.SetStateAction<FilterOptions>>;
+    edgeOptions: EdgeOptions;
+    setEdgeOptions: React.Dispatch<React.SetStateAction<EdgeOptions>>;
 }
 
 const ArticlesContext = createContext<ArticlesContextProps>({} as ArticlesContextProps);
@@ -44,11 +56,29 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
     const [highlightColor, setHighlightColor] = useState('#FFFFFF');
     const [clusterColor, setClusterColor] = useState('#FFFFFF');
     const [edgeColor, setEdgeColor] = useState('#FFFFFF');
-    const [selectedBroadClaim, setSelectedBroadClaim] = useState('');
-    const [selectedSubClaim, setSelectedSubClaim] = useState('');
-    const [selectedSource, setSelectedSource] = useState('');
-    const [hasThinktankReference, setHasThinktankReference] = useState('');
-    const [isDuplicate, setIsDuplicate] = useState('');
+    const [highlightOptions, setHighlightOptions] = useState<HighlightOptions>({
+        broadClaim: '',
+        subClaim: '',
+        source: '',
+        hasThinktankReference: '',
+        isDuplicate: '',
+        articleBody: '',
+    });
+    const [clusterOptions, setClusterOptions] = useState<FilterOptions>({
+        broadClaim: '',
+        subClaim: '',
+        source: '',
+        hasThinktankReference: '',
+        isDuplicate: '',
+    });
+    const [edgeOptions, setEdgeOptions] = useState<EdgeOptions>({
+        broadClaim: '',
+        subClaim: '',
+        source: '',
+        hasThinktankReference: '',
+        isDuplicate: '',
+        visibility: 'on',
+    });
 
     useEffect(() => {
         const cachedArticles = localStorage.getItem(CACHED_ARTICLES_KEY);
@@ -121,16 +151,12 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
                 setClusterColor,
                 edgeColor,
                 setEdgeColor,
-                selectedBroadClaim,
-                setSelectedBroadClaim,
-                selectedSubClaim,
-                setSelectedSubClaim,
-                selectedSource,
-                setSelectedSource,
-                hasThinktankReference,
-                setHasThinktankReference,
-                isDuplicate,
-                setIsDuplicate,
+                highlightOptions,
+                setHighlightOptions,
+                clusterOptions,
+                setClusterOptions,
+                edgeOptions,
+                setEdgeOptions,
             }}
         >
             {children}
