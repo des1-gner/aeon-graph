@@ -3,10 +3,11 @@ import {
     CalendarDateRangeIcon,
     CubeTransparentIcon,
     MagnifyingGlassIcon,
+    ShareIcon,
     XMarkIcon,
 } from '@heroicons/react/24/solid';
 import { BaseModal } from './BaseModal';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '../Button';
 import { Toggle } from '../Toggle';
@@ -16,14 +17,30 @@ import { ArticleTableModal } from './ArticleTableModal';
 
 type ArticleSearchModalProps = {
     onClose: () => void;
+    searchQuery: string;
+    setSearchQuery: (query: string) => void;
+    startDate: string;
+    setStartDate: (date: string) => void;
+    endDate: string;
+    setEndDate: (date: string) => void;
+    nodeQty: number;
+    setNodeQty: (qty: number) => void;
 };
 
-export const ArticleSearchModal = ({ onClose }: ArticleSearchModalProps) => {
+export const ArticleSearchModal = ({
+    onClose,
+    searchQuery,
+    setSearchQuery,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    nodeQty,
+    setNodeQty,
+}: ArticleSearchModalProps) => {
     const { articles, setArticles } = useArticles();
-    const [searchQuery, setSearchQuery] = useState('');
     const [dateRangeIndex, setDateRangeIndex] = useState(0);
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [nodeLimitIndex, setNodeLimitIndex] = useState(0);
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -71,10 +88,51 @@ export const ArticleSearchModal = ({ onClose }: ArticleSearchModalProps) => {
         setEndDate(now.toISOString().split('T')[0] + 'T23:59:59Z');
     };
 
+    const handleLimitNodes = () => {
+        if (nodeQty! < articles!.length) {
+            let limitedArticles;
+            switch (nodeLimitIndex) {
+                case 0:
+                    limitedArticles = [...articles!].sort((a, b) => {
+                        return (
+                            new Date(b.dateTime).getTime() -
+                            new Date(a.dateTime).getTime()
+                        );
+                    });
+                    break;
+                case 1:
+                    limitedArticles = [...articles!].sort((a, b) => {
+                        return (
+                            new Date(a.dateTime).getTime() -
+                            new Date(b.dateTime).getTime()
+                        );
+                    });
+                    break;
+                case 2:
+                    limitedArticles = [...articles!].sort(
+                        () => 0.5 - Math.random()
+                    );
+                    break;
+                default:
+                    limitedArticles = [...articles!];
+            }
+            setArticles(limitedArticles.slice(0, nodeQty));
+        }
+    };
+
+    useEffect(() => {
+        setNodeQty(articles?.length || 0);
+    }, [articles]);
+
+    const handleGenerateVisualisation = () => {
+        handleLimitNodes();
+        onClose();
+    };
+
     return (
         <BaseModal onClose={onClose}>
             <div className='border-neutral-800 border rounded-lg mx-10 w-[400px]'>
-                <div className='p-5 bg-neutral-900 rounded-t-lg grid grid-cols-3 items-center'>
+                <div className='px-5 py-3 bg-neutral-900 rounded-t-lg grid grid-cols-3 items-center'>
                     <XMarkIcon
                         className='size-5 text-light cursor-pointer justify-self-start'
                         onClick={onClose}
@@ -83,7 +141,7 @@ export const ArticleSearchModal = ({ onClose }: ArticleSearchModalProps) => {
                         Database Search
                     </p>
                 </div>
-                <div className='p-5 space-y-10 backdrop-blur-xl'>
+                <div className='p-5 space-y-5 backdrop-blur-xl'>
                     <div className='dark-card p-3 space-y-3'>
                         <h2 className='flex gap-2 items-center font-semibold text-light'>
                             <MagnifyingGlassIcon className='size-4' />
@@ -185,6 +243,7 @@ export const ArticleSearchModal = ({ onClose }: ArticleSearchModalProps) => {
                             </div>
                         </Toggle>
                     </div>
+
                     {articles?.length! > 0 && (
                         <div className='flex justify-center'>
                             <Button
@@ -194,7 +253,7 @@ export const ArticleSearchModal = ({ onClose }: ArticleSearchModalProps) => {
                                 isLoading={isLoading}
                             >
                                 <p className='flex gap-2 justify-center items-center'>
-                                    {articles?.length} articles currently loaded
+                                    {articles?.length} articles loaded
                                     <ArrowUpRightIcon className='w-4 h-4' />
                                 </p>
                             </Button>
@@ -202,14 +261,42 @@ export const ArticleSearchModal = ({ onClose }: ArticleSearchModalProps) => {
                     )}
 
                     {articles?.length! > 0 && (
+                        <div className='dark-card p-2 space-y-3 text-light'>
+                            <p className='flex gap-2 items-center pb-1 font-semibold '>
+                                <ShareIcon className='size-4' />
+                                Node quantity
+                            </p>
+                            <p>Limited by</p>
+                            <Toggle
+                                toggleLabels={['Latest', 'Oldest', 'Random']}
+                                selectedIndex={nodeLimitIndex}
+                                onClick={(index) => setNodeLimitIndex(index)}
+                            />
+                            <div className='flex items-center px-1 gap-3'>
+                                <input
+                                    type='range'
+                                    className='w-full accent-neutral-300'
+                                    max={articles?.length}
+                                    min={1}
+                                    value={nodeQty}
+                                    onChange={(e) =>
+                                        setNodeQty(Number(e.target.value))
+                                    }
+                                />
+                                <p className='w-5'>{nodeQty}</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {articles?.length! > 0 && (
                         <div className='flex justify-center'>
                             <Button
                                 variant='action'
-                                onClick={onClose}
+                                onClick={handleGenerateVisualisation}
                                 className='w-full'
                             >
                                 <p className='flex gap-2 justify-center items-center'>
-                                    Start visualisation
+                                    Generate visualisation
                                     <CubeTransparentIcon className='w-4 h-4' />
                                 </p>
                             </Button>

@@ -108,7 +108,7 @@ function App() {
 
     return (
         <div className='bg-black min-h-screen relative'>
-            <AnimatePresence>
+            {/* <AnimatePresence>
                 {disclaimerState.show && (
                     <motion.div
                         initial={{ opacity: 1 }}
@@ -122,11 +122,11 @@ function App() {
                         <DisclaimerPopup onAccept={handleDisclaimerAccept} />
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence> */}
 
             <motion.div
                 initial={{ opacity: 0 }}
-                animate={{ opacity: disclaimerState.accepted ? 1 : 0 }}
+                animate={{ opacity: 1 }}
                 transition={{ duration: 2 }}
                 className='absolute inset-0 z-0'
             >
@@ -158,7 +158,7 @@ function App() {
                     )}
                 </AnimatePresence>
 
-                <AnimatePresence>
+                {/* <AnimatePresence>
                     {showBottomControls && (
                         <motion.div
                             initial={{ opacity: 0, y: '100%' }}
@@ -178,7 +178,7 @@ function App() {
                             </div>
                         </motion.div>
                     )}
-                </AnimatePresence>
+                </AnimatePresence> */}
 
                 <audio
                     ref={audioRef}

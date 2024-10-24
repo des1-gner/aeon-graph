@@ -24,7 +24,7 @@ export const QuerySummaryModal = ({
     return (
         <BaseModal onClose={onClose}>
             <div className='border-neutral-800 border rounded-lg mx-10'>
-                <div className='p-5 bg-neutral-900 rounded-t-lg grid grid-cols-3 items-center'>
+                <div className='px-5 py-3 bg-neutral-900 rounded-t-lg grid grid-cols-3 items-center'>
                     <XMarkIcon
                         className='size-5 text-light cursor-pointer justify-self-start'
                         onClick={onClose}
