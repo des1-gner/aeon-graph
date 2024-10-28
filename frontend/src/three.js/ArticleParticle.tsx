@@ -552,22 +552,32 @@ const useKeyboardControls = (speed = 0.1) => {
     });
 };
 
-// Update the CameraController to fix the issue with nodes disappearing
+// Update the CameraController to handle transitions more smoothly
 const CameraController: React.FC<{
     target: THREE.Vector3 | null;
     resetView: boolean;
-}> = ({ target, resetView }) => {
+    onTransitionComplete?: () => void;
+}> = ({ target, resetView, onTransitionComplete }) => {
     const { camera, gl } = useThree();
     const controlsRef = useRef<any>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const targetRef = useRef<THREE.Vector3 | null>(null);
+    const startTargetRef = useRef<THREE.Vector3 | null>(null);
+    const transitionProgressRef = useRef(0);
+    const DEFAULT_CAMERA_POSITION = new THREE.Vector3(0, 0, 40); // Further away default position
+    const TRANSITION_SPEED = 0.02; // Slower transition speed (was 0.05)
 
     useEffect(() => {
         if (target || resetView) {
             setIsTransitioning(true);
-            targetRef.current = target
-                ? target.clone()
-                : new THREE.Vector3(0, 0, 0);
+            startTargetRef.current = controlsRef.current?.target.clone() || new THREE.Vector3();
+            targetRef.current = target ? target.clone() : new THREE.Vector3(0, 0, 0);
+            transitionProgressRef.current = 0;
+            
+            // Set initial camera position if it hasn't been set
+            if (camera.position.length() === 0) {
+                camera.position.copy(DEFAULT_CAMERA_POSITION);
+            }
         }
     }, [target, resetView]);
 
@@ -575,19 +585,20 @@ const CameraController: React.FC<{
         if (controlsRef.current && isTransitioning) {
             const controls = controlsRef.current;
 
-            if (targetRef.current) {
-                const targetPosition = targetRef.current
-                    .clone()
-                    .add(new THREE.Vector3(0, 0, 15));
-                camera.position.lerp(targetPosition, 0.05);
-                controls.target.lerp(targetRef.current, 0.05);
+            if (targetRef.current && startTargetRef.current) {
+                transitionProgressRef.current += TRANSITION_SPEED;
+                const progress = Math.min(1, transitionProgressRef.current);
 
-                if (
-                    camera.position.distanceTo(targetPosition) < 0.1 &&
-                    controls.target.distanceTo(targetRef.current) < 0.1
-                ) {
+                // Only move the orbit controls target, not the camera position
+                controls.target.lerpVectors(startTargetRef.current, targetRef.current, progress);
+
+                // Check if transition is complete
+                if (progress >= 1) {
                     setIsTransitioning(false);
                     targetRef.current = null;
+                    startTargetRef.current = null;
+                    transitionProgressRef.current = 0;
+                    onTransitionComplete?.();
                 }
             }
 
@@ -604,8 +615,9 @@ const CameraController: React.FC<{
             enableZoom={true}
             enableRotate={true}
             enablePan={true}
-            minDistance={10}
-            maxDistance={50}
+            minDistance={2} // Increased minimum distance
+            maxDistance={60} // Increased maximum distance
+            target0={new THREE.Vector3(0, 0, 0)} // Default target when reset
         />
     );
 };
@@ -821,6 +833,7 @@ const Scene: React.FC<{
         </>
     );
 };
+
 interface ArticleParticleProps {
     articles: Article[];
     highlightColor: string;
