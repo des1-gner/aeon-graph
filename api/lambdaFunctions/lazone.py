@@ -97,6 +97,7 @@ def lambda_handler(event, context):
     search = query_params.get('search')
     sources = query_params.get('sources')
     publisher = query_params.get('publisher')
+    think_tank_ref = query_params.get('thinkTankRef')
 
     print(f"Start Date: {start_date}")
     print(f"End Date: {end_date}")
@@ -128,7 +129,8 @@ def lambda_handler(event, context):
             source_list = [s.strip() for s in sources.split(',')]
             # Add filter expression for multiple sources
             filter_expressions.append(Attr('source').is_in(source_list))
-
+        if think_tank_ref == 'true':
+            filter_expressions.append(Attr('think_tank_ref').exists())
 
 
         if filter_expressions:
