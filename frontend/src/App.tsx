@@ -103,27 +103,11 @@ function App() {
     }, []);
 
     if (isLoading) {
-        return <div className='bg-black min-h-screen'></div>; // Or a loading spinner
+        return <div className='bg-black min-h-screen'></div>;
     }
 
     return (
         <div className='bg-black min-h-screen relative'>
-            {/* <AnimatePresence>
-                {disclaimerState.show && (
-                    <motion.div
-                        initial={{ opacity: 1 }}
-                        animate={{
-                            opacity: disclaimerState.transitioning ? 0 : 1,
-                        }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 2 }}
-                        className='absolute inset-0 z-50'
-                    >
-                        <DisclaimerPopup onAccept={handleDisclaimerAccept} />
-                    </motion.div>
-                )}
-            </AnimatePresence> */}
-
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -135,9 +119,9 @@ function App() {
                     highlightColor={highlightColor}
                     clusterColor={clusterColor}
                     edgeColor={edgeColor}
-                    highlightOptions={highlightOptions}
-                    clusterOptions={clusterOptions}
-                    edgeOptions={edgeOptions}
+                    highlightOptions={highlightOptions}  // Use directly from context
+                    clusterOptions={clusterOptions}      // Use directly from context
+                    edgeOptions={edgeOptions}           // Use directly from context
                 />
 
                 <AnimatePresence>
@@ -158,7 +142,16 @@ function App() {
                     )}
                 </AnimatePresence>
 
-                {/* <AnimatePresence>
+                <audio
+                    ref={audioRef}
+                    src='/music/ambient-spring-forest.mp3'
+                    loop
+                />
+            </motion.div>
+        </div>
+    );
+}
+        /* <AnimatePresence>
                     {showBottomControls && (
                         <motion.div
                             initial={{ opacity: 0, y: '100%' }}
@@ -178,16 +171,6 @@ function App() {
                             </div>
                         </motion.div>
                     )}
-                </AnimatePresence> */}
-
-                <audio
-                    ref={audioRef}
-                    src='/music/ambient-spring-forest.mp3'
-                    loop
-                />
-            </motion.div>
-        </div>
-    );
-}
+                </AnimatePresence> */
 
 export default App;

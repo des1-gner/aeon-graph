@@ -22,8 +22,13 @@ interface HighlightOptions extends FilterOptions {
     articleBody: string;
 }
 
+interface ClusterOptions extends FilterOptions {
+    articleBody: string;
+}
+
 interface EdgeOptions extends FilterOptions {
     visibility: string;
+    articleBody: string;
 }
 
 interface ArticlesContextProps {
@@ -42,8 +47,8 @@ interface ArticlesContextProps {
     setEdgeColor: (color: string) => void;
     highlightOptions: HighlightOptions;
     setHighlightOptions: React.Dispatch<React.SetStateAction<HighlightOptions>>;
-    clusterOptions: FilterOptions;
-    setClusterOptions: React.Dispatch<React.SetStateAction<FilterOptions>>;
+    clusterOptions: ClusterOptions;
+    setClusterOptions: React.Dispatch<React.SetStateAction<ClusterOptions>>;
     edgeOptions: EdgeOptions;
     setEdgeOptions: React.Dispatch<React.SetStateAction<EdgeOptions>>;
 }
@@ -56,30 +61,34 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
     const [highlightColor, setHighlightColor] = useState('#FFFFFF');
     const [clusterColor, setClusterColor] = useState('#FFFFFF');
     const [edgeColor, setEdgeColor] = useState('#FFFFFF');
-    const [highlightOptions, setHighlightOptions] = useState<HighlightOptions>({
+
+    // Base options without articleBody
+    const defaultFilterOptions: FilterOptions = {
         broadClaim: '',
         subClaim: '',
         source: '',
         think_tank_ref: '',
         isDuplicate: '',
+    };
+
+    // Separate state for each type with its own articleBody
+    const [highlightOptions, setHighlightOptions] = useState<HighlightOptions>({
+        ...defaultFilterOptions,
         articleBody: '',
     });
-    const [clusterOptions, setClusterOptions] = useState<FilterOptions>({
-        broadClaim: '',
-        subClaim: '',
-        source: '',
-        think_tank_ref: '',
-        isDuplicate: '',
-    });
-    const [edgeOptions, setEdgeOptions] = useState<EdgeOptions>({
-        broadClaim: '',
-        subClaim: '',
-        source: '',
-        think_tank_ref: '',
-        isDuplicate: '',
-        visibility: 'off',
+
+    const [clusterOptions, setClusterOptions] = useState<ClusterOptions>({
+        ...defaultFilterOptions,
+        articleBody: '',
     });
 
+    const [edgeOptions, setEdgeOptions] = useState<EdgeOptions>({
+        ...defaultFilterOptions,
+        visibility: 'off',
+        articleBody: '',
+    });
+
+    // Load cached data on mount
     useEffect(() => {
         const cachedArticles = localStorage.getItem(CACHED_ARTICLES_KEY);
         if (cachedArticles) {
@@ -99,12 +108,14 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
         }
     }, []);
 
+    // Cache articles when they change
     useEffect(() => {
         if (articles) {
             localStorage.setItem(CACHED_ARTICLES_KEY, JSON.stringify(articles));
         }
     }, [articles]);
 
+    // Cache colors when they change
     useEffect(() => {
         localStorage.setItem(CACHED_HIGHLIGHT_COLOR_KEY, highlightColor);
     }, [highlightColor]);
@@ -117,6 +128,7 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
         localStorage.setItem(CACHED_EDGE_COLOR_KEY, edgeColor);
     }, [edgeColor]);
 
+    // Article management functions
     const deleteArticle = (articleToDelete: Article) => {
         if (articles) {
             const updatedArticles = articles.filter(

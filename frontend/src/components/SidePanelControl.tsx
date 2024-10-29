@@ -170,7 +170,7 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                         {renderCommonDropdowns('highlight')}
                     </div>
                 );
-            case 1: // Cluster
+                case 1: // Cluster
                 return (
                     <div className='space-y-3'>
                         <div className='flex items-center gap-2'>
@@ -197,6 +197,24 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                 )}
                             </div>
                             <span className='text-light'>Cluster color</span>
+                        </div>
+                        <div>
+                            <p className='text-light mb-1'>
+                                Filter on Article Body:
+                            </p>
+                            <input
+                                type='text'
+                                value={clusterOptions.articleBody}
+                                placeholder='E.g. wildfire'
+                                className='dark-text-field w-full'
+                                onChange={(e) =>
+                                    handleOptionChange(
+                                        'cluster',
+                                        'articleBody',
+                                        e.target.value
+                                    )
+                                }
+                            />
                         </div>
                         {renderCommonDropdowns('cluster')}
                     </div>
@@ -244,9 +262,28 @@ export const SidePanelControl = ({ onClose }: SidePanelControlProps) => {
                                 <option value='off'>Off</option>
                             </select>
                         </div>
+                        <div>
+                            <p className='text-light mb-1'>
+                                Filter on Article Body:
+                            </p>
+                            <input
+                                type='text'
+                                value={edgeOptions.articleBody}
+                                placeholder='E.g. wildfire'
+                                className='dark-text-field w-full'
+                                onChange={(e) =>
+                                    handleOptionChange(
+                                        'edge',
+                                        'articleBody',
+                                        e.target.value
+                                    )
+                                }
+                            />
+                        </div>
                         {renderCommonDropdowns('edge')}
                     </div>
                 );
+            
             default:
                 return null;
         }

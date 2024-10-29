@@ -76,15 +76,12 @@ interface ParticleProps {
     positions: Float32Array;
     articles: Article[];
     highlightOptions: HighlightOptions;
-    clusterOptions: FilterOptions;
+    clusterOptions: ClusterOptions;  // Changed from FilterOptions
     edgeOptions: EdgeOptions;
     highlightColor: string;
     clusterColor: string;
     edgeColor: string;
-    setSelectedArticle: (
-        article: Article | null,
-        position?: THREE.Vector3
-    ) => void;
+    setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
     setHoveredParticle: (index: number | null) => void;
 }
 
@@ -112,7 +109,20 @@ export const Particle: React.FC<ParticleProps> = ({
     const article = articles[index];
   
     const isHighlighted = useMemo(() => matchesFilter(article, highlightOptions), [article, highlightOptions]);
-    const isInCluster = useMemo(() => matchesFilter(article, clusterOptions), [article, clusterOptions]);
+    const isInCluster = useMemo(
+        () => matchesFilter(article, clusterOptions as ClusterOptions),
+        [article, clusterOptions]
+    );
+    
+    // When filtering articles:
+    const clusterArticles = articles.filter((article) =>
+        matchesFilter(article, clusterOptions as ClusterOptions)
+    );
+    
+    const nonClusterArticles = articles.filter((article) =>
+        !matchesFilter(article, clusterOptions as ClusterOptions)
+    );
+    
     const isEdgeVisible = useMemo(() => matchesFilter(article, edgeOptions), [article, edgeOptions]);
   
     const getTargetColor = () => {
@@ -305,24 +315,22 @@ interface ArticleParticleProps {
     clusterColor: string;
     edgeColor: string;
     highlightOptions: HighlightOptions;
-    clusterOptions: FilterOptions;
+    clusterOptions: ClusterOptions;  // Changed from FilterOptions
     edgeOptions: EdgeOptions;
 }
 
 interface SwarmProps {
     articles: Article[];
-    setSelectedArticle: (
-        article: Article | null,
-        position?: THREE.Vector3
-    ) => void;
+    setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
     highlightOptions: HighlightOptions;
-    clusterOptions: FilterOptions;
+    clusterOptions: ClusterOptions;  // Changed from FilterOptions
     edgeOptions: EdgeOptions;
     highlightColor: string;
     clusterColor: string;
     edgeColor: string;
 }
 
+// The Swarm component that handles the particle system
 export const Swarm: React.FC<SwarmProps> = ({
     articles,
     setSelectedArticle,
@@ -333,13 +341,10 @@ export const Swarm: React.FC<SwarmProps> = ({
     clusterColor,
     edgeColor,
 }) => {
-    const positionsRef = useRef<Float32Array>(
-        new Float32Array(articles.length * 3)
-    );
+    const positionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
     const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
-    const targetPositionsRef = useRef<Float32Array>(
-        new Float32Array(articles.length * 3)
-    );
+    const targetPositionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
+    const [isInitialized, setIsInitialized] = useState(false);
 
     const generateRandomPointInSphere = (radius: number): THREE.Vector3 => {
         const u = Math.random();
@@ -361,7 +366,7 @@ export const Swarm: React.FC<SwarmProps> = ({
         const v = Math.random();
         const theta = 2 * Math.PI * u;
         const phi = Math.acos(2 * v - 1);
-        const r = outerRadius - innerRadius; // Distance between inner and outer spheres
+        const r = outerRadius - innerRadius;
         const x = r * Math.sin(phi) * Math.cos(theta);
         const y = r * Math.sin(phi) * Math.sin(theta);
         const z = r * Math.cos(phi);
@@ -373,9 +378,7 @@ export const Swarm: React.FC<SwarmProps> = ({
     // Initialize positions
     useEffect(() => {
         articles.forEach((_, i) => {
-            const point = generateRandomPointInSphere(
-                SPHERE_RADIUS - OUTER_SPHERE_PADDING
-            );
+            const point = generateRandomPointInSphere(SPHERE_RADIUS - OUTER_SPHERE_PADDING);
             positionsRef.current[i * 3] = point.x;
             positionsRef.current[i * 3 + 1] = point.y;
             positionsRef.current[i * 3 + 2] = point.z;
@@ -383,10 +386,13 @@ export const Swarm: React.FC<SwarmProps> = ({
             targetPositionsRef.current[i * 3 + 1] = point.y;
             targetPositionsRef.current[i * 3 + 2] = point.z;
         });
+        setIsInitialized(true);
     }, [articles]);
 
-    // Update target positions when cluster options change
+    // Handle clustering
     useEffect(() => {
+        if (!isInitialized) return;
+
         const isClusterActive = Object.values(clusterOptions).some(
             (value) => value !== ''
         );
@@ -400,8 +406,7 @@ export const Swarm: React.FC<SwarmProps> = ({
                 (article) => !matchesFilter(article, clusterOptions)
             );
 
-            // Position cluster articles
-            clusterArticles.forEach((article, i) => {
+            clusterArticles.forEach((article) => {
                 const index = articles.indexOf(article);
                 const offset = generateRandomPointInSphere(CLUSTER_RADIUS);
                 const targetPosition = clusterCenter.clone().add(offset);
@@ -410,8 +415,7 @@ export const Swarm: React.FC<SwarmProps> = ({
                 targetPositionsRef.current[index * 3 + 2] = targetPosition.z;
             });
 
-            // Position non-cluster articles on the outer sphere
-            nonClusterArticles.forEach((article, i) => {
+            nonClusterArticles.forEach((article) => {
                 const index = articles.indexOf(article);
                 const outerPosition = generateRandomPointOnOuterSphere(
                     CLUSTER_RADIUS,
@@ -422,7 +426,6 @@ export const Swarm: React.FC<SwarmProps> = ({
                 targetPositionsRef.current[index * 3 + 2] = outerPosition.z;
             });
         } else {
-            // Reset to original positions if no clustering
             articles.forEach((_, i) => {
                 const point = generateRandomPointInSphere(
                     SPHERE_RADIUS - OUTER_SPHERE_PADDING
@@ -432,32 +435,25 @@ export const Swarm: React.FC<SwarmProps> = ({
                 targetPositionsRef.current[i * 3 + 2] = point.z;
             });
         }
-    }, [articles, clusterOptions]);
+    }, [articles, clusterOptions, isInitialized]);
 
     useFrame(() => {
+        if (!isInitialized) return;
+        
+        const LERP_FACTOR = 0.05;
         articles.forEach((_, i) => {
-            const currentPosition = new THREE.Vector3(
-                positionsRef.current[i * 3],
-                positionsRef.current[i * 3 + 1],
-                positionsRef.current[i * 3 + 2]
-            );
-            const targetPosition = new THREE.Vector3(
-                targetPositionsRef.current[i * 3],
-                targetPositionsRef.current[i * 3 + 1],
-                targetPositionsRef.current[i * 3 + 2]
-            );
-
-            currentPosition.lerp(targetPosition, 0.05);
-
-            positionsRef.current[i * 3] = currentPosition.x;
-            positionsRef.current[i * 3 + 1] = currentPosition.y;
-            positionsRef.current[i * 3 + 2] = currentPosition.z;
+            positionsRef.current[i * 3] += (targetPositionsRef.current[i * 3] - positionsRef.current[i * 3]) * LERP_FACTOR;
+            positionsRef.current[i * 3 + 1] += (targetPositionsRef.current[i * 3 + 1] - positionsRef.current[i * 3 + 1]) * LERP_FACTOR;
+            positionsRef.current[i * 3 + 2] += (targetPositionsRef.current[i * 3 + 2] - positionsRef.current[i * 3 + 2]) * LERP_FACTOR;
         });
     });
 
     return (
         <>
-            {articles.map((article, index) => (
+            <ambientLight intensity={0.4} />
+            <pointLight position={[10, 10, 10]} intensity={0.6} />
+            <directionalLight position={[5, 5, 5]} intensity={0.5} castShadow />
+            {isInitialized && articles.map((_, index) => (
                 <Particle
                     key={index}
                     index={index}
@@ -480,6 +476,7 @@ export const Swarm: React.FC<SwarmProps> = ({
                 edgeColor={edgeColor}
                 hoveredParticle={hoveredParticle}
             />
+            <CameraController target={null} resetView={false} />
         </>
     );
 };
@@ -617,15 +614,8 @@ const CameraController: React.FC<{
 };
 
 // Main component that provides the Canvas context
-export const ArticleParticle: React.FC<{
-    articles: Article[];
-    highlightColor: string;
-    clusterColor: string;
-    edgeColor: string;
-    highlightOptions: HighlightOptions;
-    clusterOptions: FilterOptions;
-    edgeOptions: EdgeOptions;
-}> = ({
+// First, the main ArticleParticle component that provides the Canvas
+export const ArticleParticle: React.FC<ArticleParticleProps> = ({
     articles,
     highlightColor,
     clusterColor,
@@ -642,7 +632,7 @@ export const ArticleParticle: React.FC<{
                 camera={{ position: [0, 0, 30], fov: 60, near: 0.1, far: 1000 }}
                 gl={{ antialias: true }}
             >
-                <Scene
+                <Swarm
                     articles={articles}
                     setSelectedArticle={setSelectedArticle}
                     highlightOptions={highlightOptions}
@@ -663,12 +653,25 @@ export const ArticleParticle: React.FC<{
     );
 };
 
+// Update the Scene component props interface
+interface SceneProps {
+    articles: Article[];
+    setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
+    highlightOptions: HighlightOptions;
+    clusterOptions: ClusterOptions;  // Changed from FilterOptions
+    edgeOptions: EdgeOptions;
+    highlightColor: string;
+    clusterColor: string;
+    edgeColor: string;
+}
+
 // Scene component that uses Three.js hooks
+// First, update the main Scene interface
 const Scene: React.FC<{
     articles: Article[];
     setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
     highlightOptions: HighlightOptions;
-    clusterOptions: FilterOptions;
+    clusterOptions: ClusterOptions;  // Changed from FilterOptions
     edgeOptions: EdgeOptions;
     highlightColor: string;
     clusterColor: string;
@@ -727,22 +730,17 @@ const Scene: React.FC<{
     useEffect(() => {
         if (!isInitialized) return;
 
-        const isClusterActive = Object.values(clusterOptions).some(value => value !== '');
+        const isClusterActive = Object.values(clusterOptions).some(value => value !== '' && value !== 'off');
         const clusterCenter = new THREE.Vector3(0, 0, 0);
 
         if (isClusterActive) {
-            const clusterArticles = articles.filter(article => matchesFilter(article, clusterOptions));
-            const nonClusterArticles = articles.filter(article => !matchesFilter(article, clusterOptions));
-
-            clusterArticles.forEach((article) => {
-                const index = articles.indexOf(article);
-                const offset = generateRandomPointInSphere(CLUSTER_RADIUS);
-                const targetPosition = clusterCenter.clone().add(offset);
-                
-                targetPositionsRef.current[index * 3] = targetPosition.x;
-                targetPositionsRef.current[index * 3 + 1] = targetPosition.y;
-                targetPositionsRef.current[index * 3 + 2] = targetPosition.z;
-            });
+            // Update these lines to use ClusterOptions
+            const clusterArticles = articles.filter(article => 
+                matchesFilter(article, clusterOptions as ClusterOptions)
+            );
+            const nonClusterArticles = articles.filter(article => 
+                !matchesFilter(article, clusterOptions as ClusterOptions)
+            );
 
             nonClusterArticles.forEach((article) => {
                 const index = articles.indexOf(article);
@@ -801,7 +799,7 @@ const Scene: React.FC<{
                     positions={positionsRef.current}
                     articles={articles}
                     highlightOptions={highlightOptions}
-                    clusterOptions={clusterOptions}
+                    clusterOptions={clusterOptions as ClusterOptions}  // Add type assertion here
                     edgeOptions={edgeOptions}
                     highlightColor={highlightColor}
                     clusterColor={clusterColor}
@@ -834,47 +832,56 @@ interface ArticleParticleProps {
     clusterColor: string;
     edgeColor: string;
     highlightOptions: HighlightOptions;
-    clusterOptions: FilterOptions;
+    clusterOptions: ClusterOptions;  // Changed from FilterOptions
     edgeOptions: EdgeOptions;
 }
 
+// Update FilterOptions to include articleBody
+// Base interface without articleBody
+// First, define our base filter options
+// First, restore the original interfaces while keeping articleBody
 interface FilterOptions {
     broadClaim: string;
     subClaim: string;
     source: string;
     think_tank_ref: string;
     isDuplicate: string;
+    articleBody: string;  // Added but keeping original structure
 }
 
-interface HighlightOptions extends FilterOptions {
-    articleBody: string;
-}
-
+interface HighlightOptions extends FilterOptions {}
+interface ClusterOptions extends FilterOptions {}
 interface EdgeOptions extends FilterOptions {
     visibility: string;
 }
 
-// Helper function to check if an article matches the filter options
+// Helper function maintaining the original logic but adding articleBody check
 export function matchesFilter(
     article: Article,
     filterOptions: FilterOptions | HighlightOptions | EdgeOptions
 ): boolean {
+    // Check broad claim
     if (
         filterOptions.broadClaim &&
-        (!article.broadClaims ||
-            !(filterOptions.broadClaim in article.broadClaims))
+        (!article.broadClaims || !(filterOptions.broadClaim in article.broadClaims))
     ) {
         return false;
     }
+
+    // Check sub claim
     if (
         filterOptions.subClaim &&
         (!article.subClaims || !(filterOptions.subClaim in article.subClaims))
     ) {
         return false;
     }
+
+    // Check source
     if (filterOptions.source && article.source !== filterOptions.source) {
         return false;
     }
+
+    // Check think tank reference
     if (filterOptions.think_tank_ref !== '') {
         const hasThinkTankRef =
             article.think_tank_ref !== null &&
@@ -884,6 +891,8 @@ export function matchesFilter(
             return false;
         }
     }
+
+    // Check duplicate status
     if (filterOptions.isDuplicate !== '') {
         const isDuplicateMatch =
             article.isDuplicate === (filterOptions.isDuplicate === 'yes');
@@ -891,15 +900,19 @@ export function matchesFilter(
             return false;
         }
     }
+
+    // Add articleBody check while maintaining original structure
     if (
         'articleBody' in filterOptions &&
         filterOptions.articleBody &&
-        article.body &&
-        !article.body
-            .toLowerCase()
-            .includes(filterOptions.articleBody.toLowerCase())
+        filterOptions.articleBody.trim() !== ''
     ) {
-        return false;
+        if (!article.body || !article.body
+            .toLowerCase()
+            .includes(filterOptions.articleBody.toLowerCase().trim())) {
+            return false;
+        }
     }
+
     return true;
 }
