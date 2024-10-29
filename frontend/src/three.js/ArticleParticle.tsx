@@ -90,6 +90,7 @@ const DEFAULT_COLOR = new THREE.Color(0.8, 0.8, 0.8); // Light grey for non-high
 const DEFAULT_OPACITY = 0.3;
 const ACTIVE_OPACITY = 1;
 
+// Update the Particle component's color handling logic
 export const Particle: React.FC<ParticleProps> = ({
     index,
     positions,
@@ -102,120 +103,126 @@ export const Particle: React.FC<ParticleProps> = ({
     edgeColor,
     setSelectedArticle,
     setHoveredParticle,
-  }) => {
+}) => {
     const meshRef = useRef<THREE.Mesh>(null);
     const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
     const labelRef = useRef<THREE.Group>(null);
     const article = articles[index];
-  
+
     const isHighlighted = useMemo(() => matchesFilter(article, highlightOptions), [article, highlightOptions]);
-    const isInCluster = useMemo(
-        () => matchesFilter(article, clusterOptions as ClusterOptions),
-        [article, clusterOptions]
-    );
-    
-    // When filtering articles:
-    const clusterArticles = articles.filter((article) =>
-        matchesFilter(article, clusterOptions as ClusterOptions)
-    );
-    
-    const nonClusterArticles = articles.filter((article) =>
-        !matchesFilter(article, clusterOptions as ClusterOptions)
-    );
-    
+    const isInCluster = useMemo(() => matchesFilter(article, clusterOptions), [article, clusterOptions]);
     const isEdgeVisible = useMemo(() => matchesFilter(article, edgeOptions), [article, edgeOptions]);
-  
-    const getTargetColor = () => {
-      if (isHighlighted) return new THREE.Color(highlightColor);
-      if (isInCluster) return new THREE.Color(clusterColor);
-      if (isEdgeVisible) return new THREE.Color(edgeColor);
-      return DEFAULT_COLOR;
-    };
-  
-    useFrame(({ camera }) => {
-      if (meshRef.current && materialRef.current && labelRef.current) {
-        const targetPosition = new THREE.Vector3(
-          positions[index * 3],
-          positions[index * 3 + 1],
-          positions[index * 3 + 2]
-        );
-  
-        meshRef.current.position.lerp(targetPosition, 0.1);
-        labelRef.current.position.copy(targetPosition).add(new THREE.Vector3(0, -0.5, 0));
-        labelRef.current.quaternion.copy(camera.quaternion);
-  
-        let targetColor: THREE.Color;
-        let targetOpacity: number;
-        let targetEmissiveIntensity: number;
-  
-        if (isHighlighted) {
-          targetColor = new THREE.Color(highlightColor);
-          targetOpacity = ACTIVE_OPACITY;
-          targetEmissiveIntensity = 2;
-        } else if (isInCluster) {
-          targetColor = new THREE.Color(clusterColor);
-          targetOpacity = ACTIVE_OPACITY;
-          targetEmissiveIntensity = 1;
-        } else if (isEdgeVisible) {
-          targetColor = new THREE.Color(edgeColor);
-          targetOpacity = ACTIVE_OPACITY;
-          targetEmissiveIntensity = 0.5;
-        } else {
-          targetColor = DEFAULT_COLOR;
-          targetOpacity = DEFAULT_OPACITY;
-          targetEmissiveIntensity = 0.2;
+
+    // Separate color determination logic
+    const getParticleState = () => {
+        // Check if any highlight options are active
+        const hasActiveHighlight = Object.values(highlightOptions).some(value => value !== '' && value !== 'off');
+        // Check if any cluster options are active
+        const hasActiveCluster = Object.values(clusterOptions).some(value => value !== '' && value !== 'off');
+
+        if (hasActiveHighlight && isHighlighted) {
+            return {
+                color: new THREE.Color(highlightColor),
+                opacity: ACTIVE_OPACITY,
+                emissiveIntensity: 2
+            };
         }
-  
-        materialRef.current.color.lerp(targetColor, 0.1);
-        materialRef.current.emissive.lerp(targetColor, 0.1);
-        materialRef.current.opacity = THREE.MathUtils.lerp(materialRef.current.opacity, targetOpacity, 0.1);
-        materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(materialRef.current.emissiveIntensity, targetEmissiveIntensity, 0.1);
-      }
+        
+        if (hasActiveCluster && isInCluster) {
+            return {
+                color: new THREE.Color(clusterColor),
+                opacity: ACTIVE_OPACITY,
+                emissiveIntensity: 1
+            };
+        }
+
+        if (isEdgeVisible) {
+            return {
+                color: new THREE.Color(edgeColor),
+                opacity: ACTIVE_OPACITY,
+                emissiveIntensity: 0.5
+            };
+        }
+
+        return {
+            color: DEFAULT_COLOR,
+            opacity: DEFAULT_OPACITY,
+            emissiveIntensity: 0.2
+        };
+    };
+
+    useFrame(({ camera }) => {
+        if (meshRef.current && materialRef.current && labelRef.current) {
+            const targetPosition = new THREE.Vector3(
+                positions[index * 3],
+                positions[index * 3 + 1],
+                positions[index * 3 + 2]
+            );
+
+            meshRef.current.position.lerp(targetPosition, 0.1);
+            labelRef.current.position.copy(targetPosition).add(new THREE.Vector3(0, -0.5, 0));
+            labelRef.current.quaternion.copy(camera.quaternion);
+
+            const { color, opacity, emissiveIntensity } = getParticleState();
+
+            materialRef.current.color.lerp(color, 0.1);
+            materialRef.current.emissive.lerp(color, 0.1);
+            materialRef.current.opacity = THREE.MathUtils.lerp(
+                materialRef.current.opacity,
+                opacity,
+                0.1
+            );
+            materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
+                materialRef.current.emissiveIntensity,
+                emissiveIntensity,
+                0.1
+            );
+        }
     });
-  
+
     return (
-      <group>
-        <mesh
-          ref={meshRef}
-          onClick={(event) => {
-            event.stopPropagation();
-            if (meshRef.current) {
-              setSelectedArticle(article, meshRef.current.position);
-            }
-          }}
-          onPointerOver={() => setHoveredParticle(index)}
-          onPointerOut={() => setHoveredParticle(null)}
-        >
-          <sphereGeometry args={[0.2, 32, 32]} />
-          <meshPhysicalMaterial
-            ref={materialRef}
-            color={DEFAULT_COLOR}
-            emissive={DEFAULT_COLOR}
-            emissiveIntensity={0.2}
-            transparent
-            opacity={DEFAULT_OPACITY}
-            roughness={0.5}
-            metalness={0.8}
-          />
-        </mesh>
-        <group ref={labelRef}>
-          <Text
-            color={getTargetColor()}
-            fontSize={0.15}
-            lineHeight={1}
-            letterSpacing={0.02}
-            textAlign="center"
-            font="fonts/eurostile-bold.ttf"
-            anchorX="center"
-            anchorY="middle"
-            whiteSpace="nowrap"
-          >
-            {`${article.title || 'Untitled'} | ${article.source || 'Unknown Source'}`}
-          </Text>
+        <group>
+            <mesh
+                ref={meshRef}
+                onClick={(event) => {
+                    event.stopPropagation();
+                    if (meshRef.current) {
+                        setSelectedArticle(article, meshRef.current.position);
+                    }
+                }}
+                onPointerOver={() => setHoveredParticle(index)}
+                onPointerOut={() => setHoveredParticle(null)}
+            >
+                <sphereGeometry args={[0.2, 32, 32]} />
+                <meshPhysicalMaterial
+                    ref={materialRef}
+                    color={DEFAULT_COLOR}
+                    emissive={DEFAULT_COLOR}
+                    emissiveIntensity={0.2}
+                    transparent
+                    opacity={DEFAULT_OPACITY}
+                    roughness={0.5}
+                    metalness={0.8}
+                />
+            </mesh>
+            <group ref={labelRef}>
+                <Text
+                    color={getParticleState().color}
+                    fontSize={0.15}
+                    lineHeight={1}
+                    letterSpacing={0.02}
+                    textAlign="center"
+                    font="fonts/eurostile-bold.ttf"
+                    anchorX="center"
+                    anchorY="middle"
+                    whiteSpace="nowrap"
+                >
+                    {`${article.title || 'Untitled'} | ${article.source || 'Unknown Source'}`}
+                </Text>
+            </group>
         </group>
-      </group>
     );
-  };
+};
 export type { ViewMode };
 
 interface ConnectionLinesProps {
