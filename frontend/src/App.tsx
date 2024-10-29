@@ -114,14 +114,33 @@ function App() {
                 transition={{ duration: 2 }}
                 className='absolute inset-0 z-0'
             >
+                {/* Fullscreen button */}
+                <motion.button
+                    onClick={toggleFullScreen}
+                    className="fixed top-4 left-4 z-30 bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition-colors duration-200"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                >
+                    {isFullScreen ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5M15 15l5.25 5.25" />
+                        </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0-4l5 5m11-9v4m0 0h-4m4 0l-5 5" />
+                        </svg>
+                    )}
+                </motion.button>
+
                 <ArticleParticle
                     articles={articles || dummyArticles}
                     highlightColor={highlightColor}
                     clusterColor={clusterColor}
                     edgeColor={edgeColor}
-                    highlightOptions={highlightOptions}  // Use directly from context
-                    clusterOptions={clusterOptions}      // Use directly from context
-                    edgeOptions={edgeOptions}           // Use directly from context
+                    highlightOptions={highlightOptions}
+                    clusterOptions={clusterOptions}
+                    edgeOptions={edgeOptions}
                 />
 
                 <AnimatePresence>
@@ -149,9 +168,8 @@ function App() {
                 />
             </motion.div>
         </div>
-    );
-}
-        /* <AnimatePresence>
+    
+    /* <AnimatePresence>
                     {showBottomControls && (
                         <motion.div
                             initial={{ opacity: 0, y: '100%' }}
@@ -172,5 +190,8 @@ function App() {
                         </motion.div>
                     )}
                 </AnimatePresence> */
+
+    );
+}
 
 export default App;
