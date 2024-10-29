@@ -130,10 +130,7 @@ export const Particle: React.FC<ParticleProps> = ({
           positions[index * 3 + 2]
         );
   
-        // Smooth transition for position
         meshRef.current.position.lerp(targetPosition, 0.1);
-        
-        // Update label position and make it face the camera
         labelRef.current.position.copy(targetPosition).add(new THREE.Vector3(0, -0.5, 0));
         labelRef.current.quaternion.copy(camera.quaternion);
   
@@ -195,21 +192,20 @@ export const Particle: React.FC<ParticleProps> = ({
           <Text
             color={getTargetColor()}
             fontSize={0.15}
-            maxWidth={2}
             lineHeight={1}
             letterSpacing={0.02}
             textAlign="center"
             font="fonts/EurostileBQ-Italic.otf"
             anchorX="center"
             anchorY="middle"
+            whiteSpace="nowrap"
           >
-            {`${article.title || 'Untitled'}\n${article.source || 'Unknown Source'}`}
+            {`${article.title || 'Untitled'} | ${article.source || 'Unknown Source'}`}
           </Text>
         </group>
       </group>
     );
   };
-
 export type { ViewMode };
 
 interface ConnectionLinesProps {
