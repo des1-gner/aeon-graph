@@ -31,15 +31,18 @@ export const DetailedArticlePanel = ({
     return (
         <div className='fixed left-4 top-4 transform backdrop-blur-xl border-neutral-700 border p-4 space-y-6 rounded-lg z-10 w-96 text-white'>
             <div className='flex items-center justify-between'>
-                <XMarkIcon
-                    className='size-5 text-light cursor-pointer flex justify-start'
-                    onClick={onClose}
-                />
+                <div /> {/* Left spacer for your icon */}
                 <h1 className='flex gap-2 items-center font-semibold text-lg justify-center text-light'>
                     <InformationCircleIcon className='size-5' />
                     More info
                 </h1>
-                <div />
+                <button
+                    onClick={onClose}
+                    className="bg-neutral-800 hover:bg-neutral-700 text-white rounded-full p-1.5 transition-colors flex items-center justify-center"
+                    aria-label="Close panel"
+                >
+                    <XMarkIcon className="size-5" />
+                </button>
             </div>
             <div className='space-y-4'>
                 <h2 className='text-2xl font-bold capitalize'>
@@ -257,3 +260,5 @@ export const DetailedArticlePanel = ({
         </div>
     );
 };
+
+export default DetailedArticlePanel;
