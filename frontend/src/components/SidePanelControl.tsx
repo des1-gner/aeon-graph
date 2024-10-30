@@ -446,6 +446,47 @@ const resetEdgeOptions = () => {
     ) => {
         return (
             <div className="space-y-3">
+                {/* Color Picker moved to top */}
+                <div className="flex items-center gap-2 mb-4">
+                    <div
+                        className="relative"
+                        ref={optionType === 'highlight' ? highlightColorPickerRef : 
+                              optionType === 'cluster' ? clusterColorPickerRef : 
+                              edgeColorPickerRef}
+                    >
+                        <button
+                            className="w-8 h-8 rounded-full border border-neutral-500"
+                            style={{ 
+                                backgroundColor: optionType === 'highlight' ? highlightColor :
+                                                optionType === 'cluster' ? clusterColor :
+                                                edgeColor 
+                            }}
+                            onClick={() => {
+                                if (optionType === 'highlight') setShowHighlightColorPicker(!showHighlightColorPicker);
+                                else if (optionType === 'cluster') setShowClusterColorPicker(!showClusterColorPicker);
+                                else setShowEdgeColorPicker(!showEdgeColorPicker);
+                            }}
+                        />
+                        {((optionType === 'highlight' && showHighlightColorPicker) ||
+                          (optionType === 'cluster' && showClusterColorPicker) ||
+                          (optionType === 'edge' && showEdgeColorPicker)) && (
+                            <div className="absolute left-0 mt-2 z-10">
+                                <HexColorPicker
+                                    color={optionType === 'highlight' ? highlightColor :
+                                           optionType === 'cluster' ? clusterColor :
+                                           edgeColor}
+                                    onChange={optionType === 'highlight' ? setHighlightColor :
+                                            optionType === 'cluster' ? setClusterColor :
+                                            setEdgeColor}
+                                />
+                            </div>
+                        )}
+                    </div>
+                    <span className="text-light">
+                        {optionType.charAt(0).toUpperCase() + optionType.slice(1)} color
+                    </span>
+                </div>
+
                 <FilterOption label="Text Word in Article:">
                     <input
                         type="text"
@@ -520,45 +561,6 @@ const resetEdgeOptions = () => {
                             Is Duplicate Article
                         </label>
                     </div>
-                </div>
-                <div className="flex items-center gap-2 mt-4">
-                    <div
-                        className="relative"
-                        ref={optionType === 'highlight' ? highlightColorPickerRef : 
-                              optionType === 'cluster' ? clusterColorPickerRef : 
-                              edgeColorPickerRef}
-                    >
-                        <button
-                            className="w-8 h-8 rounded-full border border-neutral-500"
-                            style={{ 
-                                backgroundColor: optionType === 'highlight' ? highlightColor :
-                                                optionType === 'cluster' ? clusterColor :
-                                                edgeColor 
-                            }}
-                            onClick={() => {
-                                if (optionType === 'highlight') setShowHighlightColorPicker(!showHighlightColorPicker);
-                                else if (optionType === 'cluster') setShowClusterColorPicker(!showClusterColorPicker);
-                                else setShowEdgeColorPicker(!showEdgeColorPicker);
-                            }}
-                        />
-                        {((optionType === 'highlight' && showHighlightColorPicker) ||
-                          (optionType === 'cluster' && showClusterColorPicker) ||
-                          (optionType === 'edge' && showEdgeColorPicker)) && (
-                            <div className="absolute left-0 mt-2 z-10">
-                                <HexColorPicker
-                                    color={optionType === 'highlight' ? highlightColor :
-                                           optionType === 'cluster' ? clusterColor :
-                                           edgeColor}
-                                    onChange={optionType === 'highlight' ? setHighlightColor :
-                                            optionType === 'cluster' ? setClusterColor :
-                                            setEdgeColor}
-                                />
-                            </div>
-                        )}
-                    </div>
-                    <span className="text-light">
-                        {optionType.charAt(0).toUpperCase() + optionType.slice(1)} color
-                    </span>
                 </div>
             </div>
         );
