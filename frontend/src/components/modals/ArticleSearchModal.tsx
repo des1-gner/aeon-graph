@@ -1,6 +1,7 @@
 import {
     ArrowUpRightIcon,
     CalendarDateRangeIcon,
+    ChevronDownIcon,
     CubeTransparentIcon,
     MagnifyingGlassIcon,
     ShareIcon,
@@ -14,6 +15,43 @@ import { Toggle } from '../Toggle';
 import { useArticles } from '../../contexts/ArticlesContext';
 import { fetchArticle } from '../../api';
 import { ArticleTableModal } from './ArticleTableModal';
+
+const sources = [
+    'theaustralian.com.au',
+    'theguardian.com',
+    'abc.net.au',
+    'news.com.au',
+    'heraldsun.com.au',
+    'skynews.com.au',
+    'afr.com',
+    'smh.com.au',
+    'dailytelegraph.com.au',
+    'foxnews.com',
+    'nytimes.com',
+    'dailywire.com',
+    'couriermail.com.au',
+    'thewest.com.au',
+    '7news.com.au',
+    '9news.com.au',
+    'theconversation.com',
+    'nypost.com',
+    'wsj.com',
+    'wattsupwiththat.com',
+    'breitbart.com',
+    'newsmax.com',
+    'naturalnews.com',
+    'washingtontimes.com',
+    'climatecentral.org',
+    'skepticalscience.com',
+    'realclimate.org',
+    'climatedepot.com',
+    'nationalgeographic.com',
+    'scientificamerican.com',
+    'sciencedaily.com',
+    'phys.org',
+];
+
+const publishers = ['None', 'Murdoch Media'];
 
 type ArticleSearchModalProps = {
     onClose: () => void;
@@ -41,8 +79,16 @@ export const ArticleSearchModal = ({
     const { articles, setArticles } = useArticles();
     const [dateRangeIndex, setDateRangeIndex] = useState(0);
     const [nodeLimitIndex, setNodeLimitIndex] = useState(0);
+    const [showSourcesDropdown, setShowSourcesDropdown] = useState(false);
+    const [selectedSources, setSelectedSources] = useState<string[]>([]);
+    const [showPublisherDropdown, setShowPublisherDropdown] = useState(false);
+    const [selectedPublisher, setSelectedPublisher] = useState('None');
+    const [thinkTankRef, setThinkTankRef] = useState(false);
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
+    const hasSourcesSelected = selectedSources.length > 0;
+    const hasPublisherSelected = selectedPublisher !== 'None';
 
     const handleSearch = async () => {
         setIsLoading(true);
@@ -50,7 +96,10 @@ export const ArticleSearchModal = ({
             const response = await fetchArticle(
                 searchQuery,
                 startDate,
-                endDate
+                endDate,
+                selectedSources,
+                selectedPublisher === 'None' ? '' : selectedPublisher,
+                thinkTankRef
             );
             setArticles(response);
         } catch (err: any) {
@@ -129,6 +178,26 @@ export const ArticleSearchModal = ({
         onClose();
     };
 
+    const handleSourceToggle = (source: string) => {
+        if (!hasPublisherSelected) {
+            setSelectedSources((prev) => {
+                if (prev.includes(source)) {
+                    return prev.filter((s) => s !== source);
+                } else {
+                    return [...prev, source];
+                }
+            });
+        }
+    };
+
+    const handlePublisherSelect = (publisher: string) => {
+        if (!hasSourcesSelected) {
+            setSelectedPublisher((prev) =>
+                prev === publisher ? 'None' : publisher
+            );
+        }
+    };
+
     return (
         <BaseModal onClose={onClose}>
             <div className='border-neutral-800 border rounded-lg mx-10 w-[400px]'>
@@ -154,6 +223,172 @@ export const ArticleSearchModal = ({
                             className='dark-text-field w-full'
                             onChange={(e) => setSearchQuery(e.target.value)}
                         />
+                    </div>
+
+                    <div className='dark-card p-2 space-y-2'>
+                        <div>
+                            <div className='flex justify-between'>
+                                <p
+                                    className={`text-light ${
+                                        hasPublisherSelected ? 'opacity-50' : ''
+                                    }`}
+                                >
+                                    Sources
+                                </p>
+                                <ChevronDownIcon
+                                    className={`size-4 fill-white ${
+                                        hasPublisherSelected
+                                            ? 'opacity-50'
+                                            : 'cursor-pointer'
+                                    }`}
+                                    onClick={() =>
+                                        !hasPublisherSelected &&
+                                        setShowSourcesDropdown(
+                                            !showSourcesDropdown
+                                        )
+                                    }
+                                />
+                            </div>
+
+                            <AnimatePresence>
+                                {showSourcesDropdown &&
+                                    !hasPublisherSelected && (
+                                        <motion.div
+                                            initial='collapsed'
+                                            animate='open'
+                                            exit='collapsed'
+                                            variants={{
+                                                open: {
+                                                    opacity: 1,
+                                                    height: 'auto',
+                                                },
+                                                collapsed: {
+                                                    opacity: 0,
+                                                    height: 0,
+                                                },
+                                            }}
+                                            className='max-h-[150px] mt-1 overflow-y-auto'
+                                        >
+                                            {sources.map((source) => (
+                                                <div
+                                                    key={source}
+                                                    className='flex items-center gap-2 px-2 py-1 hover:bg-neutral-800 rounded'
+                                                >
+                                                    <input
+                                                        type='checkbox'
+                                                        id={source}
+                                                        checked={selectedSources.includes(
+                                                            source
+                                                        )}
+                                                        onChange={() =>
+                                                            handleSourceToggle(
+                                                                source
+                                                            )
+                                                        }
+                                                        className='accent-neutral-300 size-4'
+                                                    />
+                                                    <label
+                                                        htmlFor={source}
+                                                        className='text-sm text-light cursor-pointer'
+                                                    >
+                                                        {source}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                            </AnimatePresence>
+                        </div>
+
+                        <div>
+                            <div className='flex justify-between'>
+                                <p
+                                    className={`text-light ${
+                                        hasSourcesSelected ? 'opacity-30' : ''
+                                    }`}
+                                >
+                                    Publishers
+                                </p>
+                                <ChevronDownIcon
+                                    className={`size-4 fill-white ${
+                                        hasSourcesSelected
+                                            ? 'opacity-30'
+                                            : 'cursor-pointer'
+                                    }`}
+                                    onClick={() =>
+                                        !hasSourcesSelected &&
+                                        setShowPublisherDropdown(
+                                            !showPublisherDropdown
+                                        )
+                                    }
+                                />
+                            </div>
+
+                            <AnimatePresence>
+                                {showPublisherDropdown &&
+                                    !hasSourcesSelected && (
+                                        <motion.div
+                                            initial='collapsed'
+                                            animate='open'
+                                            exit='collapsed'
+                                            variants={{
+                                                open: {
+                                                    opacity: 1,
+                                                    height: 'auto',
+                                                },
+                                                collapsed: {
+                                                    opacity: 0,
+                                                    height: 0,
+                                                },
+                                            }}
+                                            className='max-h-[150px] mt-1 overflow-y-auto'
+                                        >
+                                            {publishers.map((publisher) => (
+                                                <div
+                                                    key={publisher}
+                                                    className='flex items-center gap-2 px-2 py-1 hover:bg-neutral-800 rounded'
+                                                >
+                                                    <input
+                                                        type='radio'
+                                                        id={`publisher-${publisher}`}
+                                                        checked={
+                                                            selectedPublisher ===
+                                                            publisher
+                                                        }
+                                                        onChange={() =>
+                                                            handlePublisherSelect(
+                                                                publisher
+                                                            )
+                                                        }
+                                                        className='accent-neutral-900 size-4'
+                                                        name='publisher'
+                                                    />
+                                                    <label
+                                                        htmlFor={`publisher-${publisher}`}
+                                                        className='text-sm text-light cursor-pointer'
+                                                    >
+                                                        {publisher}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                            </AnimatePresence>
+                        </div>
+
+                        <div className='flex gap-2 items-center'>
+                            <input
+                                type='checkbox'
+                                checked={thinkTankRef}
+                                onChange={(e) =>
+                                    setThinkTankRef(e.target.checked)
+                                }
+                                className='accent-neutral-300 size-4'
+                            />
+                            <label className='text-sm text-light'>
+                                Contains think tank reference
+                            </label>
+                        </div>
                     </div>
 
                     <div>
@@ -296,8 +531,8 @@ export const ArticleSearchModal = ({
                                 className='w-full'
                             >
                                 <p className='flex gap-2 justify-center items-center'>
-                                    Generate visualisation
                                     <CubeTransparentIcon className='w-4 h-4' />
+                                    Generate visualisation
                                 </p>
                             </Button>
                         </div>
