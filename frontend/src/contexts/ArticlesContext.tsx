@@ -6,11 +6,15 @@ const CACHED_HIGHLIGHT_COLOR_KEY = 'cached_highlight_color';
 const CACHED_CLUSTER_COLOR_KEY = 'cached_cluster_color';
 const CACHED_EDGE_COLOR_KEY = 'cached_edge_color';
 
+// Type definitions
+export type VisibilityType = 'on' | 'hover' | 'off';
+
 interface ArticlesProviderProps {
     children: ReactNode;
 }
 
-interface FilterOptions {
+interface CommonOptions {
+    articleBody: string;
     broadClaim: string;
     subClaim: string;
     source: string;
@@ -18,17 +22,8 @@ interface FilterOptions {
     isDuplicate: string;
 }
 
-interface HighlightOptions extends FilterOptions {
-    articleBody: string;
-}
-
-interface ClusterOptions extends FilterOptions {
-    articleBody: string;
-}
-
-interface EdgeOptions extends FilterOptions {
-    visibility: string;
-    articleBody: string;
+export interface EdgeOptions extends CommonOptions {
+    visibility: VisibilityType;
 }
 
 interface ArticlesContextProps {
@@ -45,10 +40,10 @@ interface ArticlesContextProps {
     setClusterColor: (color: string) => void;
     edgeColor: string;
     setEdgeColor: (color: string) => void;
-    highlightOptions: HighlightOptions;
-    setHighlightOptions: React.Dispatch<React.SetStateAction<HighlightOptions>>;
-    clusterOptions: ClusterOptions;
-    setClusterOptions: React.Dispatch<React.SetStateAction<ClusterOptions>>;
+    highlightOptions: CommonOptions;
+    setHighlightOptions: React.Dispatch<React.SetStateAction<CommonOptions>>;
+    clusterOptions: CommonOptions;
+    setClusterOptions: React.Dispatch<React.SetStateAction<CommonOptions>>;
     edgeOptions: EdgeOptions;
     setEdgeOptions: React.Dispatch<React.SetStateAction<EdgeOptions>>;
 }
@@ -62,31 +57,25 @@ export const ArticlesProvider: React.FC<ArticlesProviderProps> = ({ children }) 
     const [clusterColor, setClusterColor] = useState('#FFFFFF');
     const [edgeColor, setEdgeColor] = useState('#FFFFFF');
 
-    // Base options without articleBody
-    const defaultFilterOptions: FilterOptions = {
+    // Default options
+    const defaultOptions: CommonOptions = {
+        articleBody: '',
         broadClaim: '',
         subClaim: '',
         source: '',
-        think_tank_ref: '',
-        isDuplicate: '',
+        think_tank_ref: 'no',
+        isDuplicate: 'no',
     };
 
-    // Separate state for each type with its own articleBody
-    const [highlightOptions, setHighlightOptions] = useState<HighlightOptions>({
-        ...defaultFilterOptions,
-        articleBody: '',
-    });
-
-    const [clusterOptions, setClusterOptions] = useState<ClusterOptions>({
-        ...defaultFilterOptions,
-        articleBody: '',
-    });
-
-    const [edgeOptions, setEdgeOptions] = useState<EdgeOptions>({
-        ...defaultFilterOptions,
+    const defaultEdgeOptions: EdgeOptions = {
+        ...defaultOptions,
         visibility: 'off',
-        articleBody: '',
-    });
+    };
+
+    // State for options
+    const [highlightOptions, setHighlightOptions] = useState<CommonOptions>(defaultOptions);
+    const [clusterOptions, setClusterOptions] = useState<CommonOptions>(defaultOptions);
+    const [edgeOptions, setEdgeOptions] = useState<EdgeOptions>(defaultEdgeOptions);
 
     // Load cached data on mount
     useEffect(() => {

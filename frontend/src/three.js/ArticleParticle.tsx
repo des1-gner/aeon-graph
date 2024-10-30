@@ -13,6 +13,10 @@ import { Article } from '../types/article';
 import { Text } from '@react-three/drei';
 import { DetailedArticlePanel } from '../components/DetailedArticlePanel';
 
+// Add the correct type import for OrbitControls
+import { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
+
+
 // Define ViewMode once at the top of the file
 type ViewMode = 'highlight' | 'cluster';
 
@@ -76,7 +80,7 @@ interface ParticleProps {
     positions: Float32Array;
     articles: Article[];
     highlightOptions: HighlightOptions;
-    clusterOptions: ClusterOptions;  // Changed from FilterOptions
+    clusterOptions: ClusterOptions;
     edgeOptions: EdgeOptions;
     highlightColor: string;
     clusterColor: string;
@@ -85,13 +89,13 @@ interface ParticleProps {
     setHoveredParticle: (index: number | null) => void;
 }
 
-// Constants for particle appearance
-const DEFAULT_COLOR = new THREE.Color(0.8, 0.8, 0.8); // Light grey for non-highlighted nodes
-const DEFAULT_OPACITY = 0.3;
-const ACTIVE_OPACITY = 1;
+interface ParticleState {
+    color: THREE.Color;
+    opacity: number;
+    emissiveIntensity: number;
+}
 
-// Update the Particle component's color handling logic
-export const Particle: React.FC<ParticleProps> = ({
+const Particle: React.FC<ParticleProps> = ({
     index,
     positions,
     articles,
@@ -106,44 +110,63 @@ export const Particle: React.FC<ParticleProps> = ({
 }) => {
     const meshRef = useRef<THREE.Mesh>(null);
     const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
-    const labelRef = useRef<THREE.Group>(null);
+    const groupRef = useRef<THREE.Group>(null);
+    const currentColor = useRef(DEFAULT_COLOR.clone());
     const article = articles[index];
 
-    const isHighlighted = useMemo(() => matchesFilter(article, highlightOptions), [article, highlightOptions]);
-    const isInCluster = useMemo(() => matchesFilter(article, clusterOptions), [article, clusterOptions]);
-    const isEdgeVisible = useMemo(() => matchesFilter(article, edgeOptions), [article, edgeOptions]);
+    const isHighlighted = useMemo(
+        () => hasActiveFilters(highlightOptions) && matchesFilter(article, highlightOptions),
+        [article, highlightOptions]
+    );
 
-    // Separate color determination logic
+    const isInCluster = useMemo(
+        () => hasActiveFilters(clusterOptions) && matchesFilter(article, clusterOptions),
+        [article, clusterOptions]
+    );
+
     const getParticleState = () => {
-        // Check if any highlight options are active
-        const hasActiveHighlight = Object.values(highlightOptions).some(value => value !== '' && value !== 'off');
-        // Check if any cluster options are active
-        const hasActiveCluster = Object.values(clusterOptions).some(value => value !== '' && value !== 'off');
+        const hasActiveHighlight = hasActiveFilters(highlightOptions);
+        const hasActiveCluster = hasActiveFilters(clusterOptions);
 
-        if (hasActiveHighlight && isHighlighted) {
+        // No active filters - all nodes visible and grey
+        if (!hasActiveHighlight && !hasActiveCluster) {
+            return {
+                color: DEFAULT_COLOR,
+                opacity: ACTIVE_OPACITY,
+                emissiveIntensity: 0.2
+            };
+        }
+
+        // Node matches both filters - blend colors
+        if (isHighlighted && isInCluster) {
+            const blendedColor = new THREE.Color(highlightColor)
+                .lerp(new THREE.Color(clusterColor), 0.5);
+            return {
+                color: blendedColor,
+                opacity: ACTIVE_OPACITY,
+                emissiveIntensity: 1.5
+            };
+        }
+
+        // Node matches highlight only
+        if (isHighlighted) {
             return {
                 color: new THREE.Color(highlightColor),
                 opacity: ACTIVE_OPACITY,
-                emissiveIntensity: 2
+                emissiveIntensity: 1.0
             };
         }
-        
-        if (hasActiveCluster && isInCluster) {
+
+        // Node matches cluster only
+        if (isInCluster) {
             return {
                 color: new THREE.Color(clusterColor),
                 opacity: ACTIVE_OPACITY,
-                emissiveIntensity: 1
+                emissiveIntensity: 1.0
             };
         }
 
-        if (isEdgeVisible) {
-            return {
-                color: new THREE.Color(edgeColor),
-                opacity: ACTIVE_OPACITY,
-                emissiveIntensity: 0.5
-            };
-        }
-
+        // Node doesn't match any active filters - grey and transparent
         return {
             color: DEFAULT_COLOR,
             opacity: DEFAULT_OPACITY,
@@ -152,7 +175,7 @@ export const Particle: React.FC<ParticleProps> = ({
     };
 
     useFrame(({ camera }) => {
-        if (meshRef.current && materialRef.current && labelRef.current) {
+        if (meshRef.current && materialRef.current && groupRef.current) {
             const targetPosition = new THREE.Vector3(
                 positions[index * 3],
                 positions[index * 3 + 1],
@@ -160,23 +183,17 @@ export const Particle: React.FC<ParticleProps> = ({
             );
 
             meshRef.current.position.lerp(targetPosition, 0.1);
-            labelRef.current.position.copy(targetPosition).add(new THREE.Vector3(0, -0.5, 0));
-            labelRef.current.quaternion.copy(camera.quaternion);
+            groupRef.current.position.copy(targetPosition).add(new THREE.Vector3(0, -0.5, 0));
+            groupRef.current.quaternion.copy(camera.quaternion);
 
             const { color, opacity, emissiveIntensity } = getParticleState();
-
+            
             materialRef.current.color.lerp(color, 0.1);
             materialRef.current.emissive.lerp(color, 0.1);
-            materialRef.current.opacity = THREE.MathUtils.lerp(
-                materialRef.current.opacity,
-                opacity,
-                0.1
-            );
-            materialRef.current.emissiveIntensity = THREE.MathUtils.lerp(
-                materialRef.current.emissiveIntensity,
-                emissiveIntensity,
-                0.1
-            );
+            materialRef.current.opacity = opacity;
+            materialRef.current.emissiveIntensity = emissiveIntensity;
+
+            currentColor.current.copy(materialRef.current.color);
         }
     });
 
@@ -187,7 +204,7 @@ export const Particle: React.FC<ParticleProps> = ({
                 onClick={(event) => {
                     event.stopPropagation();
                     if (meshRef.current) {
-                        setSelectedArticle(article, meshRef.current.position);
+                        setSelectedArticle(article, meshRef.current.position.clone());
                     }
                 }}
                 onPointerOver={() => setHoveredParticle(index)}
@@ -205,9 +222,9 @@ export const Particle: React.FC<ParticleProps> = ({
                     metalness={0.8}
                 />
             </mesh>
-            <group ref={labelRef}>
+            <group ref={groupRef}>
                 <Text
-                    color={getParticleState().color}
+                    color={currentColor.current}
                     fontSize={0.15}
                     lineHeight={1}
                     letterSpacing={0.02}
@@ -223,6 +240,7 @@ export const Particle: React.FC<ParticleProps> = ({
         </group>
     );
 };
+
 export type { ViewMode };
 
 interface ConnectionLinesProps {
@@ -233,6 +251,7 @@ interface ConnectionLinesProps {
     hoveredParticle: number | null;
 }
 
+// Updated ConnectionLines Component
 const ConnectionLines: React.FC<ConnectionLinesProps> = ({
     articles,
     positions,
@@ -248,7 +267,9 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
             const geometry = lineRef.current.geometry as THREE.BufferGeometry;
             const vertices: number[] = [];
 
-            if (edgeOptions.visibility === 'on') {
+            const isEdgeActive = hasActiveFilters(edgeOptions);
+
+            if (edgeOptions.visibility === 'on' && isEdgeActive) {
                 articles.forEach((article1, i) => {
                     articles.forEach((article2, j) => {
                         if (
@@ -269,7 +290,8 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
                 });
             } else if (
                 edgeOptions.visibility === 'hover' &&
-                hoveredParticle !== null
+                hoveredParticle !== null &&
+                isEdgeActive
             ) {
                 const hoveredArticle = articles[hoveredParticle];
 
@@ -299,8 +321,7 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
 
             materialRef.current.color = new THREE.Color(edgeColor);
             materialRef.current.visible = edgeOptions.visibility !== 'off';
-            materialRef.current.opacity =
-                edgeOptions.visibility === 'hover' ? 0.5 : 1;
+            materialRef.current.opacity = edgeOptions.visibility === 'hover' ? 0.5 : 1;
         }
     });
 
@@ -311,10 +332,6 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
         </lineSegments>
     );
 };
-
-const SPHERE_RADIUS = 15;
-const CLUSTER_RADIUS = 6; // Reduced from 8 to 5 to keep cluster more central
-const OUTER_SPHERE_PADDING = 2; // Add padding to keep outer nodes away from the sphere's edge
 
 interface ArticleParticleProps {
     articles: Article[];
@@ -330,7 +347,7 @@ interface SwarmProps {
     articles: Article[];
     setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
     highlightOptions: HighlightOptions;
-    clusterOptions: ClusterOptions;  // Changed from FilterOptions
+    clusterOptions: ClusterOptions;
     edgeOptions: EdgeOptions;
     highlightColor: string;
     clusterColor: string;
@@ -338,6 +355,7 @@ interface SwarmProps {
 }
 
 // The Swarm component that handles the particle system
+// Updated Swarm Component
 export const Swarm: React.FC<SwarmProps> = ({
     articles,
     setSelectedArticle,
@@ -352,35 +370,6 @@ export const Swarm: React.FC<SwarmProps> = ({
     const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
     const targetPositionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
     const [isInitialized, setIsInitialized] = useState(false);
-
-    const generateRandomPointInSphere = (radius: number): THREE.Vector3 => {
-        const u = Math.random();
-        const v = Math.random();
-        const theta = 2 * Math.PI * u;
-        const phi = Math.acos(2 * v - 1);
-        const r = Math.cbrt(Math.random()) * radius;
-        const x = r * Math.sin(phi) * Math.cos(theta);
-        const y = r * Math.sin(phi) * Math.sin(theta);
-        const z = r * Math.cos(phi);
-        return new THREE.Vector3(x, y, z);
-    };
-
-    const generateRandomPointOnOuterSphere = (
-        innerRadius: number,
-        outerRadius: number
-    ): THREE.Vector3 => {
-        const u = Math.random();
-        const v = Math.random();
-        const theta = 2 * Math.PI * u;
-        const phi = Math.acos(2 * v - 1);
-        const r = outerRadius - innerRadius;
-        const x = r * Math.sin(phi) * Math.cos(theta);
-        const y = r * Math.sin(phi) * Math.sin(theta);
-        const z = r * Math.cos(phi);
-        return new THREE.Vector3(x, y, z)
-            .normalize()
-            .multiplyScalar(outerRadius);
-    };
 
     // Initialize positions
     useEffect(() => {
@@ -400,50 +389,35 @@ export const Swarm: React.FC<SwarmProps> = ({
     useEffect(() => {
         if (!isInitialized) return;
 
-        const isClusterActive = Object.values(clusterOptions).some(
-            (value) => value !== ''
-        );
+        const isClusterActive = hasActiveFilters(clusterOptions);
 
-        if (isClusterActive) {
-            const clusterCenter = new THREE.Vector3(0, 0, 0);
-            const clusterArticles = articles.filter((article) =>
-                matchesFilter(article, clusterOptions)
-            );
-            const nonClusterArticles = articles.filter(
-                (article) => !matchesFilter(article, clusterOptions)
-            );
+        articles.forEach((article, i) => {
+            let targetPosition: THREE.Vector3;
 
-            clusterArticles.forEach((article) => {
-                const index = articles.indexOf(article);
-                const offset = generateRandomPointInSphere(CLUSTER_RADIUS);
-                const targetPosition = clusterCenter.clone().add(offset);
-                targetPositionsRef.current[index * 3] = targetPosition.x;
-                targetPositionsRef.current[index * 3 + 1] = targetPosition.y;
-                targetPositionsRef.current[index * 3 + 2] = targetPosition.z;
-            });
+            if (isClusterActive) {
+                const matchesCluster = matchesFilter(article, clusterOptions);
+                if (matchesCluster) {
+                    // Place matching articles in inner cluster
+                    targetPosition = generateRandomPointInSphere(CLUSTER_RADIUS);
+                } else {
+                    // Place non-matching articles in outer sphere
+                    targetPosition = generateRandomPointOnOuterSphere(
+                        CLUSTER_RADIUS,
+                        SPHERE_RADIUS - OUTER_SPHERE_PADDING
+                    );
+                }
+            } else {
+                // When no clustering is active, distribute evenly
+                targetPosition = generateRandomPointInSphere(SPHERE_RADIUS - OUTER_SPHERE_PADDING);
+            }
 
-            nonClusterArticles.forEach((article) => {
-                const index = articles.indexOf(article);
-                const outerPosition = generateRandomPointOnOuterSphere(
-                    CLUSTER_RADIUS,
-                    SPHERE_RADIUS - OUTER_SPHERE_PADDING
-                );
-                targetPositionsRef.current[index * 3] = outerPosition.x;
-                targetPositionsRef.current[index * 3 + 1] = outerPosition.y;
-                targetPositionsRef.current[index * 3 + 2] = outerPosition.z;
-            });
-        } else {
-            articles.forEach((_, i) => {
-                const point = generateRandomPointInSphere(
-                    SPHERE_RADIUS - OUTER_SPHERE_PADDING
-                );
-                targetPositionsRef.current[i * 3] = point.x;
-                targetPositionsRef.current[i * 3 + 1] = point.y;
-                targetPositionsRef.current[i * 3 + 2] = point.z;
-            });
-        }
+            targetPositionsRef.current[i * 3] = targetPosition.x;
+            targetPositionsRef.current[i * 3 + 1] = targetPosition.y;
+            targetPositionsRef.current[i * 3 + 2] = targetPosition.z;
+        });
     }, [articles, clusterOptions, isInitialized]);
 
+    // Update particle positions
     useFrame(() => {
         if (!isInitialized) return;
         
@@ -483,7 +457,6 @@ export const Swarm: React.FC<SwarmProps> = ({
                 edgeColor={edgeColor}
                 hoveredParticle={hoveredParticle}
             />
-            <CameraController target={null} resetView={false} />
         </>
     );
 };
@@ -550,21 +523,57 @@ const useKeyboardControls = (speed = 0.1) => {
     });
 };
 
-// Update the CameraController to handle transitions more smoothly
-const CameraController: React.FC<{
+interface CameraControllerProps {
     target: THREE.Vector3 | null;
     resetView: boolean;
     onTransitionComplete?: () => void;
-}> = ({ target, resetView, onTransitionComplete }) => {
+}
+
+// Update the CameraController to handle transitions more smoothly
+// Camera Controller Component with keyboard controls
+const CameraController: React.FC<CameraControllerProps> = ({ target, resetView, onTransitionComplete }) => {
     const { camera, gl } = useThree();
-    const controlsRef = useRef<any>(null);
+    const controlsRef = useRef<OrbitControlsImpl>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const targetRef = useRef<THREE.Vector3 | null>(null);
     const startTargetRef = useRef<THREE.Vector3 | null>(null);
     const transitionProgressRef = useRef(0);
-    const DEFAULT_CAMERA_POSITION = new THREE.Vector3(0, 0, 40); // Further away default position
-    const TRANSITION_SPEED = 0.02; // Slower transition speed (was 0.05)
 
+    // Keyboard controls
+    const keys = useRef({
+        ArrowUp: false,
+        ArrowDown: false,
+        ArrowLeft: false,
+        ArrowRight: false,
+        KeyW: false,
+        KeyS: false,
+        KeyA: false,
+        KeyD: false,
+    });
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.code in keys.current) {
+                keys.current[event.code as keyof typeof keys.current] = true;
+            }
+        };
+
+        const handleKeyUp = (event: KeyboardEvent) => {
+            if (event.code in keys.current) {
+                keys.current[event.code as keyof typeof keys.current] = false;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('keyup', handleKeyUp);
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('keyup', handleKeyUp);
+        };
+    }, []);
+
+    // Handle camera transitions
     useEffect(() => {
         if (target || resetView) {
             setIsTransitioning(true);
@@ -572,35 +581,44 @@ const CameraController: React.FC<{
             targetRef.current = target ? target.clone() : new THREE.Vector3(0, 0, 0);
             transitionProgressRef.current = 0;
             
-            // Set initial camera position if it hasn't been set
             if (camera.position.length() === 0) {
                 camera.position.copy(DEFAULT_CAMERA_POSITION);
             }
         }
-    }, [target, resetView]);
+    }, [target, resetView, camera]);
 
     useFrame(() => {
-        if (controlsRef.current && isTransitioning) {
-            const controls = controlsRef.current;
+        // Handle keyboard movement
+        const moveForward = keys.current.ArrowUp || keys.current.KeyW;
+        const moveBackward = keys.current.ArrowDown || keys.current.KeyS;
+        const moveLeft = keys.current.ArrowLeft || keys.current.KeyA;
+        const moveRight = keys.current.ArrowRight || keys.current.KeyD;
 
-            if (targetRef.current && startTargetRef.current) {
-                transitionProgressRef.current += TRANSITION_SPEED;
-                const progress = Math.min(1, transitionProgressRef.current);
+        // if (moveForward) camera.translateZ(-CAMERA_MOVE_SPEED);
+        // if (moveBackward) camera.translateZ(CAMERA_MOVE_SPEED);
+        // if (moveLeft) camera.translateX(-CAMERA_MOVE_SPEED);
+        // if (moveRight) camera.translateX(CAMERA_MOVE_SPEED);
 
-                // Only move the orbit controls target, not the camera position
-                controls.target.lerpVectors(startTargetRef.current, targetRef.current, progress);
+        // Handle transitions
+        if (controlsRef.current && isTransitioning && targetRef.current && startTargetRef.current) {
+            transitionProgressRef.current += 0.02;
+            const progress = Math.min(1, transitionProgressRef.current);
 
-                // Check if transition is complete
-                if (progress >= 1) {
-                    setIsTransitioning(false);
-                    targetRef.current = null;
-                    startTargetRef.current = null;
-                    transitionProgressRef.current = 0;
-                    onTransitionComplete?.();
-                }
+            controlsRef.current.target.lerpVectors(
+                startTargetRef.current,
+                targetRef.current,
+                progress
+            );
+
+            if (progress >= 1) {
+                setIsTransitioning(false);
+                targetRef.current = null;
+                startTargetRef.current = null;
+                transitionProgressRef.current = 0;
+                onTransitionComplete?.();
             }
 
-            controls.update();
+            controlsRef.current.update();
         }
     });
 
@@ -613,52 +631,170 @@ const CameraController: React.FC<{
             enableZoom={true}
             enableRotate={true}
             enablePan={true}
-            minDistance={2} // Increased minimum distance
-            maxDistance={60} // Increased maximum distance
-            target0={new THREE.Vector3(0, 0, 0)} // Default target when reset
+            minDistance={2}
+            maxDistance={60}
+            target0={new THREE.Vector3(0, 0, 0)}
         />
     );
 };
 
 // Main component that provides the Canvas context
 // First, the main ArticleParticle component that provides the Canvas
-export const ArticleParticle: React.FC<ArticleParticleProps> = ({
-    articles,
+// Main Article Particle Component
+// Then update your ArticleParticle component's return statement:
+interface ColorLegendProps {
+    highlightColor: string;
+    clusterColor: string;
+    edgeColor: string;
+  }
+  
+  const KeyIcon = () => (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      fill="none" 
+      viewBox="0 0 24 24" 
+      strokeWidth="1.5" 
+      stroke="currentColor" 
+      className="size-4 text-neutral-400"
+    >
+      <path 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" 
+      />
+    </svg>
+  );
+  
+  const hexToRgb = (hex: string) => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16) / 255,
+      g: parseInt(result[2], 16) / 255,
+      b: parseInt(result[3], 16) / 255
+    } : null;
+  };
+  
+  const blendColors = (color1: string, color2: string, ratio: number = 0.5) => {
+    const c1 = hexToRgb(color1);
+    const c2 = hexToRgb(color2);
+    
+    if (!c1 || !c2) return color1;
+  
+    const r = Math.round((c1.r * (1 - ratio) + c2.r * ratio) * 255);
+    const g = Math.round((c1.g * (1 - ratio) + c2.g * ratio) * 255);
+    const b = Math.round((c1.b * (1 - ratio) + c2.b * ratio) * 255);
+  
+    return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`;
+  };
+  
+  export const ColorLegend: React.FC<ColorLegendProps> = ({
     highlightColor,
     clusterColor,
-    edgeColor,
-    highlightOptions,
-    clusterOptions,
-    edgeOptions,
-}) => {
-    const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-
-    return (
-        <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-            <Canvas
-                camera={{ position: [0, 0, 30], fov: 60, near: 0.1, far: 1000 }}
-                gl={{ antialias: true }}
-            >
-                <Swarm
-                    articles={articles}
-                    setSelectedArticle={setSelectedArticle}
-                    highlightOptions={highlightOptions}
-                    clusterOptions={clusterOptions}
-                    edgeOptions={edgeOptions}
-                    highlightColor={highlightColor}
-                    clusterColor={clusterColor}
-                    edgeColor={edgeColor}
-                />
-            </Canvas>
-            {selectedArticle && (
-                <InfoPanel
-                    article={selectedArticle}
-                    onClose={() => setSelectedArticle(null)}
-                />
-            )}
-        </div>
+    edgeColor
+  }) => {
+    const blendedColor = blendColors(highlightColor, clusterColor);
+  
+    const ColorBox = ({ color, label }: { color: string; label: string }) => (
+      <div className="flex items-center gap-2">
+        <div 
+          className="w-3 h-3 rounded"
+          style={{ backgroundColor: color }}
+        />
+        <span className="text-sm text-neutral-400">{label}</span>
+      </div>
     );
-};
+  
+    return (
+      <div className="fixed bottom-4 right-4 bg-neutral-900/90 backdrop-blur-sm border border-neutral-800 rounded-lg z-10">
+        <div className="p-3">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <KeyIcon />
+              <span className="text-sm font-medium text-neutral-400">Legend</span>
+            </div>
+            <div className="h-5 w-px bg-neutral-800" />
+            <div className="flex items-center gap-6">
+              <ColorBox color={highlightColor} label="Highlight" />
+              <ColorBox color={clusterColor} label="Cluster" />
+              <ColorBox color={blendedColor} label="Highlight + Cluster" />
+              <ColorBox color={edgeColor} label="Edge" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  
+  // Keep all your existing code below this point, including the ArticleParticle component
+  // Just make sure the ArticleParticle's return statement includes the ColorLegend:
+  
+  export const ArticleParticle: React.FC<{
+      articles: Article[];
+      highlightColor: string;
+      clusterColor: string;
+      edgeColor: string;
+      highlightOptions: HighlightOptions;
+      clusterOptions: ClusterOptions;
+      edgeOptions: EdgeOptions;
+  }> = ({
+      articles,
+      highlightColor,
+      clusterColor,
+      edgeColor,
+      highlightOptions,
+      clusterOptions,
+      edgeOptions,
+  }) => {
+      const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+      const [cameraTarget, setCameraTarget] = useState<THREE.Vector3 | null>(null);
+  
+      const handleArticleSelect = (article: Article | null, position?: THREE.Vector3) => {
+          setSelectedArticle(article);
+          if (position) {
+              setCameraTarget(position);
+          }
+      };
+  
+      return (
+          <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+              <Canvas
+                  camera={{ position: [0, 0, 30], fov: 60, near: 0.1, far: 1000 }}
+                  gl={{ antialias: true }}
+              >
+                  <Swarm
+                      articles={articles}
+                      setSelectedArticle={handleArticleSelect}
+                      highlightOptions={highlightOptions}
+                      clusterOptions={clusterOptions}
+                      edgeOptions={edgeOptions}
+                      highlightColor={highlightColor}
+                      clusterColor={clusterColor}
+                      edgeColor={edgeColor}
+                  />
+                  <CameraController 
+                      target={cameraTarget}
+                      resetView={!selectedArticle}
+                  />
+              </Canvas>
+              {selectedArticle && (
+                  <DetailedArticlePanel
+                      article={selectedArticle}
+                      onClose={() => {
+                          setSelectedArticle(null);
+                          setCameraTarget(null);
+                      }}
+                  />
+              )}
+              <ColorLegend 
+                  highlightColor={highlightColor}
+                  clusterColor={clusterColor}
+                  edgeColor={edgeColor}
+              />
+          </div>
+      );
+  };
+  
 
 // Update the Scene component props interface
 interface SceneProps {
@@ -833,67 +969,150 @@ const Scene: React.FC<{
     );
 };
 
-interface ArticleParticleProps {
+interface ParticleProps {
+    index: number;
+    positions: Float32Array;
     articles: Article[];
+    highlightOptions: HighlightOptions;
+    clusterOptions: ClusterOptions;
+    edgeOptions: EdgeOptions;
     highlightColor: string;
     clusterColor: string;
     edgeColor: string;
-    highlightOptions: HighlightOptions;
-    clusterOptions: ClusterOptions;  // Changed from FilterOptions
-    edgeOptions: EdgeOptions;
+    setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
+    setHoveredParticle: (index: number | null) => void;
 }
 
-// Update FilterOptions to include articleBody
-// Base interface without articleBody
-// First, define our base filter options
-// First, restore the original interfaces while keeping articleBody
+// Helper function to parse comma-separated string into array
+
+// Update the FilterOptions interface to better document the expected format// Types and Interfaces
+// Constants
+// Constants
+const SPHERE_RADIUS = 15;
+const CLUSTER_RADIUS = 6;
+const OUTER_SPHERE_PADDING = 2;
+const DEFAULT_COLOR = new THREE.Color(0.8, 0.8, 0.8);
+const DEFAULT_OPACITY = 0.3;
+const ACTIVE_OPACITY = 1;
+const CAMERA_MOVE_SPEED = 0.1;
+const DEFAULT_CAMERA_POSITION = new THREE.Vector3(0, 0, 40);
+
+// Types
+export type VisibilityType = 'on' | 'hover' | 'off';
+
 interface FilterOptions {
     broadClaim: string;
     subClaim: string;
     source: string;
     think_tank_ref: string;
     isDuplicate: string;
-    articleBody: string;  // Added but keeping original structure
+    articleBody: string;
 }
 
 interface HighlightOptions extends FilterOptions {}
 interface ClusterOptions extends FilterOptions {}
 interface EdgeOptions extends FilterOptions {
-    visibility: string;
+    visibility: VisibilityType;
 }
 
-// Helper function maintaining the original logic but adding articleBody check
+interface ParticleProps {
+    index: number;
+    positions: Float32Array;
+    articles: Article[];
+    highlightOptions: HighlightOptions;
+    clusterOptions: ClusterOptions;
+    edgeOptions: EdgeOptions;
+    highlightColor: string;
+    clusterColor: string;
+    edgeColor: string;
+    setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
+    setHoveredParticle: (index: number | null) => void;
+}
+
+// Utility Functions
+const generateRandomPointInSphere = (radius: number): THREE.Vector3 => {
+    const u = Math.random();
+    const v = Math.random();
+    const theta = 2 * Math.PI * u;
+    const phi = Math.acos(2 * v - 1);
+    const r = Math.cbrt(Math.random()) * radius;
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const y = r * Math.sin(phi) * Math.sin(theta);
+    const z = r * Math.cos(phi);
+    return new THREE.Vector3(x, y, z);
+};
+
+const generateRandomPointOnOuterSphere = (
+    innerRadius: number,
+    outerRadius: number
+): THREE.Vector3 => {
+    const u = Math.random();
+    const v = Math.random();
+    const theta = 2 * Math.PI * u;
+    const phi = Math.acos(2 * v - 1);
+    const r = outerRadius;
+    const x = r * Math.sin(phi) * Math.cos(theta);
+    const y = r * Math.sin(phi) * Math.sin(theta);
+    const z = r * Math.cos(phi);
+    return new THREE.Vector3(x, y, z);
+};
+
+const parseFilterValue = (value: string): string[] => {
+    return value ? value.split(',').filter(Boolean) : [];
+};
+
+const hasActiveFilters = (options: FilterOptions): boolean => {
+    return (
+        parseFilterValue(options.broadClaim).length > 0 ||
+        parseFilterValue(options.subClaim).length > 0 ||
+        parseFilterValue(options.source).length > 0 ||
+        options.think_tank_ref !== '' ||
+        options.isDuplicate !== '' ||
+        (options.articleBody?.trim() || '') !== ''
+    );
+};
+
+// Re-export the matchesFilter function for use in other components
 export function matchesFilter(
     article: Article,
     filterOptions: FilterOptions | HighlightOptions | EdgeOptions
 ): boolean {
-    // Check broad claim
-    if (
-        filterOptions.broadClaim &&
-        (!article.broadClaims || !(filterOptions.broadClaim in article.broadClaims))
-    ) {
-        return false;
+    if (!hasActiveFilters(filterOptions)) {
+        return true;
+    }
+    
+    // Handle broad claims
+    const selectedBroadClaims = parseFilterValue(filterOptions.broadClaim);
+    if (selectedBroadClaims.length > 0) {
+        if (!article.broadClaims) return false;
+        const hasMatchingBroadClaim = selectedBroadClaims.some(claimId => 
+            article.broadClaims && claimId in article.broadClaims
+        );
+        if (!hasMatchingBroadClaim) return false;
     }
 
-    // Check sub claim
-    if (
-        filterOptions.subClaim &&
-        (!article.subClaims || !(filterOptions.subClaim in article.subClaims))
-    ) {
-        return false;
+    // Handle sub claims
+    const selectedSubClaims = parseFilterValue(filterOptions.subClaim);
+    if (selectedSubClaims.length > 0) {
+        if (!article.subClaims) return false;
+        const hasMatchingSubClaim = selectedSubClaims.some(claimId => 
+            article.subClaims && claimId in article.subClaims
+        );
+        if (!hasMatchingSubClaim) return false;
     }
 
-    // Check source
-    if (filterOptions.source && article.source !== filterOptions.source) {
-        return false;
+    // Handle sources
+    const selectedSources = parseFilterValue(filterOptions.source);
+    if (selectedSources.length > 0) {
+        if (!article.source) return false;
+        if (!selectedSources.includes(article.source)) return false;
     }
 
     // Check think tank reference
     if (filterOptions.think_tank_ref !== '') {
-        const hasThinkTankRef =
-            article.think_tank_ref !== null &&
-            article.think_tank_ref !== undefined &&
-            article.think_tank_ref.trim() !== '';
+        const hasThinkTankRef = article.think_tank_ref !== null && 
+                               article.think_tank_ref !== undefined && 
+                               article.think_tank_ref.trim() !== '';
         if (hasThinkTankRef !== (filterOptions.think_tank_ref === 'yes')) {
             return false;
         }
@@ -901,22 +1120,16 @@ export function matchesFilter(
 
     // Check duplicate status
     if (filterOptions.isDuplicate !== '') {
-        const isDuplicateMatch =
-            article.isDuplicate === (filterOptions.isDuplicate === 'yes');
+        const isDuplicateMatch = article.isDuplicate === (filterOptions.isDuplicate === 'yes');
         if (!isDuplicateMatch) {
             return false;
         }
     }
 
-    // Add articleBody check while maintaining original structure
-    if (
-        'articleBody' in filterOptions &&
-        filterOptions.articleBody &&
-        filterOptions.articleBody.trim() !== ''
-    ) {
-        if (!article.body || !article.body
-            .toLowerCase()
-            .includes(filterOptions.articleBody.toLowerCase().trim())) {
+    // Check article body text
+    if (filterOptions.articleBody && filterOptions.articleBody.trim() !== '') {
+        if (!article.body || 
+            !article.body.toLowerCase().includes(filterOptions.articleBody.toLowerCase().trim())) {
             return false;
         }
     }

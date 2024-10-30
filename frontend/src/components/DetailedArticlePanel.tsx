@@ -13,10 +13,20 @@ export const DetailedArticlePanel = ({
     article,
     onClose,
 }: DetailedArticlePanelProps) => {
-    const [showFullArticleDropdown, setShowFullArticleDropdown] =
-        useState(false);
+    const [showFullArticleDropdown, setShowFullArticleDropdown] = useState(false);
     const [showBroadClaimDropdown, setShowBroadClaimDropdown] = useState(false);
     const [showSubClaimDropdown, setShowSubClaimDropdown] = useState(false);
+    const [showMetadataDropdown, setShowMetadataDropdown] = useState(false);
+
+    // Helper function for string yes/no values
+    const formatStringYesNo = (value: string | undefined) => {
+        return value === 'yes' ? 'Yes' : 'No';
+    };
+
+    // Helper function for boolean values
+    const formatBooleanYesNo = (value: boolean | undefined) => {
+        return value ? 'Yes' : 'No';
+    };
 
     return (
         <div className='fixed left-4 top-4 transform backdrop-blur-xl border-neutral-700 border p-4 space-y-6 rounded-lg z-10 w-96 text-white'>
@@ -58,6 +68,53 @@ export const DetailedArticlePanel = ({
                     <strong>Published:</strong>{' '}
                     {new Date(article.dateTime).toLocaleDateString()}
                 </p>
+                
+                <div>
+                    <div className='flex justify-between'>
+                        <strong>Additional Metadata:</strong>
+                        <ChevronDownIcon
+                            className='size-4 fill-white'
+                            onClick={() =>
+                                setShowMetadataDropdown(!showMetadataDropdown)
+                            }
+                        />
+                    </div>
+
+                    <AnimatePresence>
+                        {showMetadataDropdown && (
+                            <motion.div
+                                initial='collapsed'
+                                animate='open'
+                                exit='collapsed'
+                                variants={{
+                                    open: {
+                                        opacity: 1,
+                                        height: 'auto',
+                                    },
+                                    collapsed: {
+                                        opacity: 0,
+                                        height: 0,
+                                    },
+                                }}
+                                className='space-y-2 mt-2'
+                            >
+                                <p>
+                                    <strong>Think Tank Reference:</strong>{' '}
+                                    {formatStringYesNo(article.think_tank_ref)}
+                                </p>
+                                <p>
+                                    <strong>Duplicate Article:</strong>{' '}
+                                    {formatBooleanYesNo(article.isDuplicate)}
+                                </p>
+                                {article.uri && (
+                                    <p>
+                                        <strong>URI:</strong> {article.uri}
+                                    </p>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
 
                 <div>
                     <div className='flex justify-between'>
@@ -65,9 +122,7 @@ export const DetailedArticlePanel = ({
                         <ChevronDownIcon
                             className='size-4 fill-white'
                             onClick={() =>
-                                setShowBroadClaimDropdown(
-                                    !showBroadClaimDropdown
-                                )
+                                setShowBroadClaimDropdown(!showBroadClaimDropdown)
                             }
                         />
                     </div>
@@ -159,9 +214,7 @@ export const DetailedArticlePanel = ({
                         <ChevronDownIcon
                             className='size-4 fill-white'
                             onClick={() =>
-                                setShowFullArticleDropdown(
-                                    !showFullArticleDropdown
-                                )
+                                setShowFullArticleDropdown(!showFullArticleDropdown)
                             }
                         />
                     </div>
