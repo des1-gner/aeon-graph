@@ -13,7 +13,8 @@ export const DetailedArticlePanel = ({
     article,
     onClose,
 }: DetailedArticlePanelProps) => {
-    const [showFullArticleDropdown, setShowFullArticleDropdown] = useState(false);
+    const [showFullArticleDropdown, setShowFullArticleDropdown] =
+        useState(false);
     const [showBroadClaimDropdown, setShowBroadClaimDropdown] = useState(false);
     const [showSubClaimDropdown, setShowSubClaimDropdown] = useState(false);
     const [showMetadataDropdown, setShowMetadataDropdown] = useState(false);
@@ -68,61 +69,16 @@ export const DetailedArticlePanel = ({
                     <strong>Published:</strong>{' '}
                     {new Date(article.dateTime).toLocaleDateString()}
                 </p>
-                
-                <div>
-                    <div className='flex justify-between'>
-                        <strong>Additional Metadata:</strong>
-                        <ChevronDownIcon
-                            className='size-4 fill-white'
-                            onClick={() =>
-                                setShowMetadataDropdown(!showMetadataDropdown)
-                            }
-                        />
-                    </div>
-
-                    <AnimatePresence>
-                        {showMetadataDropdown && (
-                            <motion.div
-                                initial='collapsed'
-                                animate='open'
-                                exit='collapsed'
-                                variants={{
-                                    open: {
-                                        opacity: 1,
-                                        height: 'auto',
-                                    },
-                                    collapsed: {
-                                        opacity: 0,
-                                        height: 0,
-                                    },
-                                }}
-                                className='space-y-2 mt-2'
-                            >
-                                <p>
-                                    <strong>Think Tank Reference:</strong>{' '}
-                                    {formatStringYesNo(article.think_tank_ref)}
-                                </p>
-                                <p>
-                                    <strong>Duplicate Article:</strong>{' '}
-                                    {formatBooleanYesNo(article.isDuplicate)}
-                                </p>
-                                {article.uri && (
-                                    <p>
-                                        <strong>URI:</strong> {article.uri}
-                                    </p>
-                                )}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
 
                 <div>
                     <div className='flex justify-between'>
-                        <strong>Broad Claims:</strong>
+                        <strong>Broad Claims</strong>
                         <ChevronDownIcon
                             className='size-4 fill-white'
                             onClick={() =>
-                                setShowBroadClaimDropdown(!showBroadClaimDropdown)
+                                setShowBroadClaimDropdown(
+                                    !showBroadClaimDropdown
+                                )
                             }
                         />
                     </div>
@@ -151,7 +107,7 @@ export const DetailedArticlePanel = ({
                                             ([key, value]) =>
                                                 value && (
                                                     <li key={key}>
-                                                        <strong>{key}:</strong>{' '}
+                                                        <strong>{key}</strong>{' '}
                                                         {value}
                                                     </li>
                                                 )
@@ -164,7 +120,7 @@ export const DetailedArticlePanel = ({
 
                 <div>
                     <div className='flex justify-between'>
-                        <strong>Sub Claims:</strong>
+                        <strong>Sub Claims</strong>
                         <ChevronDownIcon
                             className='size-4 fill-white'
                             onClick={() =>
@@ -210,11 +166,13 @@ export const DetailedArticlePanel = ({
 
                 <div>
                     <div className='flex justify-between'>
-                        <strong>Content:</strong>
+                        <strong>Content</strong>
                         <ChevronDownIcon
                             className='size-4 fill-white'
                             onClick={() =>
-                                setShowFullArticleDropdown(!showFullArticleDropdown)
+                                setShowFullArticleDropdown(
+                                    !showFullArticleDropdown
+                                )
                             }
                         />
                     </div>
@@ -243,9 +201,56 @@ export const DetailedArticlePanel = ({
                     </AnimatePresence>
                 </div>
 
+                <div>
+                    <div className='flex justify-between'>
+                        <strong>Additional Metadata</strong>
+                        <ChevronDownIcon
+                            className='size-4 fill-white'
+                            onClick={() =>
+                                setShowMetadataDropdown(!showMetadataDropdown)
+                            }
+                        />
+                    </div>
+
+                    <AnimatePresence>
+                        {showMetadataDropdown && (
+                            <motion.div
+                                initial='collapsed'
+                                animate='open'
+                                exit='collapsed'
+                                variants={{
+                                    open: {
+                                        opacity: 1,
+                                        height: 'auto',
+                                    },
+                                    collapsed: {
+                                        opacity: 0,
+                                        height: 0,
+                                    },
+                                }}
+                                className='space-y-2 mt-2'
+                            >
+                                <p>
+                                    <strong>Think Tank Reference:</strong>{' '}
+                                    {formatStringYesNo(article.think_tank_ref)}
+                                </p>
+                                <p>
+                                    <strong>Duplicate Article:</strong>{' '}
+                                    {formatBooleanYesNo(article.isDuplicate)}
+                                </p>
+                                {article.uri && (
+                                    <p>
+                                        <strong>URI:</strong> {article.uri}
+                                    </p>
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+
                 {article.image && (
                     <div>
-                        <strong>Image:</strong>
+                        <strong>Image</strong>
                         <img
                             src={article.image}
                             alt='Article'
