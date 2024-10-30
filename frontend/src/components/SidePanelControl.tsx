@@ -728,13 +728,16 @@ const resetEdgeOptions = () => {
                         className="fixed inset-0 z-50 flex items-center justify-center"
                     >
                         <QuerySummaryModal
-                            startDate={startDate}
-                            endDate={endDate}
-                            publishedBy=""
-                            containing={searchQuery}
-                            nodeLimit={nodeQty || 0}
-                            onClose={() => setShowQuerySummaryModal(false)}
-                        />
+    startDate={startDate}
+    endDate={endDate}
+    publishedBy={searchQuery}  // or appropriate value
+    containing={searchQuery}
+    nodeLimit={nodeQty}
+    onClose={() => setShowQuerySummaryModal(false)}
+    highlightOptions={highlightOptions}
+    clusterOptions={clusterOptions}
+    edgeOptions={edgeOptions}
+/>
                     </motion.div>
                 )}
             </AnimatePresence>
