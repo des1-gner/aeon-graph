@@ -1,8 +1,8 @@
 import React from 'react';
 import { BaseModal } from './BaseModal';
 import { XMarkIcon } from '@heroicons/react/24/solid';
-import { useArticles } from '../../contexts/ArticlesContext';
-import { Article } from '../../types/article';
+import { useArticles } from '../../../contexts/ArticlesContext';
+import { Article } from '../../../types/article';
 
 // Define the necessary types
 interface CommonFilterOptions {

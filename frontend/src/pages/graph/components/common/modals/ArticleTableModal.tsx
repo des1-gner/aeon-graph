@@ -11,9 +11,9 @@ import {
     TrashIcon,
     XMarkIcon,
 } from '@heroicons/react/24/solid';
-import { Button } from '../Button';
-import { useArticles } from '../../contexts/ArticlesContext';
-import { Article } from '../../types/article';
+import { Button } from '../button/Button';
+import { useArticles } from '../../../contexts/ArticlesContext';
+import { Article } from '../../../types/article';
 
 /**
  * Props interface for the ArticleTableModal component

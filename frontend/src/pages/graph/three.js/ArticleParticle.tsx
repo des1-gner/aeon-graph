@@ -11,7 +11,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import { Article } from '../types/article';
 import { Text } from '@react-three/drei';
-import { DetailedArticlePanel } from '../components/DetailedArticlePanel';
+import { DetailedArticlePanel } from '../components/panels/DetailedArticlePanel';
 
 // Add the correct type import for OrbitControls
 import { OrbitControls as OrbitControlsImpl } from 'three-stdlib';

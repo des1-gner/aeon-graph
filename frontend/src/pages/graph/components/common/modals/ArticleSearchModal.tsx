@@ -12,10 +12,10 @@ import {
 import { BaseModal } from './BaseModal';
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Button } from '../Button';
-import { Toggle } from '../Toggle';
-import { useArticles } from '../../contexts/ArticlesContext';
-import { fetchArticle } from '../../api';
+import { Button } from '../button/Button';
+import { Toggle } from '../toggle/Toggle';
+import { useArticles } from '../../../contexts/ArticlesContext';
+import { fetchArticle } from '../../../../../api';
 import { ArticleTableModal } from './ArticleTableModal';
 
 // List of news sources to choose from

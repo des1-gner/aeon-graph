@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { ArticlesProvider } from './contexts/ArticlesContext';
+import { ArticlesProvider } from './pages/graph/contexts/ArticlesContext';
 import logo from 'frontend/zone.jpg'
 
 const root = ReactDOM.createRoot(

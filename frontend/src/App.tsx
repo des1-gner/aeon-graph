@@ -1,11 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import DisclaimerPopup from './components/DisclaimerPopup';
-import { BottomPanelControl } from './components/BottomPanelControl';
-import { SidePanelControl } from './components/SidePanelControl';
-import { ArticleParticle } from './three.js/ArticleParticle';
-import { useArticles } from './contexts/ArticlesContext';
-import { dummyArticles } from './types/article';
+import DisclaimerPage from './pages/disclaimer/DisclaimerPage';
+import { BottomPanelControl } from './pages/graph/components/controls/BottomPanelControl';
+import { SidePanelControl } from './pages/graph/components/panels/SidePanelControl';
+import { ArticleParticle } from './pages/graph/three.js/ArticleParticle';
+import { useArticles } from './pages/graph/contexts/ArticlesContext';
+import { dummyArticles } from './pages/graph/types/article';
 
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
@@ -123,7 +123,7 @@ function App() {
                         transition={{ duration: 2 }}
                         className='absolute inset-0 z-50'
                     >
-                        <DisclaimerPopup onAccept={handleDisclaimerAccept} />
+                        <DisclaimerPage onAccept={handleDisclaimerAccept} />
                     </motion.div>
                 )}
             </AnimatePresence>
