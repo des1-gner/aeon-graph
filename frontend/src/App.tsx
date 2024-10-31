@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import DisclaimerPage from './pages/disclaimer/DisclaimerPage';
-import { BottomPanelControl } from './pages/graph/components/controls/BottomPanelControl';
-import { SidePanelControl } from './pages/graph/components/panels/SidePanelControl';
+import { BottomPanelControl } from './pages/graph/components/panels/PlaybackPanel';
+import { FilterControl } from './pages/graph/components/panels/filter-panel/FilterControl';
 import { ArticleParticle } from './pages/graph/three.js/ArticleParticle';
 import { useArticles } from './pages/graph/contexts/ArticlesContext';
 import { dummyArticles } from './pages/graph/types/article';
@@ -196,7 +196,7 @@ function App() {
                             className='fixed top-0 right-0 z-20'
                         >
                             <div className='p-4'>
-                                <SidePanelControl
+                                <FilterControl
                                     onClose={() => setShowSideControls(false)}
                                     initialShowSearchQueryModal={
                                         initialShowSearchQueryModal

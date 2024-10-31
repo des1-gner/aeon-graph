@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Toggle } from '../common/toggle/Toggle';
+import { Toggle } from '../components/common/toggle/Toggle';
 import {
     AdjustmentsHorizontalIcon,
     CircleStackIcon,
@@ -14,22 +14,22 @@ import {
     CursorArrowRaysIcon,
     ChevronDownIcon,
 } from '@heroicons/react/24/solid';
-import { Button } from '../common/button/Button';
+import { Button } from '../components/common/button/Button';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     useArticles,
     EdgeOptions as ContextEdgeOptions,
     VisibilityType as ContextVisibilityType,
-} from '../../contexts/ArticlesContext';
+} from '../contexts/ArticlesContext';
 import {
     broadClaims,
     dummyArticles,
     sources,
     subClaims,
-} from '../../types/article';
-import { QuerySummaryModal } from '../common/modals/QuerySummaryModal';
+} from '../types/article';
+import { QuerySummaryModal } from '../components/common/modals/QuerySummaryModal';
 import { HexColorPicker } from 'react-colorful';
-import { ArticleSearchModal } from '../common/modals/ArticleSearchModal';
+import { ArticleSearchModal } from '../components/common/modals/ArticleSearchModal';
 
 // Constants
 const DEFAULT_HIGHLIGHT_COLOR = '#FF0000';

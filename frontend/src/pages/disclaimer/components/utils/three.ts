@@ -6,7 +6,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { vertexShader, fragmentShader } from '../shaders';
-import { AnimationParams, ParticleSystem, SceneSetup } from '../../types';
+import { AnimationParams, ParticleSystem, SceneSetup } from '../types';
 
 /**
  * Initializes the Three.js scene, camera, and renderer
