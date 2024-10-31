@@ -152,11 +152,11 @@ def generate_article():
     return article
 
 def main():
-    """Generate and save 200 articles to JSON file."""
-    articles = [generate_article() for _ in range(200)]
-    with open('climate_news_data.json', 'w') as f:
+    """Generate and save 500 articles to JSON file."""
+    articles = [generate_article() for _ in range(500)]
+    with open('mock_climate_news_data.json', 'w') as f:
         json.dump(articles, f, indent=2)
-    print("Generated 200 unique articles with lowercase content (except Title and publishedAt) and saved to climate_news_data.json")
+    print("Generated 500 unique articles with lowercase content (except Title and publishedAt) and saved to mock_climate_news_data.json")
 
 if __name__ == "__main__":
     main()
