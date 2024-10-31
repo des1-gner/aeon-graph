@@ -9,6 +9,7 @@ interface DisclaimerPageProps {
 const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
   const [isChecked, setIsChecked] = useState(false);
   const [isExploding, setIsExploding] = useState(false);
+
   const mountRef = useRef<HTMLDivElement>(null);
   const backgroundRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
@@ -17,23 +18,28 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
   const particlesRef = useRef<THREE.Points | null>(null);
   const backgroundParticlesRef = useRef<THREE.Points | null>(null);
   const frameIdRef = useRef<number | null>(null);
-
+  
   useEffect(() => {
     if (!mountRef.current || !backgroundRef.current) return;
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 300; // Increased z-position to zoom out
+    camera.position.z = 300;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true, 
+      alpha: true,
+      preserveDrawingBuffer: true,
+      powerPreference: "high-performance"
+    });
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     backgroundRef.current.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
 
-    // Background particles
     const backgroundGeometry = new THREE.BufferGeometry();
     const backgroundParticleCount = 100;
     const backgroundPositions = new Float32Array(backgroundParticleCount * 3);
@@ -55,8 +61,7 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
     backgroundGeometry.setAttribute('position', new THREE.BufferAttribute(backgroundPositions, 3));
     backgroundGeometry.setAttribute('size', new THREE.BufferAttribute(backgroundSizes, 1));
 
-    // Create a circular texture for particles
-    const particleTexture = new THREE.TextureLoader().load('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAOxAAADsQBlSsOGwAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAJzSURBVHic7ZpNaxNRFIafO9OYdKaVfqS2WsVVEVy5dOFfEBQLrtyJP6RrN4ILdeMvcOMmrsS1UjcKaqtWW5u0SZN0Zq4LY0vnTjNzc+fec4M8EDKEe857TtLcZCbgOI7jOI7jOI7jOI6x5N+hJ1UVd4GnQBXo2UvV48rAW+ARMKBk66PrGZHwFqMScP9fdxJ4BdwAasAVodgXhOp20QLeAVfpM2ILLAsJnAvVPQukQCgkvACmhep207nUJjDdbdAUCj4lVHcauAG0hWqPUmqTApdkxNYFWmwhzb4Pu80GYQyYFqprTQisCtW1JmTWBzXBXhGqGw3bXNJnQk0gj41G3bM2ALgllVjQhBqwIFTXmhAT/nCKpQELAnVPAD8Fao7LrA8+BXZCzX3gJfJPwS0sXv4AL4AesDfEhB5wF4v3wWmBmrMMf/+0hA8Ij8qocZxhj6qWB7gCfDuiQApcGDN32QYkwHngExCEGm+BFLgQc15cQr90gJ/APkObGQ2tD/A1wrzKDagQfQ5aYcTkNmOYxGj6tU0NyIC5EXNWMDDAOgHSr21qQAI0gC8R5tmbkAEz/LvzfwNTMedZJQDCv+RPgZlwrBG8HVrnucB4LO8AH4Gfq9WJbuKCbCEe5w1b7xpNs/0+2B5wE3gnXTiFM7UHVCt57rG6SFRqAMClA+2VqFWuPeDvpn/nvW4D6xjdCFw5cGzIy5QyJkxDcZ8/y+bLt7vO9/dvmrrg5PiWNQNCTAFXB47TJGIzStbvA+JGZIhFgm0mBEaDIpFk16sBm01w3cjPB4zjOI7jOI7jOI7jZMBvLTVZOScB8a8AAAAASUVORK5CYII=');
+    const particleTexture = new THREE.TextureLoader().load('data:image/png;base64,...');
 
     const backgroundMaterial = new THREE.PointsMaterial({
       color: 0xffffff,
@@ -64,12 +69,14 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
       map: particleTexture,
       transparent: true,
       blending: THREE.AdditiveBlending,
-      depthTest: false
+      depthTest: false,
+      depthWrite: false,
+      alphaTest: 0.1
     });
+
     const backgroundParticles = new THREE.Points(backgroundGeometry, backgroundMaterial);
     scene.add(backgroundParticles);
 
-    // Main "The Zone" text particles
     const geometry = new THREE.BufferGeometry();
     const particleCount = 500;
     const positions = new Float32Array(particleCount * 3);
@@ -86,6 +93,7 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
       ctx.font = 'Bold 768px Arial';
       ctx.fillStyle = 'white';
       ctx.textAlign = 'center';
+      ctx.fillText('.', canvas.width / 2, canvas.height / 2 + 100);
       ctx.fillText('La Zona', canvas.width / 2, canvas.height / 2 + 100);
 
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -100,6 +108,7 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
 
         const initialX = (x - canvas.width / 2) * 0.15;
         const initialY = (canvas.height / 2 - y) * 0.15;
+        
         positions[i * 3] = initialX;
         positions[i * 3 + 1] = initialY;
         positions[i * 3 + 2] = 0;
@@ -139,19 +148,21 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
       varying vec3 vColor;
       void main() {
         vec2 center = gl_PointCoord - vec2(0.5, 0.5);
-        if (length(center) > 0.5) discard;
-        gl_FragColor = vec4(vColor, 1.0);
+        float dist = length(center);
+        float alpha = smoothstep(0.5, 0.45, dist);
+        if (alpha < 0.1) discard;
+        gl_FragColor = vec4(vColor, alpha);
       }
     `;
 
     const material = new THREE.ShaderMaterial({
-      uniforms: {
-        // Add any uniforms if needed
-      },
-      vertexShader: vertexShader,
-      fragmentShader: fragmentShader,
+      uniforms: {},
+      vertexShader,
+      fragmentShader,
       transparent: true,
       vertexColors: true,
+      depthWrite: false,
+      depthTest: true
     });
 
     const particles = new THREE.Points(geometry, material);
@@ -175,7 +186,6 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
           positions[i] += backgroundVelocities[i];
           positions[i + 1] += backgroundVelocities[i + 1];
 
-          // Bounce off edges
           if (Math.abs(positions[i]) > window.innerWidth / 2) {
             backgroundVelocities[i] *= -1;
           }
@@ -183,7 +193,6 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
             backgroundVelocities[i + 1] *= -1;
           }
 
-          // Gradually increase size
           if (sizes[i / 3] < 10) {
             sizes[i / 3] += 0.01;
           }

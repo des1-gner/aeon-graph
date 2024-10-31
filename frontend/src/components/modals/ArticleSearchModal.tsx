@@ -1,6 +1,9 @@
+import React from 'react';
 import {
     ArrowUpRightIcon,
     CalendarDateRangeIcon,
+    ChevronDownIcon,
+    ChevronUpIcon,
     CubeTransparentIcon,
     MagnifyingGlassIcon,
     ShareIcon,
@@ -14,6 +17,47 @@ import { Toggle } from '../Toggle';
 import { useArticles } from '../../contexts/ArticlesContext';
 import { fetchArticle } from '../../api';
 import { ArticleTableModal } from './ArticleTableModal';
+
+// List of news sources to choose from
+const sources = [
+    'theaustralian.com.au',
+    'theguardian.com',
+    'abc.net.au',
+    'news.com.au',
+    'heraldsun.com.au',
+    'skynews.com.au',
+    'afr.com',
+    'smh.com.au',
+    'dailytelegraph.com.au',
+    'foxnews.com',
+    'nytimes.com',
+    'dailywire.com',
+    'couriermail.com.au',
+    'thewest.com.au',
+    '7news.com.au',
+    '9news.com.au',
+    'theconversation.com',
+    'nypost.com',
+    'wsj.com',
+    'wattsupwiththat.com',
+    'breitbart.com',
+    'newsmax.com',
+    'naturalnews.com',
+    'washingtontimes.com',
+    'climatecentral.org',
+    'skepticalscience.com',
+    'realclimate.org',
+    'climatedepot.com',
+    'nationalgeographic.com',
+    'scientificamerican.com',
+    'sciencedaily.com',
+    'phys.org',
+];
+
+// List of publishers to choose from
+const publishers = ['None', 'Murdoch Media'];
+
+type ThinkTankOption = 'yes' | 'no' | 'both';
 
 type ArticleSearchModalProps = {
     onClose: () => void;
@@ -41,16 +85,29 @@ export const ArticleSearchModal = ({
     const { articles, setArticles } = useArticles();
     const [dateRangeIndex, setDateRangeIndex] = useState(0);
     const [nodeLimitIndex, setNodeLimitIndex] = useState(0);
+    const [showSourcesDropdown, setShowSourcesDropdown] = useState(false);
+    const [selectedSources, setSelectedSources] = useState<string[]>([]);
+    const [showPublisherDropdown, setShowPublisherDropdown] = useState(false);
+    const [selectedPublisher, setSelectedPublisher] = useState('None');
+    const [thinkTankRef, setThinkTankRef] = useState<ThinkTankOption>('both');
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Helpers to check if sources or publisher are selected
+    const hasSourcesSelected = selectedSources.length > 0;
+    const hasPublisherSelected = selectedPublisher !== 'None';
+
+    // Function to fetch articles based on the search criteria
     const handleSearch = async () => {
         setIsLoading(true);
         try {
             const response = await fetchArticle(
                 searchQuery,
                 startDate,
-                endDate
+                endDate,
+                selectedSources,
+                selectedPublisher === 'None' ? '' : selectedPublisher,
+                thinkTankRef === 'both' ? undefined : thinkTankRef === 'yes'
             );
             setArticles(response);
         } catch (err: any) {
@@ -60,34 +117,25 @@ export const ArticleSearchModal = ({
         }
     };
 
+    // Function to handle date range selection
     const handleDateRangeToggle = (index: number) => {
         setDateRangeIndex(index);
         const now = new Date();
-        let from = new Date();
-
+        
         switch (index) {
-            case 0:
+            case 0: // All
                 setStartDate('');
                 break;
-            case 1:
-                from.setDate(now.getDate() - 1);
-                break;
-            case 2:
-                from.setDate(now.getDate() - 7);
-                break;
-            case 3:
-                from.setMonth(now.getMonth() - 1);
-                break;
-            case 4:
-                return;
+            case 1: // Custom
+                return; // Do nothing, let the custom date inputs handle the dates
             default:
                 setStartDate('');
                 return;
         }
-        setStartDate(from.toISOString().split('T')[0] + 'T00:00:00Z');
         setEndDate(now.toISOString().split('T')[0] + 'T23:59:59Z');
     };
 
+    // Function to limit the number of articles displayed
     const handleLimitNodes = () => {
         if (nodeQty! < articles!.length) {
             let limitedArticles;
@@ -120,13 +168,37 @@ export const ArticleSearchModal = ({
         }
     };
 
+    // Update the node quantity when the articles change
     useEffect(() => {
         setNodeQty(articles?.length || 0);
     }, [articles]);
 
+    // Function to generate the visualization
     const handleGenerateVisualisation = () => {
         handleLimitNodes();
         onClose();
+    };
+
+    // Function to handle source selection
+    const handleSourceToggle = (source: string) => {
+        if (!hasPublisherSelected) {
+            setSelectedSources((prev) => {
+                if (prev.includes(source)) {
+                    return prev.filter((s) => s !== source);
+                } else {
+                    return [...prev, source];
+                }
+            });
+        }
+    };
+
+    // Function to handle publisher selection
+    const handlePublisherSelect = (publisher: string) => {
+        if (!hasSourcesSelected) {
+            setSelectedPublisher((prev) =>
+                prev === publisher ? 'None' : publisher
+            );
+        }
     };
 
     return (
@@ -141,6 +213,7 @@ export const ArticleSearchModal = ({
                     </p>
                 </div>
                 <div className='p-5 space-y-5 backdrop-blur-xl'>
+                    {/* database search module */}
                     <div className='dark-card p-3 space-y-3'>
                         <h2 className='flex gap-2 items-center font-semibold text-light'>
                             <MagnifyingGlassIcon className='size-4' />
@@ -155,6 +228,222 @@ export const ArticleSearchModal = ({
                         />
                     </div>
 
+                    {/* date search module */}
+                    <div className='dark-card p-2 space-y-2'>
+                        {/* Sources Section */}
+                        <div className='bg-neutral-800 rounded-lg px-2'>
+                            <div className='flex justify-between'>
+                                <p
+                                    className={`text-light ${
+                                        hasPublisherSelected ? 'opacity-50' : ''
+                                    }`}
+                                >
+                                    Sources
+                                </p>
+                                {!hasPublisherSelected &&
+                                    (showSourcesDropdown ? (
+                                        <ChevronUpIcon
+                                            className='size-4 fill-white cursor-pointer'
+                                            onClick={() =>
+                                                setShowSourcesDropdown(false)
+                                            }
+                                        />
+                                    ) : (
+                                        <ChevronDownIcon
+                                            className='size-4 fill-white cursor-pointer'
+                                            onClick={() =>
+                                                setShowSourcesDropdown(true)
+                                            }
+                                        />
+                                    ))}
+                            </div>
+
+                            <AnimatePresence>
+                                {showSourcesDropdown &&
+                                    !hasPublisherSelected && (
+                                        <motion.div
+                                            initial='collapsed'
+                                            animate='open'
+                                            exit='collapsed'
+                                            variants={{
+                                                open: {
+                                                    opacity: 1,
+                                                    height: 'auto',
+                                                    marginTop: 8,
+                                                },
+                                                collapsed: {
+                                                    opacity: 0,
+                                                    height: 0,
+                                                    marginTop: 0,
+                                                },
+                                            }}
+                                            className='max-h-[150px] overflow-y-auto'
+                                        >
+                                            {sources.map((source) => (
+                                                <div
+                                                    key={source}
+                                                    className='flex items-center gap-2 px-2 py-1 hover:bg-neutral-700 rounded'
+                                                >
+                                                    <input
+                                                        type='checkbox'
+                                                        id={source}
+                                                        checked={selectedSources.includes(
+                                                            source
+                                                        )}
+                                                        onChange={() =>
+                                                            handleSourceToggle(
+                                                                source
+                                                            )
+                                                        }
+                                                        className='accent-neutral-300 size-4'
+                                                    />
+                                                    <label
+                                                        htmlFor={source}
+                                                        className='text-sm text-light cursor-pointer'
+                                                    >
+                                                        {source}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Publishers Section */}
+                        <div className='bg-neutral-800 rounded-lg px-2'>
+                            <div className='flex justify-between'>
+                                <p
+                                    className={`text-light ${
+                                        hasSourcesSelected ? 'opacity-50' : ''
+                                    }`}
+                                >
+                                    Publishers
+                                </p>
+                                {!hasSourcesSelected &&
+                                    (showPublisherDropdown ? (
+                                        <ChevronUpIcon
+                                            className='size-4 fill-white cursor-pointer'
+                                            onClick={() =>
+                                                setShowPublisherDropdown(false)
+                                            }
+                                        />
+                                    ) : (
+                                        <ChevronDownIcon
+                                            className='size-4 fill-white cursor-pointer'
+                                            onClick={() =>
+                                                setShowPublisherDropdown(true)
+                                            }
+                                        />
+                                    ))}
+                            </div>
+
+                            <AnimatePresence>
+                                {showPublisherDropdown &&
+                                    !hasSourcesSelected && (
+                                        <motion.div
+                                            initial='collapsed'
+                                            animate='open'
+                                            exit='collapsed'
+                                            variants={{
+                                                open: {
+                                                    opacity: 1,
+                                                    height: 'auto',
+                                                    marginTop: 8,
+                                                },
+                                                collapsed: {
+                                                    opacity: 0,
+                                                    height: 0,
+                                                    marginTop: 0,
+                                                },
+                                            }}
+                                            className='max-h-[150px] overflow-y-auto'
+                                        >
+                                            {publishers.map((publisher) => (
+                                                <div
+                                                    key={publisher}
+                                                    className='flex items-center gap-2 px-2 py-1 hover:bg-neutral-700 rounded'
+                                                >
+                                                    <input
+                                                        type='radio'
+                                                        id={`publisher-${publisher}`}
+                                                        checked={
+                                                            selectedPublisher ===
+                                                            publisher
+                                                        }
+                                                        onChange={() =>
+                                                            handlePublisherSelect(
+                                                                publisher
+                                                            )
+                                                        }
+                                                        className='accent-neutral-300 size-4'
+                                                        name='publisher'
+                                                    />
+                                                    <label
+                                                        htmlFor={`publisher-${publisher}`}
+                                                        className='text-sm text-light cursor-pointer'
+                                                    >
+                                                        {publisher}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </motion.div>
+                                    )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Think Tank Section */}
+                        <div className='bg-neutral-800 rounded-lg p-2'>
+                            <p className="text-light mb-2">Think Tank Reference</p>
+                            <div className='space-y-2'>
+                                <div className='flex items-center gap-2'>
+                                    <input
+                                        type='radio'
+                                        id='think-tank-yes'
+                                        checked={thinkTankRef === 'yes'}
+                                        onChange={() => setThinkTankRef('yes')}
+                                        className='accent-neutral-300 size-4'
+                                        name='think-tank'
+                                    />
+                                    <label htmlFor='think-tank-yes' className='text-sm text-light cursor-pointer'>
+                                        Contains think tank reference
+                                    </label>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                    <input
+                                        type='radio'
+                                        id='think-tank-no'
+                                        checked={thinkTankRef === 'no'}
+                                        onChange={() => setThinkTankRef('no')}
+                                        className='accent-neutral-300 size-4'
+                                        name='think-tank'
+                                    />
+                                    <label htmlFor='think-tank-no' 
+                                        className='text-sm text-light cursor-pointer'
+                                    >
+                                        No think tank reference
+                                    </label>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                    <input
+                                        type='radio'
+                                        id='think-tank-both'
+                                        checked={thinkTankRef === 'both'}
+                                        onChange={() => setThinkTankRef('both')}
+                                        className='accent-neutral-300 size-4'
+                                        name='think-tank'
+                                    />
+                                    <label 
+                                        htmlFor='think-tank-both' 
+                                        className='text-sm text-light cursor-pointer'
+                                    >
+                                        Both
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div>
                         <Toggle
                             header={[
@@ -163,16 +452,13 @@ export const ArticleSearchModal = ({
                             ]}
                             toggleLabels={[
                                 'All',
-                                'Day',
-                                'Week',
-                                'Month',
-                                'Custom',
+                                'Custom'
                             ]}
                             selectedIndex={dateRangeIndex}
                             onClick={handleDateRangeToggle}
                         >
                             <AnimatePresence>
-                                {dateRangeIndex === 4 && (
+                                {dateRangeIndex === 1 && (
                                     <motion.div
                                         initial='collapsed'
                                         animate='open'
@@ -195,14 +481,9 @@ export const ArticleSearchModal = ({
                                                 </p>
                                                 <input
                                                     type='date'
-                                                    value={
-                                                        startDate.split('T')[0]
-                                                    }
+                                                    value={startDate.split('T')[0]}
                                                     onChange={(e) =>
-                                                        setStartDate(
-                                                            e.target.value +
-                                                                'T00:00:00Z'
-                                                        )
+                                                        setStartDate(e.target.value + 'T00:00:00Z')
                                                     }
                                                     className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none accent-white focus:border-neutral-300'
                                                 />
@@ -213,14 +494,9 @@ export const ArticleSearchModal = ({
                                                 </p>
                                                 <input
                                                     type='date'
-                                                    value={
-                                                        endDate.split('T')[0]
-                                                    }
+                                                    value={endDate.split('T')[0]}
                                                     onChange={(e) =>
-                                                        setEndDate(
-                                                            e.target.value +
-                                                                'T00:00:00Z'
-                                                        )
+                                                        setEndDate(e.target.value + 'T23:59:59Z')
                                                     }
                                                     className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300'
                                                 />
@@ -261,7 +537,7 @@ export const ArticleSearchModal = ({
 
                     {articles?.length! > 0 && (
                         <div className='dark-card p-2 space-y-3 text-light'>
-                            <p className='flex gap-2 items-center pb-1 font-semibold '>
+                            <p className='flex gap-2 items-center pb-1 font-semibold'>
                                 <ShareIcon className='size-4' />
                                 Node quantity
                             </p>
@@ -295,8 +571,8 @@ export const ArticleSearchModal = ({
                                 className='w-full'
                             >
                                 <p className='flex gap-2 justify-center items-center'>
-                                    Generate visualisation
                                     <CubeTransparentIcon className='w-4 h-4' />
+                                    Generate visualisation
                                 </p>
                             </Button>
                         </div>

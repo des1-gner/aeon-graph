@@ -1,8 +1,15 @@
+"""
+Climate News Article Generator
+
+This script generates synthetic climate news articles with varying perspectives and claims,
+outputting a JSON dataset that simulates real-world news coverage patterns.
+"""
+
 import json
 import random
 from datetime import datetime, timedelta
 
-# Expanded list of news sources (now lowercase)
+# News source domains
 sources = [
     "theaustralian.com.au", "theguardian.com", "abc.net.au", "news.com.au",
     "heraldsun.com.au", "skynews.com.au", "afr.com", "smh.com.au",
@@ -14,7 +21,7 @@ sources = [
     "nationalgeographic.com", "scientificamerican.com", "sciencedaily.com", "phys.org"
 ]
 
-# Expanded vocabulary for sentence generation (now lowercase)
+# Article subject components
 subjects = [
     "new study", "recent report", "climate scientist", "environmental group", "think tank",
     "controversial paper", "leaked document", "anonymous source", "whistleblower", "satellite data",
@@ -24,6 +31,7 @@ subjects = [
     "fossil fuel industry insider", "environmental activist", "meteorological organization", "geophysical survey"
 ]
 
+# Action verbs for sentence construction
 verbs = [
     "suggests", "claims", "argues", "reveals", "questions",
     "contradicts", "challenges", "supports", "debunks", "reaffirms",
@@ -32,6 +40,7 @@ verbs = [
     "extrapolates", "deduces", "proposes", "asserts", "substantiates"
 ]
 
+# Climate-related statements
 objects = [
     "global warming trends are exaggerated",
     "climate change impacts are less severe than predicted",
@@ -55,7 +64,7 @@ objects = [
     "biodiversity loss is accelerating due to climate stress"
 ]
 
-# List of random words to occasionally insert (now lowercase)
+# Scientific terminology for enhanced complexity
 random_words = [
     "quixotic", "serendipitous", "ephemeral", "ubiquitous", "ethereal",
     "paradigm", "quintessential", "anomaly", "paradox", "enigma",
@@ -63,22 +72,7 @@ random_words = [
     "juxtaposition", "obfuscation", "epiphany", "dichotomy", "symbiosis"
 ]
 
-def generate_sentence():
-    sentence = f"{random.choice(subjects)} {random.choice(verbs)} that {random.choice(objects)}."
-    if random.random() < 0.3:  # 30% chance to add a random word
-        sentence += f" this {random.choice(random_words)} finding has sparked debate in the scientific community."
-    return sentence.lower()
-
-def generate_paragraph():
-    num_sentences = random.randint(3, 6)
-    return ' '.join([generate_sentence() for _ in range(num_sentences)])
-
-def random_date():
-    start_date = datetime(2024, 1, 1)
-    end_date = datetime(2024, 12, 31)
-    random_date = start_date + timedelta(seconds=random.randint(0, int((end_date - start_date).total_seconds())))
-    return random_date.strftime("%Y-%m-%dT%H:%M:%SZ")
-
+# Claim categories and their associated subclaims
 claims = {
     "gw_not_happening": {
         "sentence_key": "bc_gw_not_happening_sentence",
@@ -94,7 +88,8 @@ claims = {
     },
     "solutions_wont_work": {
         "sentence_key": "bc_solutions_wont_work_sentence",
-        "subclaims": ["sc_policies_negative", "sc_policies_ineffective", "sc_policies_difficult", "sc_low_support_policies", "sc_clean_energy_unreliable"]
+        "subclaims": ["sc_policies_negative", "sc_policies_ineffective", "sc_policies_difficult", 
+                      "sc_low_support_policies", "sc_clean_energy_unreliable"]
     },
     "science_movement_unrel": {
         "sentence_key": "bc_science_movement_unrel_sentence",
@@ -106,41 +101,62 @@ claims = {
     }
 }
 
+def generate_sentence():
+    """Generate a random climate-related sentence."""
+    sentence = f"{random.choice(subjects)} {random.choice(verbs)} that {random.choice(objects)}."
+    if random.random() < 0.3:
+        sentence += f" this {random.choice(random_words)} finding has sparked debate in the scientific community."
+    return sentence.lower()
+
+def generate_paragraph():
+    """Generate a paragraph with 3-6 sentences."""
+    return ' '.join([generate_sentence() for _ in range(random.randint(3, 6))])
+
+def random_date():
+    """Generate a random date in 2024."""
+    start_date = datetime(2024, 1, 1)
+    end_date = datetime(2024, 12, 31)
+    return (start_date + timedelta(seconds=random.randint(0, int((end_date - start_date).total_seconds())))).strftime("%Y-%m-%dT%H:%M:%SZ")
+
 def generate_article():
+    """Generate a complete news article with metadata and claims."""
     source = random.choice(sources)
     content = generate_paragraph()
+    
     article = {
-        "title": {"S": f"Climate Change: {generate_sentence().capitalize()}"}, # Title remains capitalized
-        "publishedAt": {"S": random_date()}, # publishedAt remains as is
-        "author": {"S": f"{random.choice(['john', 'jane', 'alex', 'sam', 'morgan', 'taylor', 'jordan', 'casey'])} {random.choice(['smith', 'doe', 'johnson', 'brown', 'lee', 'garcia', 'martinez', 'rodriguez'])}"},
+        "title": {"S": f"Climate Change: {generate_sentence().capitalize()}"},
+        "publishedAt": {"S": random_date()},
+        "author": {"S": f"{random.choice(['john', 'jane', 'alex', 'sam', 'morgan', 'taylor', 'jordan', 'casey'])} "
+                      f"{random.choice(['smith', 'doe', 'johnson', 'brown', 'lee', 'garcia', 'martinez', 'rodriguez'])}"},
         "urlToImage": {"S": f"https://{source}/images/climate-{random.randint(1000, 9999)}.jpg"},
         "content": {"S": content},
         "description": {"S": f"brief summary: {content[:100]}..."},
         "sourceName": {"S": source},
-        "sourceDescription": {"S": f"a {'leading' if random.random() > 0.5 else 'popular'} news source for {'international' if random.random() > 0.5 else 'national'} news and analysis, known for its {random.choice(['in-depth reporting', 'breaking news coverage', 'investigative journalism', 'opinion pieces', 'data-driven approach'])}."},
+        "sourceDescription": {"S": f"a {'leading' if random.random() > 0.5 else 'popular'} news source for "
+                                f"{'international' if random.random() > 0.5 else 'national'} news and analysis, known for its "
+                                f"{random.choice(['in-depth reporting', 'breaking news coverage', 'investigative journalism', 'opinion pieces', 'data-driven approach'])}."},
         "url": {"S": f"https://{source}/article-{random.randint(10000, 99999)}"}
     }
-
-    selected_claims = random.sample(list(claims.keys()), random.randint(1, 3))
-
-    for claim in selected_claims:
+    
+    # Add random claims and subclaims
+    for claim in random.sample(list(claims.keys()), random.randint(1, 3)):
         article[claims[claim]["sentence_key"]] = {"S": generate_paragraph()}
-        
         if claims[claim]["subclaims"]:
-            num_subclaims = min(len(claims[claim]["subclaims"]), random.randint(1, 3))
-            selected_subclaims = random.sample(claims[claim]["subclaims"], num_subclaims)
-            
-            for subclaim in selected_subclaims:
+            for subclaim in random.sample(claims[claim]["subclaims"], 
+                                        min(len(claims[claim]["subclaims"]), random.randint(1, 3))):
                 article[f"{subclaim}_sentence"] = {"S": generate_paragraph()}
-
+    
     if random.random() < 0.3:
         article["think_tank_ref_sentence"] = {"S": generate_paragraph()}
-
+    
     return article
 
-articles = [generate_article() for _ in range(200)]
+def main():
+    """Generate and save 500 articles to JSON file."""
+    articles = [generate_article() for _ in range(500)]
+    with open('mock_climate_news_data.json', 'w') as f:
+        json.dump(articles, f, indent=2)
+    print("Generated 500 unique articles with lowercase content (except Title and publishedAt) and saved to mock_climate_news_data.json")
 
-with open('climate_news_data.json', 'w') as f:
-    json.dump(articles, f, indent=2)
-
-print("Generated 200 unique articles with lowercase content (except Title and publishedAt) and saved to climate_news_data.json")
+if __name__ == "__main__":
+    main()
