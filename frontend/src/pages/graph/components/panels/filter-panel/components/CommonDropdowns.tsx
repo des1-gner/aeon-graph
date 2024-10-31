@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { MultiSelect } from './MultiSelect';
 import { FilterOption } from './FilterOption';
 import { CommonOptions, CommonDropdownsProps } from '../types/interfaces';
@@ -14,6 +14,10 @@ export function CommonDropdowns<T extends CommonOptions>({
     options,
     setOptions 
 }: CommonDropdownsProps<T>) {
+    // Track visual selection state separately from actual values
+    const [thinkTankVisualSelection, setThinkTankVisualSelection] = useState<string[]>([]);
+    const [duplicateVisualSelection, setDuplicateVisualSelection] = useState<string[]>([]);
+
     const handleOptionChange = (field: keyof CommonOptions, value: string) => {
         setOptions((prev: T) => ({
             ...prev,
@@ -24,8 +28,40 @@ export function CommonDropdowns<T extends CommonOptions>({
     const handleMultiSelectChange = (field: keyof CommonOptions, values: string[]) => {
         setOptions((prev: T) => ({
             ...prev,
-            [field]: values.length > 0 ? values.join(',') : '',  // Return empty string if no values
+            [field]: values.length > 0 ? values.join(',') : '',
         }));
+    };
+
+    const handleThinkTankChange = (values: string[]) => {
+        setThinkTankVisualSelection(values);
+        // If both or none are selected, set empty string
+        if (values.length !== 1) {
+            setOptions((prev: T) => ({
+                ...prev,
+                think_tank_ref: '',
+            }));
+        } else {
+            setOptions((prev: T) => ({
+                ...prev,
+                think_tank_ref: values[0],
+            }));
+        }
+    };
+
+    const handleDuplicateChange = (values: string[]) => {
+        setDuplicateVisualSelection(values);
+        // If both or none are selected, set empty string
+        if (values.length !== 1) {
+            setOptions((prev: T) => ({
+                ...prev,
+                isDuplicate: '',
+            }));
+        } else {
+            setOptions((prev: T) => ({
+                ...prev,
+                isDuplicate: values[0],
+            }));
+        }
     };
 
     return (
@@ -80,47 +116,35 @@ export function CommonDropdowns<T extends CommonOptions>({
                     onChange={(value: string[]) => handleMultiSelectChange('source', value)}
                     placeholder='Select sources...'
                     groups={{
+                        'Any Sources': sources,
                         'All Murdoch Owned Media': Array.from(murdochMedia)
                     }}
                 />
             </FilterOption>
 
-            <div className='space-y-2'>
-                <div className='flex items-center gap-2'>
-                    <input
-                        type='checkbox'
-                        id={`${type}-think-tank`}
-                        checked={options.think_tank_ref === 'yes'}
-                        onChange={(e) =>
-                            handleOptionChange('think_tank_ref', e.target.checked ? 'yes' : 'no')
-                        }
-                        className='rounded border-neutral-500'
-                    />
-                    <label
-                        htmlFor={`${type}-think-tank`}
-                        className='text-sm text-neutral-400'
-                    >
-                        Contains Think Tank Reference
-                    </label>
-                </div>
-                <div className='flex items-center gap-2'>
-                    <input
-                        type='checkbox'
-                        id={`${type}-duplicate`}
-                        checked={options.isDuplicate === 'yes'}
-                        onChange={(e) =>
-                            handleOptionChange('isDuplicate', e.target.checked ? 'yes' : 'no')
-                        }
-                        className='rounded border-neutral-500'
-                    />
-                    <label
-                        htmlFor={`${type}-duplicate`}
-                        className='text-sm text-neutral-400'
-                    >
-                        Article is published on more than one source
-                    </label>
-                </div>
-            </div>
+            <FilterOption label='Think Tank Reference:'>
+                <MultiSelect
+                    options={[
+                        { value: 'yes', label: 'True' },
+                        { value: 'no', label: 'False' }
+                    ]}
+                    value={thinkTankVisualSelection}
+                    onChange={handleThinkTankChange}
+                    placeholder='Select think tank reference options...'
+                />
+            </FilterOption>
+
+            <FilterOption label='Article Publication Type:'>
+                <MultiSelect
+                    options={[
+                        { value: 'yes', label: 'Duplicate' },
+                        { value: 'no', label: 'Unique' }
+                    ]}
+                    value={duplicateVisualSelection}
+                    onChange={handleDuplicateChange}
+                    placeholder='Select publication type...'
+                />
+            </FilterOption>
         </div>
     );
 }
