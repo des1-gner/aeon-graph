@@ -32,9 +32,9 @@ import { HexColorPicker } from 'react-colorful';
 import { ArticleSearchModal } from './modals/ArticleSearchModal';
 
 // Constants
-const DEFAULT_HIGHLIGHT_COLOR = '#FFFFFF';
-const DEFAULT_CLUSTER_COLOR = '#FFFFFF';
-const DEFAULT_EDGE_COLOR = '#FFFFFF';
+const DEFAULT_HIGHLIGHT_COLOR = '#FF0000';
+const DEFAULT_CLUSTER_COLOR = '#00FF00';
+const DEFAULT_EDGE_COLOR = '#0000FF';
 const INACTIVE_COLOR = '#FFFFFF';
 
 const murdochMedia = [
@@ -628,77 +628,83 @@ export const SidePanelControl: React.FC<{
                 </FilterOption>
 
                 <FilterOption label='Article Contains the Broad Claim/s:'>
-                    <MultiSelect
-                        options={Object.entries(broadClaims).map(
-                            ([key, value]) => ({
-                                value: key,
-                                label: value,
-                            })
-                        )}
-                        value={
-                            options.broadClaim
-                                ? options.broadClaim.split(',').filter(Boolean)
-                                : []
-                        }
-                        onChange={(value) =>
-                            handleOptionChange(
-                                optionType,
-                                'broadClaim',
-                                value.join(',')
-                            )
-                        }
-                        placeholder='Select broad claims...'
-                    />
-                </FilterOption>
+                <MultiSelect
+                    options={Object.entries(broadClaims).map(
+                        ([key, value]) => ({
+                            value: key,
+                            label: value,
+                        })
+                    )}
+                    value={
+                        options.broadClaim
+                            ? options.broadClaim.split(',').filter(Boolean)
+                            : []
+                    }
+                    onChange={(value) =>
+                        handleOptionChange(
+                            optionType,
+                            'broadClaim',
+                            value.join(',')
+                        )
+                    }
+                    placeholder='Select broad claims...'
+                    groups={{
+                        'Any Claims': Object.keys(broadClaims)
+                    }}
+                />
+            </FilterOption>
 
-                <FilterOption label='Article Contains the Sub Claim/s:'>
-                    <MultiSelect
-                        options={Object.entries(subClaims).map(
-                            ([key, value]) => ({
-                                value: key,
-                                label: value,
-                            })
-                        )}
-                        value={
-                            options.subClaim
-                                ? options.subClaim.split(',').filter(Boolean)
-                                : []
-                        }
-                        onChange={(value) =>
-                            handleOptionChange(
-                                optionType,
-                                'subClaim',
-                                value.join(',')
-                            )
-                        }
-                        placeholder='Select sub-claims...'
-                    />
-                </FilterOption>
+            <FilterOption label='Article Contains the Sub Claim/s:'>
+                <MultiSelect
+                    options={Object.entries(subClaims).map(
+                        ([key, value]) => ({
+                            value: key,
+                            label: value,
+                        })
+                    )}
+                    value={
+                        options.subClaim
+                            ? options.subClaim.split(',').filter(Boolean)
+                            : []
+                    }
+                    onChange={(value) =>
+                        handleOptionChange(
+                            optionType,
+                            'subClaim',
+                            value.join(',')
+                        )
+                    }
+                    placeholder='Select sub-claims...'
+                    groups={{
+                        'Any SubClaims': Object.keys(subClaims)
+                    }}
+                />
+            </FilterOption>
 
-                <FilterOption label='Article is from Source/s:'>
-                    <MultiSelect
-                        options={sources.map((source) => ({
-                            value: source,
-                            label: source,
-                        }))}
-                        groups={{
-                            'All Murdoch Owned Media': [...murdochMedia],
-                        }}
-                        value={
-                            options.source
-                                ? options.source.split(',').filter(Boolean)
-                                : []
-                        }
-                        onChange={(value) =>
-                            handleOptionChange(
-                                optionType,
-                                'source',
-                                value.join(',')
-                            )
-                        }
-                        placeholder='Select sources...'
-                    />
-                </FilterOption>
+            <FilterOption label='Article is from Source/s:'>
+                <MultiSelect
+                    options={sources.map((source) => ({
+                        value: source,
+                        label: source,
+                    }))}
+                    groups={{
+                        'All Murdoch Owned Media': [...murdochMedia],
+                    }}
+                    value={
+                        options.source
+                            ? options.source.split(',').filter(Boolean)
+                            : []
+                    }
+                    onChange={(value) =>
+                        handleOptionChange(
+                            optionType,
+                            'source',
+                            value.join(',')
+                        )
+                    }
+                    placeholder='Select sources...'
+                />
+            </FilterOption>
 
                 <div className='space-y-2'>
                     <div className='flex items-center gap-2'>
@@ -740,7 +746,7 @@ export const SidePanelControl: React.FC<{
                             htmlFor={`${optionType}-duplicate`}
                             className='text-sm text-neutral-400'
                         >
-                            Is Duplicate Article
+                            Article is published on more than one source
                         </label>
                     </div>
                 </div>

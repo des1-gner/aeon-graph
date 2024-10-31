@@ -1,7 +1,7 @@
 import boto3
 import json
 import traceback
-from boto3.dynamodb.conditions import Attr, And
+from boto3.dynamodb.conditions import Attr, And, Or
 from botocore.exceptions import ClientError
 from datetime import datetime
 from decimal import Decimal
@@ -98,6 +98,7 @@ def lambda_handler(event, context):
     sources = query_params.get('sources')
     publisher = query_params.get('publisher')
     think_tank_ref = query_params.get('thinkTankRef')
+    broad_claims = query_params.get('broadClaims')
 
     print(f"Start Date: {start_date}")
     print(f"End Date: {end_date}")
@@ -131,8 +132,20 @@ def lambda_handler(event, context):
             filter_expressions.append(Attr('source').is_in(source_list))
         if think_tank_ref == 'true':
             filter_expressions.append(Attr('think_tank_ref').exists())
+        if think_tank_ref == 'false':
+            filter_expressions.append(Attr('think_tank_ref').not_exists())
+        if broad_claims:
+            #Currently testing
+            claims_list = [claim.strip() for claim in broad_claims.split(',')]
+            if len(claims_list) > 1:
+                conditions = [Attr(f'broadClaims.{claim}').exists() for claim in claims_list]
 
-
+                # Only create an Or expression if there are conditions to combine
+                if conditions:
+                    filter_expressions.append(Or(*conditions))
+            else:
+                # For a single claim, add it directly without Or
+                filter_expressions.append(Attr(f'broadClaims.{claims_list[0]}').exists())
         if filter_expressions:
             if len(filter_expressions) > 1:
                 filter_expression = get_filter_expression(filter_expressions)
