@@ -730,70 +730,74 @@ interface ColorLegendProps {
   // Just make sure the ArticleParticle's return statement includes the ColorLegend:
   
   export const ArticleParticle: React.FC<{
-      articles: Article[];
-      highlightColor: string;
-      clusterColor: string;
-      edgeColor: string;
-      highlightOptions: HighlightOptions;
-      clusterOptions: ClusterOptions;
-      edgeOptions: EdgeOptions;
-  }> = ({
-      articles,
-      highlightColor,
-      clusterColor,
-      edgeColor,
-      highlightOptions,
-      clusterOptions,
-      edgeOptions,
-  }) => {
-      const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-      const [cameraTarget, setCameraTarget] = useState<THREE.Vector3 | null>(null);
-  
-      const handleArticleSelect = (article: Article | null, position?: THREE.Vector3) => {
-          setSelectedArticle(article);
-          if (position) {
-              setCameraTarget(position);
-          }
-      };
-  
-      return (
-          <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
-              <Canvas
-                  camera={{ position: [0, 0, 30], fov: 60, near: 0.1, far: 1000 }}
-                  gl={{ antialias: true }}
-              >
-                  <Swarm
-                      articles={articles}
-                      setSelectedArticle={handleArticleSelect}
-                      highlightOptions={highlightOptions}
-                      clusterOptions={clusterOptions}
-                      edgeOptions={edgeOptions}
-                      highlightColor={highlightColor}
-                      clusterColor={clusterColor}
-                      edgeColor={edgeColor}
-                  />
-                  <CameraController 
-                      target={cameraTarget}
-                      resetView={!selectedArticle}
-                  />
-              </Canvas>
-              {selectedArticle && (
-                  <DetailedArticlePanel
-                      article={selectedArticle}
-                      onClose={() => {
-                          setSelectedArticle(null);
-                          setCameraTarget(null);
-                      }}
-                  />
-              )}
-              <ColorLegend 
-                  highlightColor={highlightColor}
-                  clusterColor={clusterColor}
-                  edgeColor={edgeColor}
-              />
-          </div>
-      );
-  };
+    articles: Article[];
+    highlightColor: string;
+    clusterColor: string;
+    edgeColor: string;
+    highlightOptions: HighlightOptions;
+    clusterOptions: ClusterOptions;
+    edgeOptions: EdgeOptions;
+}> = ({
+    articles,
+    highlightColor,
+    clusterColor,
+    edgeColor,
+    highlightOptions,
+    clusterOptions,
+    edgeOptions,
+}) => {
+    const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+    const [cameraTarget, setCameraTarget] = useState<THREE.Vector3 | null>(null);
+    
+    // Add a key that changes when articles change
+    const canvasKey = useMemo(() => articles.length, [articles]);
+
+    const handleArticleSelect = (article: Article | null, position?: THREE.Vector3) => {
+        setSelectedArticle(article);
+        if (position) {
+            setCameraTarget(position);
+        }
+    };
+
+    return (
+        <div style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+            <Canvas
+                key={canvasKey} // Add key here to force remount
+                camera={{ position: [0, 0, 30], fov: 60, near: 0.1, far: 1000 }}
+                gl={{ antialias: true }}
+            >
+                <Swarm
+                    articles={articles}
+                    setSelectedArticle={handleArticleSelect}
+                    highlightOptions={highlightOptions}
+                    clusterOptions={clusterOptions}
+                    edgeOptions={edgeOptions}
+                    highlightColor={highlightColor}
+                    clusterColor={clusterColor}
+                    edgeColor={edgeColor}
+                />
+                <CameraController 
+                    target={cameraTarget}
+                    resetView={!selectedArticle}
+                />
+            </Canvas>
+            {selectedArticle && (
+                <DetailedArticlePanel
+                    article={selectedArticle}
+                    onClose={() => {
+                        setSelectedArticle(null);
+                        setCameraTarget(null);
+                    }}
+                />
+            )}
+            <ColorLegend 
+                highlightColor={highlightColor}
+                clusterColor={clusterColor}
+                edgeColor={edgeColor}
+            />
+        </div>
+    );
+};
   
 
 // Update the Scene component props interface

@@ -32,9 +32,9 @@ import { HexColorPicker } from 'react-colorful';
 import { ArticleSearchModal } from './modals/ArticleSearchModal';
 
 // Constants
-const DEFAULT_HIGHLIGHT_COLOR = '#FFFFFF';
-const DEFAULT_CLUSTER_COLOR = '#FFFFFF';
-const DEFAULT_EDGE_COLOR = '#FFFFFF';
+const DEFAULT_HIGHLIGHT_COLOR = '#FF0000';
+const DEFAULT_CLUSTER_COLOR = '#00FF00';
+const DEFAULT_EDGE_COLOR = '#0000FF';
 const INACTIVE_COLOR = '#FFFFFF';
 
 const murdochMedia = [
