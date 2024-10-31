@@ -1,57 +1,100 @@
+/**
+ * Represents an article with climate-related claims and metadata
+ */
 export type Article = {
+    /** Unique identifier for the article */
     articleId: string;
+    
+    /** URI identifier for the article */
     uri: string;
+    
+    /** Article title (optional) */
     title?: string;
+    
+    /** Main content of the article (optional) */
     body?: string;
+    
+    /** Source publication or website (optional) */
     source?: string;
+    
+    /** Article authors (optional) */
     authors?: string;
+    
+    /** Publication date and time */
     dateTime: string;
+    
+    /** URL where the article can be found */
     url: string;
+    
+    /** URL of the article's featured image (optional) */
     image?: string;
+    
+    /** Flag indicating if this is a duplicate article (optional) */
     isDuplicate?: boolean;
+    
+    /** 
+     * Major climate change denial claims present in the article
+     * Each property represents a different type of broad claim
+     * Values are likely indicators of claim presence (e.g., "true", "false", or confidence scores)
+     */
     broadClaims?: {
-        gw_not_happening?: string;
-        not_caused_by_human?: string;
-        impacts_not_bad?: string;
-        solutions_wont_work?: string;
-        science_movement_unrel?: string;
-        individual_action?: string;
+      gw_not_happening?: string;           // Denial of global warming
+      not_caused_by_human?: string;        // Denial of anthropogenic causes
+      impacts_not_bad?: string;            // Minimization of impacts
+      solutions_wont_work?: string;        // Dismissal of solutions
+      science_movement_unrel?: string;     // Attacks on science/movement credibility
+      individual_action?: string;          // Dismissal of individual action
     };
+    
+    /**
+     * Specific climate change denial claims present in the article
+     * Each property represents a different type of specific claim
+     * Values are likely indicators of claim presence
+     */
     subClaims?: {
-        sc_cold_event_denial?: string;
-        sc_deny_extreme_weather?: string;
-        sc_natural_variations?: string;
-        sc_past_climate_reference?: string;
-        sc_species_adapt?: string;
-        sc_downplay_warming?: string;
-        sc_policies_negative?: string;
-        sc_policies_ineffective?: string;
-        sc_policies_difficult?: string;
-        sc_low_support_policies?: string;
-        sc_clean_energy_unreliable?: string;
-        sc_climate_science_unrel?: string;
-        sc_no_consensus?: string;
-        sc_movement_unreliable?: string;
-        sc_hoax_conspiracy?: string;
+      sc_cold_event_denial?: string;       // Using cold weather to deny warming
+      sc_deny_extreme_weather?: string;    // Denying increase in extreme weather
+      sc_natural_variations?: string;      // Attributing to natural causes
+      sc_past_climate_reference?: string;  // Using past climate to deny current change
+      sc_species_adapt?: string;           // Claiming species will adapt
+      sc_downplay_warming?: string;        // Minimizing warming impacts
+      sc_policies_negative?: string;       // Highlighting policy downsides
+      sc_policies_ineffective?: string;    // Claiming policies don't work
+      sc_policies_difficult?: string;      // Emphasizing implementation challenges
+      sc_low_support_policies?: string;    // Claiming lack of public support
+      sc_clean_energy_unreliable?: string; // Attacking renewable energy
+      sc_climate_science_unrel?: string;   // Questioning climate science
+      sc_no_consensus?: string;            // Denying scientific consensus
+      sc_movement_unreliable?: string;     // Discrediting climate movement
+      sc_hoax_conspiracy?: string;         // Promoting conspiracy theories
     };
+    
+    /** Reference to think tank involvement (optional) */
     think_tank_ref?: string;
-};
-
-export const broadClaims = {
+  };
+  
+  /**
+   * Maps broad claim identifiers to their plain English descriptions
+   * Used for categorizing major climate change denial narratives
+   */
+  export const broadClaims = {
     gw_not_happening: 'global warming is not happening',
     not_caused_by_human: 'climate change is not caused by human activities',
     impacts_not_bad: 'climate change impacts are not that bad',
     solutions_wont_work: "climate solutions won't work",
     science_movement_unrel: 'climate science or movement is unreliable',
     individual_action: 'individual action is pointless',
-};
-
-export const subClaims = {
+  };
+  
+  /**
+   * Maps specific claim identifiers to their plain English descriptions
+   * Used for categorizing detailed climate change denial arguments
+   */
+  export const subClaims = {
     sc_cold_event_denial: 'cold weather event disproves global warming',
     sc_deny_extreme_weather: 'extreme weather events are not increasing',
     sc_natural_variations: 'climate change is due to natural variations',
-    sc_past_climate_reference:
-        'past climate changes prove current changes are natural',
+    sc_past_climate_reference: 'past climate changes prove current changes are natural',
     sc_species_adapt: 'species can adapt to climate change',
     sc_downplay_warming: 'warming is not as bad as predicted',
     sc_policies_negative: 'climate policies have negative consequences',
@@ -63,9 +106,13 @@ export const subClaims = {
     sc_no_consensus: 'there is no scientific consensus on climate change',
     sc_movement_unreliable: 'the climate movement is unreliable',
     sc_hoax_conspiracy: 'climate change is a hoax or conspiracy',
-};
-
-export const sources = [
+  };
+  
+  /**
+   * List of news sources that are monitored for climate-related articles
+   * Includes both mainstream and alternative media outlets
+   */
+  export const sources = [
     'theaustralian.com.au',
     'theguardian.com',
     'abc.net.au',
@@ -90,8 +137,10 @@ export const sources = [
     'newsmax.com',
     'naturalnews.com',
     'washingtontimes.com',
-];
+  ];
 
+
+// Mock Articles accessible via the Demo button on SidePanel
 export const dummyArticles: Article[] = [
     {
         articleId: 'a1b2c3d4',
