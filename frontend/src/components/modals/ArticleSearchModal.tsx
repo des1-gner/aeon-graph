@@ -18,6 +18,7 @@ import { useArticles } from '../../contexts/ArticlesContext';
 import { fetchArticle } from '../../api';
 import { ArticleTableModal } from './ArticleTableModal';
 
+// List of news sources to choose from
 const sources = [
     'theaustralian.com.au',
     'theguardian.com',
@@ -53,6 +54,7 @@ const sources = [
     'phys.org',
 ];
 
+// List of publishers to choose from
 const publishers = ['None', 'Murdoch Media'];
 
 type ArticleSearchModalProps = {
@@ -89,9 +91,11 @@ export const ArticleSearchModal = ({
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Helpers to check if sources or publisher are selected
     const hasSourcesSelected = selectedSources.length > 0;
     const hasPublisherSelected = selectedPublisher !== 'None';
 
+    // Function to fetch articles based on the search criteria
     const handleSearch = async () => {
         setIsLoading(true);
         try {
@@ -111,11 +115,13 @@ export const ArticleSearchModal = ({
         }
     };
 
+    // Function to handle date range selection
     const handleDateRangeToggle = (index: number) => {
         setDateRangeIndex(index);
         const now = new Date();
         let from = new Date();
 
+        // Set start and end dates based on the selected date range
         switch (index) {
             case 0:
                 setStartDate('');
@@ -139,6 +145,7 @@ export const ArticleSearchModal = ({
         setEndDate(now.toISOString().split('T')[0] + 'T23:59:59Z');
     };
 
+    // Function to limit the number of articles displayed
     const handleLimitNodes = () => {
         if (nodeQty! < articles!.length) {
             let limitedArticles;
@@ -171,15 +178,18 @@ export const ArticleSearchModal = ({
         }
     };
 
+    // Update the node quantity when the articles change
     useEffect(() => {
         setNodeQty(articles?.length || 0);
     }, [articles]);
 
+    // Function to generate the visualization
     const handleGenerateVisualisation = () => {
         handleLimitNodes();
         onClose();
     };
 
+    // Function to handle source selection
     const handleSourceToggle = (source: string) => {
         if (!hasPublisherSelected) {
             setSelectedSources((prev) => {
@@ -192,6 +202,7 @@ export const ArticleSearchModal = ({
         }
     };
 
+    // Function to handle publisher selection
     const handlePublisherSelect = (publisher: string) => {
         if (!hasSourcesSelected) {
             setSelectedPublisher((prev) =>
