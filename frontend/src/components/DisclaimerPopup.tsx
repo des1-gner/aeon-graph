@@ -103,6 +103,7 @@ const DisclaimerPage: React.FC<DisclaimerPageProps> = ({ onAccept }) => {
       ctx.fillStyle = 'white';
       ctx.textAlign = 'center';
       ctx.fillText('.', canvas.width / 2, canvas.height / 2 + 100);
+      ctx.fillText('La Zona', canvas.width / 2, canvas.height / 2 + 100);
 
       // Sample pixels from the canvas to position particles in dot shape
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);

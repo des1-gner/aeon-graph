@@ -851,59 +851,100 @@ const Scene: React.FC<{
         );
     };
 
-    useEffect(() => {
-        if (articles.length !== previousArticlesLengthRef.current || !isInitialized) {
-            articles.forEach((_, i) => {
-                const randomPoint = generateRandomPointInSphere(SPHERE_RADIUS - OUTER_SPHERE_PADDING);
-                
-                positionsRef.current[i * 3] = randomPoint.x;
-                positionsRef.current[i * 3 + 1] = randomPoint.y;
-                positionsRef.current[i * 3 + 2] = randomPoint.z;
-                
-                targetPositionsRef.current[i * 3] = randomPoint.x;
-                targetPositionsRef.current[i * 3 + 1] = randomPoint.y;
-                targetPositionsRef.current[i * 3 + 2] = randomPoint.z;
-            });
-
-            previousArticlesLengthRef.current = articles.length;
-            setIsInitialized(true);
-        }
-    }, [articles]);
-
-    useEffect(() => {
-        if (!isInitialized) return;
-
-        const isClusterActive = Object.values(clusterOptions).some(value => value !== '' && value !== 'off');
-        const clusterCenter = new THREE.Vector3(0, 0, 0);
-
-        if (isClusterActive) {
-            // Update these lines to use ClusterOptions
-            const clusterArticles = articles.filter(article => 
-                matchesFilter(article, clusterOptions as ClusterOptions)
+    // Replace the first useEffect in Scene:
+useEffect(() => {
+    if (articles.length !== previousArticlesLengthRef.current || !isInitialized) {
+        const existingPositions: THREE.Vector3[] = [];
+        const minDistance = Math.max(1, (SPHERE_RADIUS * 2) / Math.cbrt(articles.length));
+        
+        articles.forEach((_, i) => {
+            const position = findValidPosition(
+                SPHERE_RADIUS - OUTER_SPHERE_PADDING,
+                existingPositions,
+                minDistance
             );
-            const nonClusterArticles = articles.filter(article => 
-                !matchesFilter(article, clusterOptions as ClusterOptions)
-            );
+            
+            // Store position for collision checking
+            existingPositions.push(position.clone());
+            
+            // Update position arrays
+            positionsRef.current[i * 3] = position.x;
+            positionsRef.current[i * 3 + 1] = position.y;
+            positionsRef.current[i * 3 + 2] = position.z;
+            
+            targetPositionsRef.current[i * 3] = position.x;
+            targetPositionsRef.current[i * 3 + 1] = position.y;
+            targetPositionsRef.current[i * 3 + 2] = position.z;
+        });
 
-            nonClusterArticles.forEach((article) => {
-                const index = articles.indexOf(article);
-                const outerPoint = generateRandomPointInSphere(SPHERE_RADIUS - OUTER_SPHERE_PADDING)
-                    .normalize()
-                    .multiplyScalar(SPHERE_RADIUS - OUTER_SPHERE_PADDING);
-                
-                targetPositionsRef.current[index * 3] = outerPoint.x;
-                targetPositionsRef.current[index * 3 + 1] = outerPoint.y;
-                targetPositionsRef.current[index * 3 + 2] = outerPoint.z;
-            });
-        } else {
-            articles.forEach((_, i) => {
-                const randomPoint = generateRandomPointInSphere(SPHERE_RADIUS - OUTER_SPHERE_PADDING);
-                targetPositionsRef.current[i * 3] = randomPoint.x;
-                targetPositionsRef.current[i * 3 + 1] = randomPoint.y;
-                targetPositionsRef.current[i * 3 + 2] = randomPoint.z;
-            });
-        }
-    }, [articles, clusterOptions, isInitialized]);
+        previousArticlesLengthRef.current = articles.length;
+        setIsInitialized(true);
+    }
+}, [articles]);
+
+// Replace the second useEffect in Scene (the clustering effect):
+useEffect(() => {
+    if (!isInitialized) return;
+
+    const isClusterActive = hasActiveFilters(clusterOptions);
+    const existingPositions: THREE.Vector3[] = [];
+    
+    if (isClusterActive) {
+        const matchingArticles = articles.filter(article => 
+            matchesFilter(article, clusterOptions)
+        );
+        
+        const nonMatchingArticles = articles.filter(article => 
+            !matchesFilter(article, clusterOptions)
+        );
+        
+        // Calculate appropriate minimum distances based on number of particles
+        const innerMinDistance = Math.max(0.5, (CLUSTER_RADIUS * 2) / Math.cbrt(matchingArticles.length));
+        const outerMinDistance = Math.max(1, ((SPHERE_RADIUS - OUTER_SPHERE_PADDING) * 2) / Math.cbrt(nonMatchingArticles.length));
+        
+        // Position matching articles in inner cluster
+        matchingArticles.forEach((article) => {
+            const index = articles.indexOf(article);
+            const position = findValidPosition(CLUSTER_RADIUS, existingPositions, innerMinDistance);
+            
+            existingPositions.push(position.clone());
+            targetPositionsRef.current[index * 3] = position.x;
+            targetPositionsRef.current[index * 3 + 1] = position.y;
+            targetPositionsRef.current[index * 3 + 2] = position.z;
+        });
+        
+        // Position non-matching articles in outer sphere
+        nonMatchingArticles.forEach((article) => {
+            const index = articles.indexOf(article);
+            const position = findValidPosition(
+                SPHERE_RADIUS - OUTER_SPHERE_PADDING,
+                existingPositions,
+                outerMinDistance
+            );
+            
+            existingPositions.push(position.clone());
+            targetPositionsRef.current[index * 3] = position.x;
+            targetPositionsRef.current[index * 3 + 1] = position.y;
+            targetPositionsRef.current[index * 3 + 2] = position.z;
+        });
+    } else {
+        // When no clustering, distribute evenly throughout sphere
+        const minDistance = Math.max(1, (SPHERE_RADIUS * 2) / Math.cbrt(articles.length));
+        
+        articles.forEach((_, i) => {
+            const position = findValidPosition(
+                SPHERE_RADIUS - OUTER_SPHERE_PADDING,
+                existingPositions,
+                minDistance
+            );
+            
+            existingPositions.push(position.clone());
+            targetPositionsRef.current[i * 3] = position.x;
+            targetPositionsRef.current[i * 3 + 1] = position.y;
+            targetPositionsRef.current[i * 3 + 2] = position.z;
+        });
+    }
+}, [articles, clusterOptions, isInitialized]);
 
     useFrame(() => {
         if (!isInitialized) return;
@@ -1031,15 +1072,56 @@ interface ParticleProps {
 
 // Utility Functions
 const generateRandomPointInSphere = (radius: number): THREE.Vector3 => {
-    const u = Math.random();
-    const v = Math.random();
-    const theta = 2 * Math.PI * u;
-    const phi = Math.acos(2 * v - 1);
+    // Use spherical coordinates for more even distribution
+    const phi = Math.acos(2 * Math.random() - 1);
+    const theta = 2 * Math.PI * Math.random();
+    
+    // Use cubic root for better radial distribution
     const r = Math.cbrt(Math.random()) * radius;
+    
+    // Convert to Cartesian coordinates
     const x = r * Math.sin(phi) * Math.cos(theta);
     const y = r * Math.sin(phi) * Math.sin(theta);
     const z = r * Math.cos(phi);
+    
     return new THREE.Vector3(x, y, z);
+};
+
+// Add these new utility functions:
+const checkCollision = (
+    position: THREE.Vector3,
+    existingPositions: THREE.Vector3[],
+    minDistance: number
+): boolean => {
+    return existingPositions.some(existing => 
+        position.distanceTo(existing) < minDistance
+    );
+};
+
+const findValidPosition = (
+    radius: number,
+    existingPositions: THREE.Vector3[],
+    minDistance: number,
+    maxAttempts: number = 50
+): THREE.Vector3 => {
+    let attempts = 0;
+    let position: THREE.Vector3;
+    
+    do {
+        position = generateRandomPointInSphere(radius);
+        attempts++;
+        
+        if (attempts > maxAttempts) {
+            // If we can't find a good spot, gradually reduce minimum distance
+            minDistance *= 0.9;
+            attempts = 0;
+        }
+    } while (
+        checkCollision(position, existingPositions, minDistance) && 
+        minDistance > 0.1
+    );
+    
+    return position;
 };
 
 const generateRandomPointOnOuterSphere = (
