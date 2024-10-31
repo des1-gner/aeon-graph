@@ -88,6 +88,7 @@ export const ArticleSearchModal = ({
         setEndDate(now.toISOString().split('T')[0] + 'T23:59:59Z');
     };
 
+    // logic for reducing the qty of nodes on screen
     const handleLimitNodes = () => {
         if (nodeQty! < articles!.length) {
             let limitedArticles;
@@ -124,6 +125,7 @@ export const ArticleSearchModal = ({
         setNodeQty(articles?.length || 0);
     }, [articles]);
 
+    // applies node reduction to the visualisation array
     const handleGenerateVisualisation = () => {
         handleLimitNodes();
         onClose();
@@ -142,6 +144,7 @@ export const ArticleSearchModal = ({
                     </p>
                 </div>
                 <div className='p-5 space-y-5 backdrop-blur-xl'>
+                    {/* database search module */}
                     <div className='dark-card p-3 space-y-3'>
                         <h2 className='flex gap-2 items-center font-semibold text-light'>
                             <MagnifyingGlassIcon className='size-4' />
@@ -156,6 +159,7 @@ export const ArticleSearchModal = ({
                         />
                     </div>
 
+                    {/* date search module */}
                     <div>
                         <Toggle
                             header={[
