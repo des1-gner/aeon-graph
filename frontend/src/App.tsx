@@ -10,6 +10,9 @@ import { dummyArticles } from './types/article';
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
     const [showBottomControls, setShowBottomControls] = useState(true);
+    const [initialShowSearchQueryModal, setInitialShowSearchQueryModal] =
+        useState(true);
+
     const {
         articles,
         highlightedWord,
@@ -135,24 +138,46 @@ function App() {
                 {/* Fullscreen button */}
                 <motion.button
                     onClick={toggleFullScreen}
-                    className="fixed top-4 left-4 z-30 bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition-colors duration-200"
+                    className='fixed bottom-4 left-4 z-30 bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition-colors duration-200'
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
                 >
                     {isFullScreen ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+                        <svg
+                            xmlns='http://www.w3.org/2000/svg'
+                            className='h-8 w-8'
+                            fill='none'
+                            viewBox='0 0 24 24'
+                            stroke='currentColor'
+                        >
+                            <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3'
+                            />
                         </svg>
                     ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5h2m-2 0v2m0-2l4 4m10-4h-2m2 0v2m0-2l-4 4M5 19h2m-2 0v-2m0 2l4-4m10 4h-2m2 0v-2m0 2l-4-4" />
+                        <svg
+                            xmlns='http://www.w3.org/2000/svg'
+                            className='h-8 w-8'
+                            fill='none'
+                            viewBox='0 0 24 24'
+                            stroke='currentColor'
+                        >
+                            <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M5 5h2m-2 0v2m0-2l4 4m10-4h-2m2 0v2m0-2l-4 4M5 19h2m-2 0v-2m0 2l4-4m10 4h-2m2 0v-2m0 2l-4-4'
+                            />
                         </svg>
                     )}
                 </motion.button>
 
                 <ArticleParticle
-                    articles={articles || dummyArticles}
+                    articles={articles || []}
                     highlightColor={highlightColor}
                     clusterColor={clusterColor}
                     edgeColor={edgeColor}
@@ -173,6 +198,12 @@ function App() {
                             <div className='p-4'>
                                 <SidePanelControl
                                     onClose={() => setShowSideControls(false)}
+                                    initialShowSearchQueryModal={
+                                        initialShowSearchQueryModal
+                                    }
+                                    setInitialShowSearchQueryModal={
+                                        setInitialShowSearchQueryModal
+                                    }
                                 />
                             </div>
                         </motion.div>
