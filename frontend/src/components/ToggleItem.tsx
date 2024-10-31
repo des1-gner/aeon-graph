@@ -32,8 +32,15 @@ type ToggleItemProps = {
     return (
       // TODO: Add proper toggle UI elements and styling
       // Currently only renders the label without visual indication of selection state
-      <div>
-        {label}
-      </div>
+      <button
+            onClick={onClick}
+            className={`group dark-gradient flex items-center rounded-lg px-3 py-1 transition duration-150 ease-in hover:cursor-pointer border-neutral-700 border ${
+                isSelected && 'light-gradient'
+            }`}
+        >
+            <p className={`text-sm ${isSelected ? 'text-dark' : 'text-light'}`}>
+                {label}
+            </p>
+        </button>
     );
-  };
+};

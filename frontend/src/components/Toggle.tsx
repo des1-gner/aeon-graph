@@ -23,29 +23,25 @@ export const Toggle = ({
   selectedIndex,
   onClick,
 }: ToggleProps) => {
-  return (
-    // Main container div
-    <div>
-      {/* Render header section if provided */}
-      {header && (
-        <div>
-          {/* Optional ReactNode element followed by header text */}
-          {header[1]} {header[0]}
+    return (
+        <div className='inline-block w-full select-none rounded-lg py-1 dark-card'>
+            {header && (
+                <h2 className='flex gap-2 items-center leading-none p-2 font-semibold text-light'>
+                    {header[1]}
+                    {header[0]}
+                </h2>
+            )}
+            <div className='p-2 flex gap-2'>
+                {toggleLabels.map((label, index) => (
+                    <ToggleItem
+                        key={index}
+                        label={label}
+                        isSelected={selectedIndex === index}
+                        onClick={() => onClick(index)}
+                    />
+                ))}
+            </div>
+            {children}
         </div>
-      )}
-
-      {/* Map through toggle labels to create individual toggle items */}
-      {toggleLabels.map((label, index) => (
-        <ToggleItem
-          key={index}
-          label={label}
-          isSelected={selectedIndex === index}
-          onClick={() => onClick(index)}
-        />
-      ))}
-
-      {/* Render any children components passed to Toggle */}
-      {children}
-    </div>
-  );
+    );
 };
