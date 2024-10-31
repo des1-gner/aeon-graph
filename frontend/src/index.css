@@ -1,59 +1,76 @@
+/* Import Tailwind's base styles */
 @tailwind base;
+/* Import Tailwind's component classes */
 @tailwind components;
+/* Import Tailwind's utility classes */
 @tailwind utilities;
 
+/* Custom component classes */
 @layer components {
-    .text-dark {
-        @apply text-neutral-800;
-    }
+  /* Text color utilities for light/dark modes */
+  .text-dark {
+    @apply text-neutral-800; /* Dark gray text for light mode */
+  }
+  .text-light {
+    @apply text-neutral-50; /* Very light gray text for dark mode */
+  }
 
-    .text-light {
-        @apply text-neutral-50;
-    }
+  /* Gradient background utilities */
+  .dark-gradient {
+    @apply bg-gradient-to-b from-neutral-700 to-5% to-neutral-800; /* Dark mode gradient: dark gray to darker gray */
+  }
+  .light-gradient {
+    @apply bg-gradient-to-b from-neutral-200 to-20% to-neutral-300; /* Light mode gradient: light gray to slightly darker */
+  }
+  .green-gradient {
+    @apply bg-gradient-to-b from-green-300 to-50% to-green-400; /* Green gradient: light green to medium green */
+  }
 
-    .dark-gradient {
-        @apply bg-gradient-to-b from-neutral-700 to-5% to-neutral-800;
-    }
+  /* Text input field styles */
+  .light-text-field {
+    @apply text-sm w-full rounded-lg border p-1.5 shadow-lg 
+           border-neutral-300 focus:border-neutral-400 
+           focus:outline-none text-dark; /* Light mode input with shadow and focus states */
+  }
+  .dark-text-field {
+    @apply text-sm w-full rounded-lg border p-1.5 
+           bg-neutral-900 border-neutral-600 
+           focus:border-neutral-300 focus:outline-none 
+           text-light; /* Dark mode input with appropriate contrasts */
+  }
 
-    .light-gradient {
-        @apply bg-gradient-to-b from-neutral-200 to-20% to-neutral-300;
-    }
+  /* Card container styles */
+  .light-card {
+    @apply bg-neutral-100 shadow 
+           border-neutral-300 border 
+           rounded-lg; /* Light mode card with shadow and border */
+  }
+  .dark-card {
+    @apply dark-gradient border-neutral-700 
+           border rounded-lg; /* Dark mode card using the dark gradient */
+  }
 
-    .green-gradient {
-        @apply bg-gradient-to-b from-green-300 to-50% to-green-400;
-    }
+  /* Label styles */
+  .light-label {
+    @apply light-gradient text-dark 
+           border border-neutral-300 
+           rounded-full px-3 py-1; /* Light mode pill label */
+  }
+  .dark-label {
+    @apply dark-gradient text-light 
+           border border-neutral-900 
+           rounded-full px-3 py-1; /* Dark mode pill label */
+  }
 
-    .light-text-field {
-        @apply text-sm w-full rounded-lg border p-1.5 shadow-lg border-neutral-300 focus:border-neutral-400 focus:outline-none text-dark;
-    }
-
-    .dark-text-field {
-        @apply text-sm w-full rounded-lg border p-1.5 bg-neutral-900 border-neutral-600 focus:border-neutral-300 focus:outline-none text-light;
-    }
-
-    .light-card {
-        @apply bg-neutral-100 shadow border-neutral-300 border rounded-lg;
-    }
-
-    .dark-card {
-        @apply dark-gradient border-neutral-700 border rounded-lg;
-    }
-
-    .light-label {
-        @apply light-gradient text-dark border border-neutral-300 rounded-full px-3 py-1;
-    }
-
-    .dark-label {
-        @apply dark-gradient text-light border border-neutral-900 rounded-full px-3 py-1;
-    }
-
-    ::-webkit-calendar-picker-indicator {
-        filter: invert(1);
-    }
+  /* Style override for date picker icon in dark mode */
+  ::-webkit-calendar-picker-indicator {
+    filter: invert(1); /* Inverts the color of the date picker icon for better visibility in dark mode */
+  }
 }
 
+/* Base styles */
 @layer base {
-    body {
-        @apply text-dark;
-    }
+  body {
+    @apply text-dark; /* Set default text color for the entire application */
+  }
 }
