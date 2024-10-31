@@ -45,6 +45,12 @@ interface CollapsibleSectionProps {
  *   onClose={() => setShowPanel(false)}
  * />
  * ```
+ * 
+ * @changelog
+ * - Removed formatStringYesNo function as it's no longer needed
+ * - Modified think_tank_ref display to only show when value exists
+ * - Updated think_tank_ref to display actual reference text instead of Yes/No conversion
+ * - Maintained all existing functionality for other sections
  */
 export const DetailedArticlePanel = ({
     article,
@@ -56,15 +62,6 @@ export const DetailedArticlePanel = ({
     const [showBroadClaimDropdown, setShowBroadClaimDropdown] = useState(false);
     const [showSubClaimDropdown, setShowSubClaimDropdown] = useState(false);
     const [showMetadataDropdown, setShowMetadataDropdown] = useState(false);
-
-    /**
-     * Formats string-based yes/no values to proper case
-     * @param {string | undefined} value - The input value to format
-     * @returns {string} Formatted "Yes" or "No" string
-     */
-    const formatStringYesNo = (value: string | undefined): string => {
-        return value === 'yes' ? 'Yes' : 'No';
-    };
 
     /**
      * Formats boolean values to yes/no strings
@@ -225,10 +222,12 @@ export const DetailedArticlePanel = ({
                     }
                 >
                     <div className='space-y-2 mt-2'>
-                        <p>
-                            <strong>Think Tank Reference:</strong>{' '}
-                            {formatStringYesNo(article.think_tank_ref)}
-                        </p>
+                        {article.think_tank_ref && (
+                            <p>
+                                <strong>Think Tank Reference:</strong>{' '}
+                                {article.think_tank_ref}
+                            </p>
+                        )}
                         <p>
                             <strong>Duplicate Article:</strong>{' '}
                             {formatBooleanYesNo(article.isDuplicate)}

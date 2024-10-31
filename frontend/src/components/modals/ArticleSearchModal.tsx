@@ -57,6 +57,8 @@ const sources = [
 // List of publishers to choose from
 const publishers = ['None', 'Murdoch Media'];
 
+type ThinkTankOption = 'yes' | 'no' | 'both';
+
 type ArticleSearchModalProps = {
     onClose: () => void;
     searchQuery: string;
@@ -87,7 +89,7 @@ export const ArticleSearchModal = ({
     const [selectedSources, setSelectedSources] = useState<string[]>([]);
     const [showPublisherDropdown, setShowPublisherDropdown] = useState(false);
     const [selectedPublisher, setSelectedPublisher] = useState('None');
-    const [thinkTankRef, setThinkTankRef] = useState(false);
+    const [thinkTankRef, setThinkTankRef] = useState<ThinkTankOption>('both');
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -105,7 +107,7 @@ export const ArticleSearchModal = ({
                 endDate,
                 selectedSources,
                 selectedPublisher === 'None' ? '' : selectedPublisher,
-                thinkTankRef
+                thinkTankRef === 'both' ? undefined : thinkTankRef === 'yes'
             );
             setArticles(response);
         } catch (err: any) {
@@ -116,23 +118,22 @@ export const ArticleSearchModal = ({
     };
 
     // Function to handle date range selection
-    // Function to handle date range selection
-const handleDateRangeToggle = (index: number) => {
-    setDateRangeIndex(index);
-    const now = new Date();
-    
-    switch (index) {
-        case 0: // All
-            setStartDate('');
-            break;
-        case 1: // Custom
-            return; // Do nothing, let the custom date inputs handle the dates
-        default:
-            setStartDate('');
-            return;
-    }
-    setEndDate(now.toISOString().split('T')[0] + 'T23:59:59Z');
-};
+    const handleDateRangeToggle = (index: number) => {
+        setDateRangeIndex(index);
+        const now = new Date();
+        
+        switch (index) {
+            case 0: // All
+                setStartDate('');
+                break;
+            case 1: // Custom
+                return; // Do nothing, let the custom date inputs handle the dates
+            default:
+                setStartDate('');
+                return;
+        }
+        setEndDate(now.toISOString().split('T')[0] + 'T23:59:59Z');
+    };
 
     // Function to limit the number of articles displayed
     const handleLimitNodes = () => {
@@ -393,97 +394,130 @@ const handleDateRangeToggle = (index: number) => {
                         </div>
 
                         {/* Think Tank Section */}
-                        <div className='bg-neutral-800 rounded-lg px-2'>
-                            <div className='flex gap-2 items-center'>
-                                <input
-                                    type='checkbox'
-                                    checked={thinkTankRef}
-                                    onChange={(e) =>
-                                        setThinkTankRef(e.target.checked)
-                                    }
-                                    className='accent-neutral-300 size-4'
-                                />
-                                <label className='text-sm text-light'>
-                                    Contains think tank reference
-                                </label>
+                        <div className='bg-neutral-800 rounded-lg p-2'>
+                            <p className="text-light mb-2">Think Tank Reference</p>
+                            <div className='space-y-2'>
+                                <div className='flex items-center gap-2'>
+                                    <input
+                                        type='radio'
+                                        id='think-tank-yes'
+                                        checked={thinkTankRef === 'yes'}
+                                        onChange={() => setThinkTankRef('yes')}
+                                        className='accent-neutral-300 size-4'
+                                        name='think-tank'
+                                    />
+                                    <label htmlFor='think-tank-yes' className='text-sm text-light cursor-pointer'>
+                                        Contains think tank reference
+                                    </label>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                    <input
+                                        type='radio'
+                                        id='think-tank-no'
+                                        checked={thinkTankRef === 'no'}
+                                        onChange={() => setThinkTankRef('no')}
+                                        className='accent-neutral-300 size-4'
+                                        name='think-tank'
+                                    />
+                                    <label htmlFor='think-tank-no' 
+                                        className='text-sm text-light cursor-pointer'
+                                    >
+                                        No think tank reference
+                                    </label>
+                                </div>
+                                <div className='flex items-center gap-2'>
+                                    <input
+                                        type='radio'
+                                        id='think-tank-both'
+                                        checked={thinkTankRef === 'both'}
+                                        onChange={() => setThinkTankRef('both')}
+                                        className='accent-neutral-300 size-4'
+                                        name='think-tank'
+                                    />
+                                    <label 
+                                        htmlFor='think-tank-both' 
+                                        className='text-sm text-light cursor-pointer'
+                                    >
+                                        Both
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                    // In your JSX, update the Toggle component props
-<Toggle
-    header={[
-        'Date range',
-        <CalendarDateRangeIcon className='size-4' />,
-    ]}
-    toggleLabels={[
-        'All',
-        'Custom'
-    ]}
-    selectedIndex={dateRangeIndex}
-    onClick={handleDateRangeToggle}
->
-    <AnimatePresence>
-        {dateRangeIndex === 1 && ( // Changed from 4 to 1 since we now only have two options
-            <motion.div
-                initial='collapsed'
-                animate='open'
-                exit='collapsed'
-                variants={{
-                    open: {
-                        opacity: 1,
-                        height: 'auto',
-                    },
-                    collapsed: {
-                        opacity: 0,
-                        height: 0,
-                    },
-                }}
-            >
-                <div className='flex justify-around p-2'>
-                    <div className='space-y-1'>
-                        <p className='text-light pl-1 text-sm'>
-                            Start date
-                        </p>
-                        <input
-                            type='date'
-                            value={startDate.split('T')[0]}
-                            onChange={(e) =>
-                                setStartDate(e.target.value + 'T00:00:00Z')
-                            }
-                            className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none accent-white focus:border-neutral-300'
-                        />
-                    </div>
-                    <div className='space-y-1'>
-                        <p className='text-light pl-1 text-sm'>
-                            End date
-                        </p>
-                        <input
-                            type='date'
-                            value={endDate.split('T')[0]}
-                            onChange={(e) =>
-                                setEndDate(e.target.value + 'T00:00:00Z')
-                            }
-                            className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300'
-                        />
-                    </div>
-                </div>
-            </motion.div>
-        )}
-    </AnimatePresence>
-    <div className='p-2'>
-        <Button
-            variant='secondary'
-            className='flex items-center gap-2 justify-center w-full'
-            isLoading={isLoading}
-            onClick={handleSearch}
-        >
-            <MagnifyingGlassIcon className='size-4' />
-            Search
-        </Button>
-    </div>
-</Toggle>
+                        <Toggle
+                            header={[
+                                'Date range',
+                                <CalendarDateRangeIcon className='size-4' />,
+                            ]}
+                            toggleLabels={[
+                                'All',
+                                'Custom'
+                            ]}
+                            selectedIndex={dateRangeIndex}
+                            onClick={handleDateRangeToggle}
+                        >
+                            <AnimatePresence>
+                                {dateRangeIndex === 1 && (
+                                    <motion.div
+                                        initial='collapsed'
+                                        animate='open'
+                                        exit='collapsed'
+                                        variants={{
+                                            open: {
+                                                opacity: 1,
+                                                height: 'auto',
+                                            },
+                                            collapsed: {
+                                                opacity: 0,
+                                                height: 0,
+                                            },
+                                        }}
+                                    >
+                                        <div className='flex justify-around p-2'>
+                                            <div className='space-y-1'>
+                                                <p className='text-light pl-1 text-sm'>
+                                                    Start date
+                                                </p>
+                                                <input
+                                                    type='date'
+                                                    value={startDate.split('T')[0]}
+                                                    onChange={(e) =>
+                                                        setStartDate(e.target.value + 'T00:00:00Z')
+                                                    }
+                                                    className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none accent-white focus:border-neutral-300'
+                                                />
+                                            </div>
+                                            <div className='space-y-1'>
+                                                <p className='text-light pl-1 text-sm'>
+                                                    End date
+                                                </p>
+                                                <input
+                                                    type='date'
+                                                    value={endDate.split('T')[0]}
+                                                    onChange={(e) =>
+                                                        setEndDate(e.target.value + 'T23:59:59Z')
+                                                    }
+                                                    className='bg-neutral-900 rounded-lg text-light p-2 focus:outline-none focus:border-neutral-300'
+                                                />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                            <div className='p-2'>
+                                <Button
+                                    variant='secondary'
+                                    className='flex items-center gap-2 justify-center w-full'
+                                    isLoading={isLoading}
+                                    onClick={handleSearch}
+                                >
+                                    <MagnifyingGlassIcon className='size-4' />
+                                    Search
+                                </Button>
+                            </div>
+                        </Toggle>
                     </div>
 
                     {articles?.length! > 0 && (
@@ -504,7 +538,7 @@ const handleDateRangeToggle = (index: number) => {
 
                     {articles?.length! > 0 && (
                         <div className='dark-card p-2 space-y-3 text-light'>
-                            <p className='flex gap-2 items-center pb-1 font-semibold '>
+                            <p className='flex gap-2 items-center pb-1 font-semibold'>
                                 <ShareIcon className='size-4' />
                                 Node quantity
                             </p>
