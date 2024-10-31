@@ -1,11 +1,12 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import DisclaimerPopup from './components/DisclaimerPopup';
-import { BottomPanelControl } from './components/BottomPanelControl';
-import { SidePanelControl } from './components/SidePanelControl';
-import { ArticleParticle } from './three.js/ArticleParticle';
-import { useArticles } from './contexts/ArticlesContext';
-import { dummyArticles } from './types/article';
+import DisclaimerPage from './pages/disclaimer/DisclaimerPage';
+import { BottomPanelControl } from './pages/graph/components/panels/PlaybackPanel';
+import { FilterControl } from './pages/graph/components/panels/filter-panel/FilterControl';
+import React from 'react';
+import { ArticleVisualization } from './pages/graph/three.js/components/visualization/ArticleVisualization';
+import { useArticles } from './pages/graph/contexts/ArticlesContext';
+import { dummyArticles } from './pages/graph/three.js/types/article';
 
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
@@ -123,7 +124,7 @@ function App() {
                         transition={{ duration: 2 }}
                         className='absolute inset-0 z-50'
                     >
-                        <DisclaimerPopup onAccept={handleDisclaimerAccept} />
+                        <DisclaimerPage onAccept={handleDisclaimerAccept} />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -176,7 +177,7 @@ function App() {
                     )}
                 </motion.button>
 
-                <ArticleParticle
+                <ArticleVisualization
                     articles={articles || []}
                     highlightColor={highlightColor}
                     clusterColor={clusterColor}
@@ -196,7 +197,7 @@ function App() {
                             className='fixed top-0 right-0 z-20'
                         >
                             <div className='p-4'>
-                                <SidePanelControl
+                                <FilterControl
                                     onClose={() => setShowSideControls(false)}
                                     initialShowSearchQueryModal={
                                         initialShowSearchQueryModal

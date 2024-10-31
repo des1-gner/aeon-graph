@@ -1,19 +1,31 @@
+# Author: Oisin Aeonn s3952320@student.rmit.edu.au
+
+# BuildSpec configuration for AWS CodeBuild
+# Version specification for the BuildSpec syntax
 version: 0.2
 
+# Define the different phases of the build process
 phases:
+  # Installation phase - Set up the build environment
   install:
+    # Specify the runtime versions for the build environment
     runtime-versions:
-      nodejs: 20
+      nodejs: 20 # Use Node.js version 20.x
+    
+    # Commands to run during installation phase
     commands:
-      - cd frontend
-      - yarn install --frozen-lockfile
+      - cd frontend # Navigate to the frontend directory
+      - yarn install --frozen-lockfile # Install dependencies using Yarn, ensuring consistent versions
 
+  # Build phase - Compile and package the application
   build:
     commands:
-      - npm run build  # Build the production-ready files
+      # Build the production-ready files using npm
+      - npm run build # Executes the build script defined in package.json
 
+# Specify which files should be included in the build artifact
 artifacts:
   files:
-    - '**/*'
-  base-directory: frontend/build
-  discard-paths: no
+    - '**/*' # Include all files and directories
+  base-directory: frontend/build # Set the root directory for artifacts
+  discard-paths: no # Maintain the directory structure in the artifact
