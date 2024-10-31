@@ -1,20 +1,27 @@
 import { ReactNode } from 'react';
 import { ToggleItem } from './ToggleItem';
 
+// Define the props interface for the Toggle component
 type ToggleProps = {
-    header?: [string, ReactNode?];
-    children?: ReactNode;
-    toggleLabels: string[];
-    selectedIndex: number;
-    onClick: (index: number) => void;
+  // Optional header tuple: [text content, optional ReactNode element]
+  header?: [string, ReactNode?];
+  // Optional children elements to be rendered inside the component
+  children?: ReactNode;
+  // Array of labels for each toggle option
+  toggleLabels: string[];
+  // Currently selected toggle index
+  selectedIndex: number;
+  // Callback function when a toggle item is clicked
+  onClick: (index: number) => void;
 };
 
+// Toggle component that renders a group of toggleable items with optional header
 export const Toggle = ({
-    header,
-    children,
-    toggleLabels,
-    selectedIndex,
-    onClick,
+  header,
+  children,
+  toggleLabels,
+  selectedIndex,
+  onClick,
 }: ToggleProps) => {
     return (
         <div className='inline-block w-full select-none rounded-lg py-1 dark-card'>
