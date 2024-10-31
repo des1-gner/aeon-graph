@@ -12,7 +12,7 @@ import { EdgeOptions } from './components/options/EdgeOptions';
 import { QuerySummaryModal } from '../../common/modals/QuerySummaryModal';
 import { ArticleSearchModal } from '../../common/modals/ArticleSearchModal';
 import { VisibilityState } from './types/interfaces';
-import { dummyArticles } from '../../../types/article';
+import { dummyArticles } from '../../../three.js/types/article';
 import { VisibilityType } from './types/interfaces';
 import type { EdgeOptions as EdgeOptionsType } from './types/interfaces';
 import {

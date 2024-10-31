@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
-import { Article } from '../types/article';
+import { Article } from '../three.js/types/article';
 
 // Constants for localStorage keys to cache application state
 const CACHED_ARTICLES_KEY = 'cached_articles';

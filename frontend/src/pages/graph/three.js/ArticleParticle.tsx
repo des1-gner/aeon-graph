@@ -9,9 +9,9 @@ import React, {
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { Article } from '../types/article';
+import { Article } from './types/article';
 import { Text } from '@react-three/drei';
-import { DetailedArticlePanel } from '../components/panels/InfoPanel';
+import { DetailedArticlePanel } from '../components/panels/DetailedArticlePanel';
 
 // Add the correct type import for OrbitControls
 import { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -89,22 +89,14 @@ interface ParticleProps {
     setHoveredParticle: (index: number | null) => void;
 }
 
-interface ParticleState {
-    color: THREE.Color;
-    opacity: number;
-    emissiveIntensity: number;
-}
-
 const Particle: React.FC<ParticleProps> = ({
     index,
     positions,
     articles,
     highlightOptions,
     clusterOptions,
-    edgeOptions,
     highlightColor,
     clusterColor,
-    edgeColor,
     setSelectedArticle,
     setHoveredParticle,
 }) => {
@@ -332,16 +324,6 @@ const ConnectionLines: React.FC<ConnectionLinesProps> = ({
         </lineSegments>
     );
 };
-
-interface ArticleParticleProps {
-    articles: Article[];
-    highlightColor: string;
-    clusterColor: string;
-    edgeColor: string;
-    highlightOptions: HighlightOptions;
-    clusterOptions: ClusterOptions;  // Changed from FilterOptions
-    edgeOptions: EdgeOptions;
-}
 
 interface SwarmProps {
     articles: Article[];
@@ -798,19 +780,6 @@ interface ColorLegendProps {
         </div>
     );
 };
-  
-
-// Update the Scene component props interface
-interface SceneProps {
-    articles: Article[];
-    setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
-    highlightOptions: HighlightOptions;
-    clusterOptions: ClusterOptions;  // Changed from FilterOptions
-    edgeOptions: EdgeOptions;
-    highlightColor: string;
-    clusterColor: string;
-    edgeColor: string;
-}
 
 // Scene component that uses Three.js hooks
 // First, update the main Scene interface
@@ -1039,7 +1008,6 @@ const OUTER_SPHERE_PADDING = 2;
 const DEFAULT_COLOR = new THREE.Color(0.8, 0.8, 0.8);
 const DEFAULT_OPACITY = 0.3;
 const ACTIVE_OPACITY = 1;
-const CAMERA_MOVE_SPEED = 0.1;
 const DEFAULT_CAMERA_POSITION = new THREE.Vector3(0, 0, 40);
 
 // Types

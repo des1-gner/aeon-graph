@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from 'react';
 import DisclaimerPage from './pages/disclaimer/DisclaimerPage';
 import { BottomPanelControl } from './pages/graph/components/panels/PlaybackPanel';
 import { FilterControl } from './pages/graph/components/panels/filter-panel/FilterControl';
-import { ArticleParticle } from './pages/graph/three.js/ArticleParticle';
+import React from 'react';
+import { ArticleVisualization } from './pages/graph/three.js/components/visualization/ArticleVisualization';
 import { useArticles } from './pages/graph/contexts/ArticlesContext';
-import { dummyArticles } from './pages/graph/types/article';
+import { dummyArticles } from './pages/graph/three.js/types/article';
 
 function App() {
     const [showSideControls, setShowSideControls] = useState(true);
@@ -176,7 +177,7 @@ function App() {
                     )}
                 </motion.button>
 
-                <ArticleParticle
+                <ArticleVisualization
                     articles={articles || []}
                     highlightColor={highlightColor}
                     clusterColor={clusterColor}

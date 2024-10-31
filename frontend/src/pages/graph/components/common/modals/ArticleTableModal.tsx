@@ -13,7 +13,7 @@ import {
 } from '@heroicons/react/24/solid';
 import { Button } from '../button/Button';
 import { useArticles } from '../../../contexts/ArticlesContext';
-import { Article } from '../../../types/article';
+import { Article } from '../../../three.js/types/article';
 
 /**
  * Props interface for the ArticleTableModal component

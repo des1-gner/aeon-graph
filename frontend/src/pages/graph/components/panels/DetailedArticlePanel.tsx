@@ -1,5 +1,5 @@
 import { InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Article } from '../../types/article';
+import { Article } from '../../three.js/types/article';
 import { useState } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/solid';
 import { AnimatePresence, motion } from 'framer-motion';
