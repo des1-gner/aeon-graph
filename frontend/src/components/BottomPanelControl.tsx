@@ -3,9 +3,18 @@ import {
     ArrowsPointingOutIcon,
     MusicalNoteIcon,
     PauseIcon,
-    XMarkIcon, // Import the XMarkIcon for the close button
+    XMarkIcon,
 } from '@heroicons/react/24/solid';
 
+/**
+ * Props interface for the BottomPanelControl component
+ * @interface BottomPanelControlProps
+ * @property {() => void} [onClose] - Optional callback function to handle panel closure
+ * @property {boolean} isPlaying - Current state of music playback
+ * @property {() => void} toggleMusic - Function to toggle music play/pause
+ * @property {() => void} toggleFullScreen - Function to toggle fullscreen mode
+ * @property {boolean} isFullScreen - Current state of fullscreen mode
+ */
 type BottomPanelControlProps = {
     onClose?: () => void;
     isPlaying: boolean;
@@ -14,6 +23,19 @@ type BottomPanelControlProps = {
     isFullScreen: boolean;
 };
 
+/**
+ * A control panel component that provides playback controls, music toggle, and fullscreen functionality
+ * Features include:
+ * - Loop playback toggle
+ * - Playback toggle
+ * - Playback speed control
+ * - Music play/pause
+ * - Fullscreen toggle
+ * 
+ * @component
+ * @param {BottomPanelControlProps} props - Component props
+ * @returns {JSX.Element} Rendered bottom panel control component
+ */
 export const BottomPanelControl = ({
     onClose,
     isPlaying,
@@ -22,7 +44,9 @@ export const BottomPanelControl = ({
     isFullScreen,
 }: BottomPanelControlProps) => {
     return (
+        // Main container with backdrop blur and border styling
         <div className='backdrop-blur-xl border border-neutral-700 p-4 rounded-lg shadow-lg w-fit z-10'>
+            {/* Header section with title and close button */}
             <div className='flex items-center justify-between'>
                 <h1 className='text-base font-semibold text-light'>
                     Playback Controls
@@ -31,13 +55,15 @@ export const BottomPanelControl = ({
                     onClick={onClose}
                     className='text-gray-400 hover:text-gray-200'
                 >
-                    <XMarkIcon className='h-5 w-5' /> {/* Close button icon */}
+                    <XMarkIcon className='h-5 w-5' />
                 </button>
             </div>
 
+            {/* Controls container */}
             <div className='flex items-center justify-between mt-4 space-x-4'>
-                {/* Left: Loop Playback and Toggle Playback */}
+                {/* Left section: Loop and Toggle Playback controls */}
                 <div className='flex space-x-4'>
+                    {/* Loop Playback toggle */}
                     <div className='flex flex-col items-center'>
                         <span className='text-gray-400 text-sm mb-1'>
                             Loop Playback
@@ -56,6 +82,7 @@ export const BottomPanelControl = ({
                         </div>
                     </div>
 
+                    {/* Toggle Playback switch */}
                     <div className='flex flex-col items-center'>
                         <span className='text-gray-400 text-sm mb-1'>
                             Toggle Playback
@@ -75,7 +102,7 @@ export const BottomPanelControl = ({
                     </div>
                 </div>
 
-                {/* Center: Playback Speed Slider */}
+                {/* Center section: Playback Speed slider */}
                 <div className='flex flex-col items-center mx-4'>
                     <span className='text-gray-400 text-sm mb-2'>
                         Playback Speed
@@ -93,8 +120,9 @@ export const BottomPanelControl = ({
                     </div>
                 </div>
 
-                {/* Right: Music and Fullscreen Buttons */}
+                {/* Right section: Music and Fullscreen controls */}
                 <div className='flex space-x-4'>
+                    {/* Music toggle button */}
                     <div className='flex flex-col items-center'>
                         <span className='text-gray-400 mb-2 text-sm'>
                             Music
@@ -111,6 +139,7 @@ export const BottomPanelControl = ({
                         </button>
                     </div>
 
+                    {/* Fullscreen toggle button */}
                     <div className='flex flex-col items-center'>
                         <span className='text-gray-400 mb-2 text-sm'>
                             Fullscreen
