@@ -62,7 +62,7 @@ export const Button = ({
 
     return (
         <button
-            className={`${variantClass} ${className} px-3 py-1`}
+            className={`${variantClass} ${className} px-3 py-1 text-nowrap`}
             onClick={onClick}
             disabled={isLoading}
         >
