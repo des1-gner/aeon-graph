@@ -1,2 +1,2 @@
-// src/pages/graph/three.js/components/ui/index.ts
+// Exports all named exports from the ColorLegend module
 export * from './ColorLegend';
