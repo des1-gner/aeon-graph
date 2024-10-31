@@ -1,7 +1,9 @@
+import React from 'react';
 import {
     ArrowUpRightIcon,
     CalendarDateRangeIcon,
     ChevronDownIcon,
+    ChevronUpIcon,
     CubeTransparentIcon,
     MagnifyingGlassIcon,
     ShareIcon,
@@ -225,169 +227,134 @@ export const ArticleSearchModal = ({
                         />
                     </div>
 
-                    <div className='dark-card p-2 space-y-2'>
-                        <div>
+                    <div className='dark-card p-3 space-y-4'>
+                        {/* Sources Section */}
+                        <div className='bg-neutral-800 rounded-lg p-3'>
                             <div className='flex justify-between'>
-                                <p
-                                    className={`text-light ${
-                                        hasPublisherSelected ? 'opacity-50' : ''
-                                    }`}
-                                >
+                                <p className={`text-light ${hasPublisherSelected ? 'opacity-50' : ''}`}>
                                     Sources
                                 </p>
-                                <ChevronDownIcon
-                                    className={`size-4 fill-white ${
-                                        hasPublisherSelected
-                                            ? 'opacity-50'
-                                            : 'cursor-pointer'
-                                    }`}
-                                    onClick={() =>
-                                        !hasPublisherSelected &&
-                                        setShowSourcesDropdown(
-                                            !showSourcesDropdown
-                                        )
-                                    }
-                                />
+                                {!hasPublisherSelected && (
+                                    showSourcesDropdown ? (
+                                        <ChevronUpIcon
+                                            className='size-4 fill-white cursor-pointer'
+                                            onClick={() => setShowSourcesDropdown(false)}
+                                        />
+                                    ) : (
+                                        <ChevronDownIcon
+                                            className='size-4 fill-white cursor-pointer'
+                                            onClick={() => setShowSourcesDropdown(true)}
+                                        />
+                                    )
+                                )}
                             </div>
 
                             <AnimatePresence>
-                                {showSourcesDropdown &&
-                                    !hasPublisherSelected && (
-                                        <motion.div
-                                            initial='collapsed'
-                                            animate='open'
-                                            exit='collapsed'
-                                            variants={{
-                                                open: {
-                                                    opacity: 1,
-                                                    height: 'auto',
-                                                },
-                                                collapsed: {
-                                                    opacity: 0,
-                                                    height: 0,
-                                                },
-                                            }}
-                                            className='max-h-[150px] mt-1 overflow-y-auto'
-                                        >
-                                            {sources.map((source) => (
-                                                <div
-                                                    key={source}
-                                                    className='flex items-center gap-2 px-2 py-1 hover:bg-neutral-800 rounded'
-                                                >
-                                                    <input
-                                                        type='checkbox'
-                                                        id={source}
-                                                        checked={selectedSources.includes(
-                                                            source
-                                                        )}
-                                                        onChange={() =>
-                                                            handleSourceToggle(
-                                                                source
-                                                            )
-                                                        }
-                                                        className='accent-neutral-300 size-4'
-                                                    />
-                                                    <label
-                                                        htmlFor={source}
-                                                        className='text-sm text-light cursor-pointer'
-                                                    >
-                                                        {source}
-                                                    </label>
-                                                </div>
-                                            ))}
-                                        </motion.div>
-                                    )}
+                                {showSourcesDropdown && !hasPublisherSelected && (
+                                    <motion.div
+                                        initial='collapsed'
+                                        animate='open'
+                                        exit='collapsed'
+                                        variants={{
+                                            open: { opacity: 1, height: 'auto', marginTop: 8 },
+                                            collapsed: { opacity: 0, height: 0, marginTop: 0 },
+                                        }}
+                                        className='max-h-[150px] overflow-y-auto'
+                                    >
+                                        {sources.map((source) => (
+                                            <div
+                                                key={source}
+                                                className='flex items-center gap-2 px-2 py-1 hover:bg-neutral-700 rounded'
+                                            >
+                                                <input
+                                                    type='checkbox'
+                                                    id={source}
+                                                    checked={selectedSources.includes(source)}
+                                                    onChange={() => handleSourceToggle(source)}
+                                                    className='accent-neutral-300 size-4'
+                                                />
+                                                <label htmlFor={source} className='text-sm text-light cursor-pointer'>
+                                                    {source}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </motion.div>
+                                )}
                             </AnimatePresence>
                         </div>
 
-                        <div>
+                        {/* Publishers Section */}
+                        <div className='bg-neutral-800 rounded-lg p-3'>
                             <div className='flex justify-between'>
-                                <p
-                                    className={`text-light ${
-                                        hasSourcesSelected ? 'opacity-30' : ''
-                                    }`}
-                                >
+                                <p className={`text-light ${hasSourcesSelected ? 'opacity-50' : ''}`}>
                                     Publishers
                                 </p>
-                                <ChevronDownIcon
-                                    className={`size-4 fill-white ${
-                                        hasSourcesSelected
-                                            ? 'opacity-30'
-                                            : 'cursor-pointer'
-                                    }`}
-                                    onClick={() =>
-                                        !hasSourcesSelected &&
-                                        setShowPublisherDropdown(
-                                            !showPublisherDropdown
-                                        )
-                                    }
-                                />
+                                {!hasSourcesSelected && (
+                                    showPublisherDropdown ? (
+                                        <ChevronUpIcon
+                                            className='size-4 fill-white cursor-pointer'
+                                            onClick={() => setShowPublisherDropdown(false)}
+                                        />
+                                    ) : (
+                                        <ChevronDownIcon
+                                            className='size-4 fill-white cursor-pointer'
+                                            onClick={() => setShowPublisherDropdown(true)}
+                                        />
+                                    )
+                                )}
                             </div>
 
                             <AnimatePresence>
-                                {showPublisherDropdown &&
-                                    !hasSourcesSelected && (
-                                        <motion.div
-                                            initial='collapsed'
-                                            animate='open'
-                                            exit='collapsed'
-                                            variants={{
-                                                open: {
-                                                    opacity: 1,
-                                                    height: 'auto',
-                                                },
-                                                collapsed: {
-                                                    opacity: 0,
-                                                    height: 0,
-                                                },
-                                            }}
-                                            className='max-h-[150px] mt-1 overflow-y-auto'
-                                        >
-                                            {publishers.map((publisher) => (
-                                                <div
-                                                    key={publisher}
-                                                    className='flex items-center gap-2 px-2 py-1 hover:bg-neutral-800 rounded'
+                                {showPublisherDropdown && !hasSourcesSelected && (
+                                    <motion.div
+                                        initial='collapsed'
+                                        animate='open'
+                                        exit='collapsed'
+                                        variants={{
+                                            open: { opacity: 1, height: 'auto', marginTop: 8 },
+                                            collapsed: { opacity: 0, height: 0, marginTop: 0 },
+                                        }}
+                                        className='max-h-[150px] overflow-y-auto'
+                                    >
+                                        {publishers.map((publisher) => (
+                                            <div
+                                                key={publisher}
+                                                className='flex items-center gap-2 px-2 py-1 hover:bg-neutral-700 rounded'
+                                            >
+                                                <input
+                                                    type='radio'
+                                                    id={`publisher-${publisher}`}
+                                                    checked={selectedPublisher === publisher}
+                                                    onChange={() => handlePublisherSelect(publisher)}
+                                                    className='accent-neutral-300 size-4'
+                                                    name='publisher'
+                                                />
+                                                <label
+                                                    htmlFor={`publisher-${publisher}`}
+                                                    className='text-sm text-light cursor-pointer'
                                                 >
-                                                    <input
-                                                        type='radio'
-                                                        id={`publisher-${publisher}`}
-                                                        checked={
-                                                            selectedPublisher ===
-                                                            publisher
-                                                        }
-                                                        onChange={() =>
-                                                            handlePublisherSelect(
-                                                                publisher
-                                                            )
-                                                        }
-                                                        className='accent-neutral-900 size-4'
-                                                        name='publisher'
-                                                    />
-                                                    <label
-                                                        htmlFor={`publisher-${publisher}`}
-                                                        className='text-sm text-light cursor-pointer'
-                                                    >
-                                                        {publisher}
-                                                    </label>
-                                                </div>
-                                            ))}
-                                        </motion.div>
-                                    )}
+                                                    {publisher}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </motion.div>
+                                )}
                             </AnimatePresence>
                         </div>
 
-                        <div className='flex gap-2 items-center'>
-                            <input
-                                type='checkbox'
-                                checked={thinkTankRef}
-                                onChange={(e) =>
-                                    setThinkTankRef(e.target.checked)
-                                }
-                                className='accent-neutral-300 size-4'
-                            />
-                            <label className='text-sm text-light'>
-                                Contains think tank reference
-                            </label>
+                        {/* Think Tank Section */}
+                        <div className='bg-neutral-800 rounded-lg p-3'>
+                            <div className='flex gap-2 items-center'>
+                                <input
+                                    type='checkbox'
+                                    checked={thinkTankRef}
+                                    onChange={(e) => setThinkTankRef(e.target.checked)}
+                                    className='accent-neutral-300 size-4'
+                                />
+                                <label className='text-sm text-light'>
+                                    Contains think tank reference
+                                </label>
+                            </div>
                         </div>
                     </div>
 
