@@ -740,7 +740,7 @@ export const SidePanelControl: React.FC<{
                             htmlFor={`${optionType}-duplicate`}
                             className='text-sm text-neutral-400'
                         >
-                            Is Duplicate Article
+                            Article is published on more than one source
                         </label>
                     </div>
                 </div>
