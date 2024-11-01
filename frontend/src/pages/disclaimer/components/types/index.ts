@@ -6,6 +6,8 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
  * Parameters required for the particle explosion animation
  * Contains all necessary Three.js objects and animation state
  */
+
+// Authors: Oisin Aeonn and Chris Partridge
 export interface AnimationParams {
   // Core Three.js scene components
   scene: Scene;                    // Main Three.js scene containing all objects

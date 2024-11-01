@@ -3,6 +3,8 @@
  * A versatile button component with multiple variants and loading state support.
  *
  * @component
+ * 
+ * Author Chris Partridge
  *
  * Props:
  * @param {ReactNode} children - Content to be rendered inside the button

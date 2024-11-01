@@ -5,6 +5,8 @@
  * for both background particles and text-based particle effects
  */
 
+// Authors: Oisin Aeonn, Jasica Jong, and Lucas Phung
+
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { vertexShader, fragmentShader } from '../shaders';

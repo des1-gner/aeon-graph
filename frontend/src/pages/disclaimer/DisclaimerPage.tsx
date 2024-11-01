@@ -3,6 +3,7 @@
  * @description A React component that displays a disclaimer page with animated particle effects
  * @maintainers 
  * - Oisin Aeonn (s3952320@student.rmit.edu.au)
+ * - Jasica Jong (s3805999@student.rmit.edu.au)
  * - Lucas Phung (s3945217@student.rmit.edu.au)
  */
 

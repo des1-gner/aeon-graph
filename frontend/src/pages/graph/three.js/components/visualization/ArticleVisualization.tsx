@@ -9,6 +9,8 @@ import { ColorLegend } from '../ui';  // Updated import
 import { DetailedArticlePanel } from '../../../components/panels/DetailedArticlePanel';
 
 // Interface defining the props for the ArticleVisualization component
+
+// Author: Oisin Aeonn
 interface ArticleVisualizationProps {
     articles: Article[];                    // Array of articles to visualize
     highlightColor?: string;               // Color for highlighted elements

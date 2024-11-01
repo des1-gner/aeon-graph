@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { VISUALIZATION_CONSTANTS } from './constants';
 
 /**
  * Generates a random point within a sphere using spherical coordinates.

@@ -1,5 +1,3 @@
-// src/components/filter/FilterControl.tsx
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useArticles } from '../../../contexts/ArticlesContext';
@@ -14,7 +12,6 @@ import { ArticleSearchModal } from '../../common/modals/ArticleSearchModal';
 import { VisibilityState } from './types/interfaces';
 import { dummyArticles } from '../../../three.js/types/article';
 import { VisibilityType } from './types/interfaces';
-import type { EdgeOptions as EdgeOptionsType } from './types/interfaces';
 import {
     DEFAULT_HIGHLIGHT_COLOR,
     DEFAULT_CLUSTER_COLOR,
@@ -32,35 +29,47 @@ import {
     DocumentTextIcon,
 } from '@heroicons/react/24/solid';
 
+/**
+ * Props interface for the FilterControl component
+ */
 interface FilterControlProps {
-    onClose?: () => void;
-    initialShowSearchQueryModal: boolean;
-    setInitialShowSearchQueryModal: (value: boolean) => void;
+    onClose?: () => void;                                          // Optional callback for closing the filter control
+    initialShowSearchQueryModal: boolean;                          // Flag to show search query modal on initial render
+    setInitialShowSearchQueryModal: (value: boolean) => void;      // Setter for initialShowSearchQueryModal
 }
 
+/**
+ * FilterControl Component
+ * 
+ * A comprehensive control panel for managing article filtering, visualization options,
+ * and data source selection. Provides interfaces for highlighting, clustering, and edge
+ * manipulation in the visualization.
+ */
 export const FilterControl: React.FC<FilterControlProps> = ({
     onClose,
     initialShowSearchQueryModal,
     setInitialShowSearchQueryModal,
 }) => {
-    // Data source state
-    const [dataSourceIndex, setDataSourceIndex] = useState(0);
-    const [showArticleSearchModal, setShowArticleSearchModal] = useState(false);
-    const [visualisationOption, setVisualisationOption] = useState(0);
+    // ====================== State Management ======================
     
-    // Search state
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [nodeQty, setNodeQty] = useState<number>(0);
-    const [showQuerySummaryModal, setShowQuerySummaryModal] = useState(false);
+    // Data source related states
+    const [dataSourceIndex, setDataSourceIndex] = useState(0);                     // 0: Database, 1: Demo
+    const [showArticleSearchModal, setShowArticleSearchModal] = useState(false);   // Controls article search modal visibility
+    const [visualisationOption, setVisualisationOption] = useState(0);            // Current visualization option index
+    
+    // Search parameters states
+    const [startDate, setStartDate] = useState('');                               // Start date for article search
+    const [endDate, setEndDate] = useState('');                                   // End date for article search
+    const [searchQuery, setSearchQuery] = useState('');                           // Search query string
+    const [nodeQty, setNodeQty] = useState<number>(0);                           // Number of nodes to display
+    const [showQuerySummaryModal, setShowQuerySummaryModal] = useState(false);    // Controls query summary modal visibility
 
-    // Color states
-    const [prevHighlightColor, setPrevHighlightColor] = useState(DEFAULT_HIGHLIGHT_COLOR);
-    const [prevClusterColor, setPrevClusterColor] = useState(DEFAULT_CLUSTER_COLOR);
-    const [prevEdgeColor, setPrevEdgeColor] = useState(DEFAULT_EDGE_COLOR);
+    // Color management states
+    const [prevHighlightColor, setPrevHighlightColor] = useState(DEFAULT_HIGHLIGHT_COLOR);  // Previous highlight color
+    const [prevClusterColor, setPrevClusterColor] = useState(DEFAULT_CLUSTER_COLOR);        // Previous cluster color
+    const [prevEdgeColor, setPrevEdgeColor] = useState(DEFAULT_EDGE_COLOR);                 // Previous edge color
 
-    // Visibility states
+    // Visibility management states
     const [highlightVisibility, setHighlightVisibility] = useState<VisibilityState>({ isActive: false });
     const [clusterVisibility, setClusterVisibility] = useState<VisibilityState>({ isActive: false });
     const [edgeVisibility, setEdgeVisibility] = useState<VisibilityState>({
@@ -68,7 +77,7 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         mode: 'off',
     });
 
-    // Context and hooks
+    // Context and custom hooks
     const {
         articles,
         setArticles,
@@ -86,9 +95,13 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         setEdgeOptions,
     } = useArticles();
 
-    const colorPicker = useColorPicker();
+    const colorPicker = useColorPicker();  // Custom hook for color picking functionality
 
-    // Effects
+    // ====================== Effects ======================
+
+    /**
+     * Effect to handle initial search query modal display
+     */
     useEffect(() => {
         if (initialShowSearchQueryModal) {
             setShowArticleSearchModal(true);
@@ -96,13 +109,20 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         }
     }, [initialShowSearchQueryModal, setInitialShowSearchQueryModal]);
 
+    /**
+     * Effect to reset all options on component mount
+     */
     useEffect(() => {
         resetHighlightOptions();
         resetClusterOptions();
         resetEdgeOptions();
     }, []);
 
-    // Reset handlers
+    // ====================== Reset Handlers ======================
+
+    /**
+     * Resets highlight options to their default values
+     */
     const resetHighlightOptions = () => {
         setHighlightOptions(defaultOptions);
         setPrevHighlightColor(DEFAULT_HIGHLIGHT_COLOR);
@@ -110,6 +130,9 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         setHighlightVisibility({ isActive: false });
     };
 
+    /**
+     * Resets cluster options to their default values
+     */
     const resetClusterOptions = () => {
         setClusterOptions(defaultOptions);
         setPrevClusterColor(DEFAULT_CLUSTER_COLOR);
@@ -117,6 +140,9 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         setClusterVisibility({ isActive: false });
     };
 
+    /**
+     * Resets edge options to their default values
+     */
     const resetEdgeOptions = () => {
         setEdgeOptions(defaultEdgeOptions);
         setPrevEdgeColor(DEFAULT_EDGE_COLOR);
@@ -124,7 +150,12 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         setEdgeVisibility({ isActive: false, mode: 'off' });
     };
 
-    // Visibility handlers
+    // ====================== Visibility Handlers ======================
+
+    /**
+     * Handles changes in highlight visibility state
+     * @param newState - New visibility state
+     */
     const handleHighlightVisibilityChange = (newState: VisibilityState) => {
         if (newState.isActive) {
             setHighlightColor(prevHighlightColor);
@@ -135,6 +166,10 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         setHighlightVisibility(newState);
     };
 
+    /**
+     * Handles changes in cluster visibility state
+     * @param newState - New visibility state
+     */
     const handleClusterVisibilityChange = (newState: VisibilityState) => {
         if (newState.isActive) {
             setClusterColor(prevClusterColor);
@@ -145,6 +180,10 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         setClusterVisibility(newState);
     };
 
+    /**
+     * Handles changes in edge visibility state
+     * @param newState - New visibility state
+     */
     const handleEdgeVisibilityChange = (newState: VisibilityState) => {
         if (newState.mode !== 'off') {
             setEdgeColor(prevEdgeColor);
@@ -162,6 +201,10 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         }));
     };
 
+    /**
+     * Handles changes in data source selection
+     * @param index - Index of selected data source (0: Database, 1: Demo)
+     */
     const handleDataSourceChange = (index: number) => {
         setDataSourceIndex(index);
         if (index === 1) {
@@ -169,9 +212,12 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         }
     };
 
+    // ====================== Render Component ======================
     return (
         <>
+            {/* Main Filter Control Panel */}
             <div className='backdrop-blur-xl border-neutral-700 border p-4 space-y-6 rounded-lg z-10 w-96'>
+                {/* Header Section */}
                 <div className='flex items-center justify-between'>
                     <XMarkIcon
                         className='size-5 text-light cursor-pointer flex justify-start'
@@ -184,6 +230,7 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                     <div />
                 </div>
 
+                {/* Data Source Toggle */}
                 <Toggle
                     header={[
                         'Data source',
@@ -207,6 +254,7 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                     )}
                 </Toggle>
 
+                {/* Visualization Options Toggle */}
                 <Toggle
                     header={[
                         'Visualisation options',
@@ -217,48 +265,49 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                     onClick={setVisualisationOption}
                 />
 
+                {/* Visualization Options Content */}
                 <div className='dark-card p-3'>
-                // Update the component renders:
-{visualisationOption === 0 && (
-    <HighlightOptions
-        options={highlightOptions}
-        setOptions={setHighlightOptions}
-        color={highlightColor}
-        setColor={setHighlightColor}
-        colorPickerState={colorPicker}
-        onReset={resetHighlightOptions}
-        highlightVisibility={highlightVisibility}
-        onVisibilityChange={handleHighlightVisibilityChange}
-    />
-)}
+                    {visualisationOption === 0 && (
+                        <HighlightOptions
+                            options={highlightOptions}
+                            setOptions={setHighlightOptions}
+                            color={highlightColor}
+                            setColor={setHighlightColor}
+                            colorPickerState={colorPicker}
+                            onReset={resetHighlightOptions}
+                            highlightVisibility={highlightVisibility}
+                            onVisibilityChange={handleHighlightVisibilityChange}
+                        />
+                    )}
 
-{visualisationOption === 1 && (
-    <ClusterOptions
-        options={clusterOptions}
-        setOptions={setClusterOptions}
-        color={clusterColor}
-        setColor={setClusterColor}
-        colorPickerState={colorPicker}
-        onReset={resetClusterOptions}
-        highlightVisibility={clusterVisibility}
-        onVisibilityChange={handleClusterVisibilityChange}
-    />
-)}
+                    {visualisationOption === 1 && (
+                        <ClusterOptions
+                            options={clusterOptions}
+                            setOptions={setClusterOptions}
+                            color={clusterColor}
+                            setColor={setClusterColor}
+                            colorPickerState={colorPicker}
+                            onReset={resetClusterOptions}
+                            highlightVisibility={clusterVisibility}
+                            onVisibilityChange={handleClusterVisibilityChange}
+                        />
+                    )}
 
-{visualisationOption === 2 && (
-    <EdgeOptions
-        options={edgeOptions}
-        setOptions={setEdgeOptions}
-        color={edgeColor}
-        setColor={setEdgeColor}
-        colorPickerState={colorPicker}
-        onReset={resetEdgeOptions}
-        highlightVisibility={edgeVisibility}
-        onVisibilityChange={handleEdgeVisibilityChange}
-    />
-)}
+                    {visualisationOption === 2 && (
+                        <EdgeOptions
+                            options={edgeOptions}
+                            setOptions={setEdgeOptions}
+                            color={edgeColor}
+                            setColor={setEdgeColor}
+                            colorPickerState={colorPicker}
+                            onReset={resetEdgeOptions}
+                            highlightVisibility={edgeVisibility}
+                            onVisibilityChange={handleEdgeVisibilityChange}
+                        />
+                    )}
                 </div>
 
+                {/* Query Summary Button */}
                 <Button
                     variant='primary'
                     className='flex items-center gap-2 justify-center w-full'
@@ -269,6 +318,7 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                 </Button>
             </div>
 
+            {/* Article Search Modal */}
             <AnimatePresence>
                 {showArticleSearchModal && (
                     <motion.div
@@ -293,6 +343,7 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                 )}
             </AnimatePresence>
 
+            {/* Query Summary Modal */}
             <AnimatePresence>
                 {showQuerySummaryModal && (
                     <motion.div

@@ -8,6 +8,8 @@ import { HighlightOptions, ClusterOptions } from '../../types/filters';
 import { VISUALIZATION_CONSTANTS } from '../../utils/constants';
 import { matchesFilter } from '../../utils/filters';
 
+// Authors Oisin Aeonn, and Chris Partridge
+
 // Destructure visualization constants for easier access
 const {
     DEFAULT_COLOR,

@@ -1,6 +1,4 @@
 import React, { useEffect, useCallback, createContext, useContext, useState } from 'react';
-import { useThree, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 import { CAMERA_CONTROL_CONSTANTS } from '../../utils/constants';
 
 // Destructure constants for camera control settings

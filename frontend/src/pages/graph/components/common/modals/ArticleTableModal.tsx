@@ -4,6 +4,8 @@
  * The modal includes features for viewing article details, opening articles in new tabs, and deleting articles.
  */
 
+// Author Chris Partridge
+
 import React, { useState } from 'react';
 import { BaseModal } from './BaseModal';
 import {

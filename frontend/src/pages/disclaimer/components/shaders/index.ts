@@ -8,6 +8,8 @@
  * - Handles dynamic particle sizing based on distance from camera
  * - Passes color data to fragment shader
  */
+
+// Author: Oisin Aeonn
 export const vertexShader = `
     // Input attribute for controlling individual particle sizes
     attribute float size;

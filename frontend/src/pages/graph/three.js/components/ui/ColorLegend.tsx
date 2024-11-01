@@ -1,7 +1,6 @@
 // Import necessary dependencies from React
 import React from 'react';
 // Import UI constants and color utility function
-import { UI_CONSTANTS } from '../../utils/constants';
 import { blendColors } from '../../utils/colors';
 
 // Define the props interface for the ColorLegend component

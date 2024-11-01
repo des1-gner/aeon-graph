@@ -4,6 +4,8 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { initScene, createParticles, animate } from '../utils/three';
 
+// Authors: Oisin Aeonn, Chris Partridge
+
 // Define the component props interface
 interface ParticleEffectProps {
   isExploding: boolean; // Controls whether particles are in explosion state

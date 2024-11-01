@@ -1,3 +1,5 @@
+# Author: Oisin Aeonn
+
 import requests
 import json
 import uuid

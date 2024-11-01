@@ -5,6 +5,8 @@ import { ChevronDownIcon } from '@heroicons/react/24/solid';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ReactNode } from 'react';
 
+// Authors: Chris Partridge, and Oisin Aeonn
+
 /**
  * Props interface for the DetailedArticlePanel component
  * @interface DetailedArticlePanelProps

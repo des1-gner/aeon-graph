@@ -13,6 +13,8 @@ interface ConnectionLinesProps {
   hoveredParticle: number | null; // Index of currently hovered particle, if any
 }
 
+// Authors Oisin Aeonn, and Chris Partridge
+
 /**
  * ConnectionLines component creates visual connections between articles in 3D space
  * It supports different visibility modes (always on, hover-only, off) and filtering options

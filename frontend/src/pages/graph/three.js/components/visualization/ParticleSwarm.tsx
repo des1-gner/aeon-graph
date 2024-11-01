@@ -11,11 +11,12 @@ import { Particle } from './Particle';
 import { ConnectionLines } from './ConnectionLines';
 import { findValidPosition } from '../../utils/geometry';
 
+// Authors Oisin Aeonn, and Chris Partridge
+
 const {
     SPHERE_RADIUS,
     CLUSTER_RADIUS,
     OUTER_SPHERE_PADDING,
-    MIN_PARTICLE_DISTANCE
 } = VISUALIZATION_CONSTANTS;
 
 // Props interface defining required properties for particle visualization
