@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Author: Oisin Aeonn
+
 # Installation script for article generation and push tool
 # This script installs required dependencies and sets up the article generation project
 

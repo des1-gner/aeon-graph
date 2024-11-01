@@ -1,3 +1,4 @@
+// Import necessary dependencies from React and other libraries
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import DisclaimerPage from './pages/disclaimer/DisclaimerPage';
@@ -9,14 +10,15 @@ import { useArticles } from './pages/graph/contexts/ArticlesContext';
 import { dummyArticles } from './pages/graph/three.js/types/article';
 
 function App() {
+    // State for controlling UI visibility
     const [showSideControls, setShowSideControls] = useState(true);
     const [showBottomControls, setShowBottomControls] = useState(true);
     const [initialShowSearchQueryModal, setInitialShowSearchQueryModal] =
         useState(true);
 
+    // Get article data and visualization options from context
     const {
         articles,
-        highlightedWord,
         highlightColor,
         clusterColor,
         edgeColor,
@@ -24,9 +26,14 @@ function App() {
         clusterOptions,
         edgeOptions,
     } = useArticles();
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [isFullScreen, setIsFullScreen] = useState(false);
+
+    // State for media controls and UI modes
+    const [isPlaying, setIsPlaying] = useState(false);        // Controls background music
+    const [isFullScreen, setIsFullScreen] = useState(false);  // Tracks fullscreen mode
+    
+    // State for managing the disclaimer modal
     const [disclaimerState, setDisclaimerState] = useState(() => {
+        // Initialize disclaimer state from session storage
         const accepted =
             sessionStorage.getItem('disclaimerAccepted') === 'true';
         return {
@@ -35,17 +42,26 @@ function App() {
             transitioning: false,
         };
     });
+
+    // Loading state for initial render
     const [isLoading, setIsLoading] = useState(true);
+    
+    // Reference to the background music audio element
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
+    // Effect to handle initial loading state
     useEffect(() => {
         setTimeout(() => {
             setIsLoading(false);
         }, 100);
     }, []);
 
+    // Handler for accepting the disclaimer
     const handleDisclaimerAccept = () => {
+        // Start transition animation
         setDisclaimerState((prev) => ({ ...prev, transitioning: true }));
+        
+        // After animation, update state and save to session storage
         setTimeout(() => {
             setDisclaimerState({
                 accepted: true,
@@ -56,6 +72,7 @@ function App() {
         }, 2000);
     };
 
+    // Handler for toggling fullscreen mode
     const toggleFullScreen = () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch((err) => {
@@ -69,6 +86,7 @@ function App() {
         setIsFullScreen(!isFullScreen);
     };
 
+    // Handler for toggling background music
     const toggleMusic = () => {
         if (audioRef.current) {
             if (isPlaying) {
@@ -80,7 +98,9 @@ function App() {
         }
     };
 
+    // Effect to handle mouse movement for UI controls visibility
     useEffect(() => {
+        // Show side controls when mouse is in top-right corner
         const handleSidePanelMouseMove = (e: MouseEvent) => {
             if (e.clientX > window.innerWidth - 100 && e.clientY < 100) {
                 setShowSideControls(true);
@@ -91,28 +111,32 @@ function App() {
             }
         };
 
+        // Show bottom controls when mouse leaves the window
         const handleMouseLeave = (e: MouseEvent) => {
             if (e.clientY < window.innerHeight - 50) {
                 setShowBottomControls(true);
             }
         };
 
+        // Add event listeners
         window.addEventListener('mousemove', handleSidePanelMouseMove);
         window.addEventListener('mouseleave', handleMouseLeave);
 
+        // Cleanup event listeners
         return () => {
             window.removeEventListener('mousemove', handleSidePanelMouseMove);
             window.removeEventListener('mouseleave', handleMouseLeave);
         };
     }, []);
 
+    // Show loading screen
     if (isLoading) {
         return <div className='bg-black min-h-screen'></div>;
     }
 
     return (
         <div className='bg-black min-h-screen relative'>
-            {/* Disclaimer Layer */}
+            {/* Disclaimer Layer - Animated modal that shows initially */}
             <AnimatePresence>
                 {disclaimerState.show && (
                     <motion.div
@@ -129,14 +153,14 @@ function App() {
                 )}
             </AnimatePresence>
 
-            {/* Main Content Layer */}
+            {/* Main Content Layer - Contains visualization and controls */}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: disclaimerState.accepted ? 1 : 0 }}
                 transition={{ duration: 2 }}
                 className='absolute inset-0 z-0'
             >
-                {/* Fullscreen button */}
+                {/* Fullscreen toggle button - Fixed position in bottom-left */}
                 <motion.button
                     onClick={toggleFullScreen}
                     className='fixed bottom-4 left-4 z-30 bg-black/50 hover:bg-black/70 text-white p-2 rounded-lg transition-colors duration-200'
@@ -144,6 +168,7 @@ function App() {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
                 >
+                    {/* SVG icons for fullscreen states */}
                     {isFullScreen ? (
                         <svg
                             xmlns='http://www.w3.org/2000/svg'
@@ -177,6 +202,7 @@ function App() {
                     )}
                 </motion.button>
 
+                {/* Main visualization component */}
                 <ArticleVisualization
                     articles={articles || []}
                     highlightColor={highlightColor}
@@ -187,6 +213,7 @@ function App() {
                     edgeOptions={edgeOptions}
                 />
 
+                {/* Side controls panel - Animated */}
                 <AnimatePresence>
                     {showSideControls && (
                         <motion.div
@@ -211,6 +238,7 @@ function App() {
                     )}
                 </AnimatePresence>
 
+                {/* Background music audio element */}
                 <audio
                     ref={audioRef}
                     src='/music/ambient-spring-forest.mp3'

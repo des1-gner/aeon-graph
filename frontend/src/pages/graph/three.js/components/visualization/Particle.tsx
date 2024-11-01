@@ -1,3 +1,4 @@
+// Import necessary dependencies from React and Three.js libraries
 import React, { useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -7,24 +8,29 @@ import { HighlightOptions, ClusterOptions } from '../../types/filters';
 import { VISUALIZATION_CONSTANTS } from '../../utils/constants';
 import { matchesFilter } from '../../utils/filters';
 
+// Authors Oisin Aeonn, and Chris Partridge
+
+// Destructure visualization constants for easier access
 const {
     DEFAULT_COLOR,
     DEFAULT_OPACITY,
     ACTIVE_OPACITY,
 } = VISUALIZATION_CONSTANTS;
 
+// Define the props interface for the Particle component
 interface ParticleProps {
-    index: number;
-    positions: Float32Array;
-    article: Article;
-    highlightOptions: HighlightOptions;
-    clusterOptions: ClusterOptions;
-    highlightColor: string;
-    clusterColor: string;
-    setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
-    setHoveredParticle: (index: number | null) => void;
+    index: number;                // Index of the particle in the visualization
+    positions: Float32Array;      // Array containing positions of all particles
+    article: Article;             // Article data associated with this particle
+    highlightOptions: HighlightOptions;  // Options for highlighting particles
+    clusterOptions: ClusterOptions;      // Options for clustering particles
+    highlightColor: string;              // Color to use for highlighted particles
+    clusterColor: string;                // Color to use for clustered particles
+    setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;  // Callback for article selection
+    setHoveredParticle: (index: number | null) => void;  // Callback for hover state
 }
 
+// Particle component representing a single article in 3D space
 export const Particle: React.FC<ParticleProps> = ({
     index,
     positions,
@@ -36,10 +42,12 @@ export const Particle: React.FC<ParticleProps> = ({
     setSelectedArticle,
     setHoveredParticle,
 }) => {
-    const meshRef = useRef<THREE.Mesh>(null);
-    const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);
-    const labelRef = useRef<THREE.Group>(null);
+    // Refs for accessing Three.js objects
+    const meshRef = useRef<THREE.Mesh>(null);                          // Reference to the particle mesh
+    const materialRef = useRef<THREE.MeshPhysicalMaterial>(null);      // Reference to the particle material
+    const labelRef = useRef<THREE.Group>(null);                        // Reference to the text label group
 
+    // Memoized values for performance optimization
     const isHighlighted = useMemo(
         () => matchesFilter(article, highlightOptions),
         [article, highlightOptions]
@@ -50,8 +58,10 @@ export const Particle: React.FC<ParticleProps> = ({
         [article, clusterOptions]
     );
 
+    // Function to determine particle visual state based on highlight and cluster status
     const getParticleState = () => {
         if (isHighlighted && isInCluster) {
+            // Blend highlight and cluster colors if both states are active
             const blendedColor = new THREE.Color(highlightColor)
                 .lerp(new THREE.Color(clusterColor), 0.5);
             return {
@@ -62,6 +72,7 @@ export const Particle: React.FC<ParticleProps> = ({
         }
 
         if (isHighlighted) {
+            // Apply highlight color and properties
             return {
                 color: new THREE.Color(highlightColor),
                 opacity: ACTIVE_OPACITY,
@@ -70,6 +81,7 @@ export const Particle: React.FC<ParticleProps> = ({
         }
 
         if (isInCluster) {
+            // Apply cluster color and properties
             return {
                 color: new THREE.Color(clusterColor),
                 opacity: ACTIVE_OPACITY,
@@ -77,6 +89,7 @@ export const Particle: React.FC<ParticleProps> = ({
             };
         }
 
+        // Default state when neither highlighted nor clustered
         return {
             color: DEFAULT_COLOR,
             opacity: DEFAULT_OPACITY,
@@ -84,18 +97,24 @@ export const Particle: React.FC<ParticleProps> = ({
         };
     };
 
+    // Update particle position and appearance every frame
     useFrame(({ camera }) => {
         if (meshRef.current && materialRef.current && labelRef.current) {
+            // Calculate target position from positions array
             const targetPosition = new THREE.Vector3(
                 positions[index * 3],
                 positions[index * 3 + 1],
                 positions[index * 3 + 2]
             );
 
+            // Smoothly interpolate to target position
             meshRef.current.position.lerp(targetPosition, 0.1);
+            // Update label position to follow particle with slight offset
             labelRef.current.position.copy(targetPosition).add(new THREE.Vector3(0, -0.5, 0));
+            // Make label face camera
             labelRef.current.quaternion.copy(camera.quaternion);
 
+            // Update particle material properties
             const { color, opacity, emissiveIntensity } = getParticleState();
             
             materialRef.current.color.lerp(color, 0.1);
@@ -107,6 +126,7 @@ export const Particle: React.FC<ParticleProps> = ({
 
     return (
         <group>
+            {/* Particle sphere mesh */}
             <mesh
                 ref={meshRef}
                 onClick={(event) => {
@@ -130,6 +150,7 @@ export const Particle: React.FC<ParticleProps> = ({
                     metalness={0.8}
                 />
             </mesh>
+            {/* Text label showing article title and source */}
             <group ref={labelRef}>
                 <Text
                     color={DEFAULT_COLOR}

@@ -1,4 +1,5 @@
-// src/components/visualization/ParticleSwarm.tsx
+// Main component for visualizing articles as an interactive 3D particle swarm
+// Handles particle positioning, clustering, and animations using Three.js
 import React, { useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -10,13 +11,15 @@ import { Particle } from './Particle';
 import { ConnectionLines } from './ConnectionLines';
 import { findValidPosition } from '../../utils/geometry';
 
+// Authors Oisin Aeonn, and Chris Partridge
+
 const {
     SPHERE_RADIUS,
     CLUSTER_RADIUS,
     OUTER_SPHERE_PADDING,
-    MIN_PARTICLE_DISTANCE
 } = VISUALIZATION_CONSTANTS;
 
+// Props interface defining required properties for particle visualization
 interface ParticleSwarmProps {
     articles: Article[];
     setSelectedArticle: (article: Article | null, position?: THREE.Vector3) => void;
@@ -38,12 +41,13 @@ export const ParticleSwarm: React.FC<ParticleSwarmProps> = ({
     clusterColor,
     edgeColor,
 }) => {
+    // Store particle positions in TypedArrays for performance
     const positionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
     const targetPositionsRef = useRef<Float32Array>(new Float32Array(articles.length * 3));
     const [hoveredParticle, setHoveredParticle] = useState<number | null>(null);
     const [isInitialized, setIsInitialized] = useState(false);
 
-    // Initialize positions
+    // Initialize particle positions in a spherical distribution
     useEffect(() => {
         const existingPositions: THREE.Vector3[] = [];
         const minDistance = Math.max(1, (SPHERE_RADIUS * 2) / Math.cbrt(articles.length));
@@ -69,7 +73,7 @@ export const ParticleSwarm: React.FC<ParticleSwarmProps> = ({
         setIsInitialized(true);
     }, [articles]);
 
-    // Handle clustering
+    // Update particle clustering based on filter options
     useEffect(() => {
         if (!isInitialized) return;
 
@@ -114,7 +118,7 @@ export const ParticleSwarm: React.FC<ParticleSwarmProps> = ({
         });
     }, [articles, clusterOptions, isInitialized]);
 
-    // Update particle positions
+    // Animate particles towards their target positions each frame
     useFrame(() => {
         if (!isInitialized) return;
         

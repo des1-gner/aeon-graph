@@ -1,4 +1,3 @@
-import React from 'react';
 import {
     ArrowUpRightIcon,
     CalendarDateRangeIcon,
@@ -18,7 +17,7 @@ import { useArticles } from '../../../contexts/ArticlesContext';
 import { fetchArticle } from '../../../../../api';
 import { ArticleTableModal } from './ArticleTableModal';
 
-// List of news sources to choose from
+// List of news sources that can be selected for article filtering
 const sources = [
     'theaustralian.com.au',
     'theguardian.com',
@@ -54,11 +53,13 @@ const sources = [
     'phys.org',
 ];
 
-// List of publishers to choose from
+// List of available publishers for filtering
 const publishers = ['None', 'Murdoch Media'];
 
+// Type definition for think tank reference options
 type ThinkTankOption = 'yes' | 'no' | 'both';
 
+// Props interface for the ArticleSearchModal component
 type ArticleSearchModalProps = {
     onClose: () => void;
     searchQuery: string;
@@ -82,7 +83,10 @@ export const ArticleSearchModal = ({
     nodeQty,
     setNodeQty,
 }: ArticleSearchModalProps) => {
+    // Access articles context for managing article data
     const { articles, setArticles } = useArticles();
+    
+    // State management for various modal controls
     const [dateRangeIndex, setDateRangeIndex] = useState(0);
     const [nodeLimitIndex, setNodeLimitIndex] = useState(0);
     const [showSourcesDropdown, setShowSourcesDropdown] = useState(false);
@@ -93,11 +97,11 @@ export const ArticleSearchModal = ({
     const [showArticleModal, setShowArticleModal] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
-    // Helpers to check if sources or publisher are selected
+    // Helper variables to check selection states
     const hasSourcesSelected = selectedSources.length > 0;
     const hasPublisherSelected = selectedPublisher !== 'None';
 
-    // Function to fetch articles based on the search criteria
+    // Function to fetch articles based on search criteria
     const handleSearch = async () => {
         setIsLoading(true);
         try {
@@ -117,7 +121,7 @@ export const ArticleSearchModal = ({
         }
     };
 
-    // Function to handle date range selection
+    // Function to handle date range selection and update dates accordingly
     const handleDateRangeToggle = (index: number) => {
         setDateRangeIndex(index);
         const now = new Date();
@@ -135,12 +139,12 @@ export const ArticleSearchModal = ({
         setEndDate(now.toISOString().split('T')[0] + 'T23:59:59Z');
     };
 
-    // Function to limit the number of articles displayed
+    // Function to limit and sort the number of displayed articles
     const handleLimitNodes = () => {
         if (nodeQty! < articles!.length) {
             let limitedArticles;
             switch (nodeLimitIndex) {
-                case 0:
+                case 0: // Sort by latest
                     limitedArticles = [...articles!].sort((a, b) => {
                         return (
                             new Date(b.dateTime).getTime() -
@@ -148,7 +152,7 @@ export const ArticleSearchModal = ({
                         );
                     });
                     break;
-                case 1:
+                case 1: // Sort by oldest
                     limitedArticles = [...articles!].sort((a, b) => {
                         return (
                             new Date(a.dateTime).getTime() -
@@ -156,7 +160,7 @@ export const ArticleSearchModal = ({
                         );
                     });
                     break;
-                case 2:
+                case 2: // Random sort
                     limitedArticles = [...articles!].sort(
                         () => 0.5 - Math.random()
                     );
@@ -168,18 +172,18 @@ export const ArticleSearchModal = ({
         }
     };
 
-    // Update the node quantity when the articles change
+    // Update node quantity when articles change
     useEffect(() => {
         setNodeQty(articles?.length || 0);
     }, [articles]);
 
-    // Function to generate the visualization
+    // Function to generate visualization after limiting nodes
     const handleGenerateVisualisation = () => {
         handleLimitNodes();
         onClose();
     };
 
-    // Function to handle source selection
+    // Function to handle source selection/deselection
     const handleSourceToggle = (source: string) => {
         if (!hasPublisherSelected) {
             setSelectedSources((prev) => {
@@ -444,6 +448,7 @@ export const ArticleSearchModal = ({
                         </div>
                     </div>
 
+                    {/* Date Range Toggle and Custom Date Selection */}
                     <div>
                         <Toggle
                             header={[
@@ -457,6 +462,7 @@ export const ArticleSearchModal = ({
                             selectedIndex={dateRangeIndex}
                             onClick={handleDateRangeToggle}
                         >
+                            {/* Animated custom date range inputs */}
                             <AnimatePresence>
                                 {dateRangeIndex === 1 && (
                                     <motion.div
@@ -505,6 +511,7 @@ export const ArticleSearchModal = ({
                                     </motion.div>
                                 )}
                             </AnimatePresence>
+                            {/* Search button */}
                             <div className='p-2'>
                                 <Button
                                     variant='secondary'
@@ -519,6 +526,7 @@ export const ArticleSearchModal = ({
                         </Toggle>
                     </div>
 
+                    {/* Display number of loaded articles if any */}
                     {articles?.length! > 0 && (
                         <div className='flex justify-center'>
                             <Button
@@ -535,6 +543,7 @@ export const ArticleSearchModal = ({
                         </div>
                     )}
 
+                    {/* Node quantity selector section */}
                     {articles?.length! > 0 && (
                         <div className='dark-card p-2 space-y-3 text-light'>
                             <p className='flex gap-2 items-center pb-1 font-semibold'>
@@ -563,6 +572,7 @@ export const ArticleSearchModal = ({
                         </div>
                     )}
 
+                    {/* Generate visualization button */}
                     {articles?.length! > 0 && (
                         <div className='flex justify-center'>
                             <Button
@@ -579,6 +589,7 @@ export const ArticleSearchModal = ({
                     )}
                 </div>
 
+                {/* Article table modal with animation */}
                 <AnimatePresence>
                     {showArticleModal && articles && (
                         <motion.div

@@ -1,3 +1,5 @@
+# Author: Oisin Aeonn
+
 """
 Climate News Article Generator
 
