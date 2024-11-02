@@ -2,7 +2,7 @@
 
 "The Zone" is a data visualisation project that explores how climate change is discussed in the news and media and displays the complex relationship between data in a 3D interactive experience.
 
-## Hosted Website
+## Live Website
 https://aeonify.net/
 
 ## Features
