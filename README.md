@@ -33,8 +33,6 @@ https://aeonify.net/
 2. Run "npm install" to install React project and dependencies
 3. Run "npm start" to start local server
    
-### Backend
-
 ### Tests
 1. Open 'selenium-test' folder in a Java IDE (e.g. IntelliJ)
 2. Attach junit5 jar located in "JUniteExtension > Jars > JUnit_5_Extension_jar > JUnit5Extension.jar"
@@ -44,7 +42,6 @@ https://aeonify.net/
 6. Observe the automated Chrome test browser run through the tests script
 7. Review results
    
-### Deployment
 
 ## Tech Stack
 ### Frontend
