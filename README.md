@@ -14,13 +14,11 @@ https://aeonify.net/
 
 ## Local Installation
 ### Frontend
-1. cd into 'frontend' directory
-2. Run 'npm install' to install React project and dependencies
-3. Run 'npm start' to start local server
+1. cd into "frontend" directory located in "The-Zone-Semester-2-WIL-Program-main > frontend"
+2. Run "npm install" to install React project and dependencies
+3. Run "npm start" to start local server
 
 ### Backend
-
-### Data / Machine Learning
 
 ### Tests
 1. Open 'selenium-test' folder in a Java IDE (e.g. IntelliJ)
@@ -30,3 +28,28 @@ https://aeonify.net/
 5. Run the test file
 6. Observe the automated Chrome test browser run through the tests script
 7. Review results
+
+### Deployment
+
+## Tech Stack
+### Frontend
+- React
+- Typescript
+- Tailwindcss
+
+### Backend
+- AWS Lambda
+- DynamoDb
+- Python
+
+### Testing
+- Selenium
+- Java
+
+## Development Team
+- Oisin Aeonn
+- Jasica Jong
+- Chris Partridge
+- Lucas Phung
+- Jermaine Portelli
+- Laurence Watts
