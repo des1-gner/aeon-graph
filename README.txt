@@ -32,7 +32,7 @@ https://aeonify.net/
 - API can be reached at https://ynicn27cgg.execute-api.ap-southeast-2.amazonaws.com/prod?
 - For more information on how it works please read the README located in the folder aws/lambda
 
-### cloud information
+### Cloud Information
 - The website is already deployed on AWS cloud, which is owned by Laurence. 
 - If you need to redeploy the cloud, crate a stack on cloud formation using the template lazone-infrastructure.yaml located in aws/cloud formation.
 - More information on cloud deployment can be found in the thezone-technical-report.docx
@@ -74,4 +74,3 @@ https://aeonify.net/
 - Chris Partridge
 - Lucas Phung
 - Jermaine Portelli
-- Laurence Watts
