@@ -152,3 +152,6 @@ Private GitHub REPO: https://github.com/laurencewatts3/The-Zone-Semester-2-WIL-P
 - Added basic filtering functionality
 - Implemented dark theme
 - Created initial API endpoints
+
+Cheers,
+VC-402 The Zone Team
