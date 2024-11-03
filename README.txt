@@ -1,4 +1,4 @@
-# VC402 The Zone - Climate Change Data Visualisation Project
+# VC-402 The Zone - Climate Change Data Visualisation Project
 
 "The Zone" is a data visualisation project that explores how climate change is discussed in the news and media and displays the complex relationship between data in a 3D interactive experience.
 
@@ -31,7 +31,7 @@
 
 ## Installation & Setup
 
-### Frontend
+### Frontend (This is the important one)
 1. cd into "frontend" directory located in "The-Zone-Semester-2-WIL-Program-main > frontend"
 2. Run "npm install" to install React project and dependencies
 3. Run "npm start" to start local server
@@ -129,7 +129,6 @@ Private GitHub REPO: https://github.com/laurencewatts3/The-Zone-Semester-2-WIL-P
 - Implemented full frontend visualization features
 - Enhanced search functionality with multi-parameter support
 - Optimized particle system performance
-- *Reviewed by: Christopher Partridge*
 
 ### October 2024
 - Implemented 3D visualization space
@@ -138,7 +137,6 @@ Private GitHub REPO: https://github.com/laurencewatts3/The-Zone-Semester-2-WIL-P
 - Improved color management for visualizations
 - Added multi-selection menus for claims and sources
 - Implemented fullscreen functionality
-- *Reviewed by: Oisin Aeonn*
 
 ### September 2024
 - Developed article particle system
@@ -146,7 +144,6 @@ Private GitHub REPO: https://github.com/laurencewatts3/The-Zone-Semester-2-WIL-P
 - Added disclaimer and home page components
 - Created swarm visualization demo
 - Enhanced data processing capabilities
-- *Reviewed by: Lucas Phung*
 
 ### August 2024
 - Set up React + TypeScript + Tailwind environment
@@ -155,4 +152,3 @@ Private GitHub REPO: https://github.com/laurencewatts3/The-Zone-Semester-2-WIL-P
 - Added basic filtering functionality
 - Implemented dark theme
 - Created initial API endpoints
-- *Reviewed by: Jermaine Portelli*
