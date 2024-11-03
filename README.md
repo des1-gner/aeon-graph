@@ -27,6 +27,16 @@ https://aeonify.net/
 ### Apply Filters
 - On the side panel you can switch between the 3 main filter modes. Highlight, Cluster, Edges
 
+## Backend
+### How to interact with API
+- API can be reached at https://ynicn27cgg.execute-api.ap-southeast-2.amazonaws.com/prod?
+- For more information on how it works please read the README located in the folder aws/lambda
+
+### cloud information
+- The website is already deployed on AWS cloud, which is owned by Laurence. 
+- If you need to redeploy the cloud, crate a stack on cloud formation using the template lazone-infrastructure.yaml located in aws/cloud formation.
+- More information on cloud deployment can be found in the thezone-technical-report.docx
+
 ## Local Installation
 ### Frontend
 1. cd into "frontend" directory located in "The-Zone-Semester-2-WIL-Program-main > frontend"
