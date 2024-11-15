@@ -33,14 +33,20 @@ function App() {
     
     // State for managing the disclaimer modal
     const [disclaimerState, setDisclaimerState] = useState(() => {
-        // Initialize disclaimer state from session storage
-        const accepted =
-            sessionStorage.getItem('disclaimerAccepted') === 'true';
+        // MODIFIED: Force disclaimer to be accepted regardless of session storage
         return {
-            accepted,
-            show: !accepted,
+            accepted: true,
+            show: false,
             transitioning: false,
         };
+        
+        // ORIGINAL CODE (commented out):
+        // const accepted = sessionStorage.getItem('disclaimerAccepted') === 'true';
+        // return {
+        //     accepted,
+        //     show: !accepted,
+        //     transitioning: false,
+        // };
     });
 
     // Loading state for initial render
