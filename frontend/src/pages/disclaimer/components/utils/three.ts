@@ -120,7 +120,7 @@ export const createParticles = (scene: THREE.Scene): ParticleSystem => {
     ctx.font = 'Bold 768px Arial';
     ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
-    ctx.fillText('La Zona', canvas.width / 2, canvas.height / 2 + 100);
+    ctx.fillText('.', canvas.width / 2, canvas.height / 2 + 100);
     // ctx.fillText('La Zona', canvas.width / 2, canvas.height / 2 + 100);
 
     // Get image data for particle positioning
