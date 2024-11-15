@@ -160,7 +160,7 @@ export const createParticles = (scene: THREE.Scene): ParticleSystem => {
       colors[i * 3 + 2] = Math.random();
 
       // Set random particle sizes
-      sizes[i] = Math.random() * 10 + 20;
+      sizes[i] = Math.random() * 0 + 0; // just changed to 0
     }
   }
 
