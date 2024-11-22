@@ -5,17 +5,18 @@ import { Article } from '../../types/article';
 import { EdgeOptions } from '../../types/filters';
 import { hasActiveFilters, matchesFilter } from '../../utils/filters';
 
+// Add the missing Distance interface
+interface Distance {
+  index: number;
+  distance: number;
+}
+
 interface ConnectionLinesProps {
   articles: Article[];
   positions: Float32Array;
   edgeOptions: EdgeOptions;
   edgeColor: string;
   hoveredParticle: number | null;
-}
-
-interface Distance {
-  index: number;
-  distance: number;
 }
 
 /**
@@ -85,6 +86,7 @@ export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
       // Check if any filters are active
       const isEdgeActive = hasActiveFilters(edgeOptions);
 
+      // Two nearest neighbors logic for 'on' visibility
       if (edgeOptions.visibility === 'on' && isEdgeActive) {
         // Track connected pairs to avoid duplicates
         const connectedPairs = new Set<string>();
@@ -110,23 +112,31 @@ export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
             }
           });
         });
-      } else if (
+      }
+      // All connections for hovered particle
+      else if (
         edgeOptions.visibility === 'hover' &&
         hoveredParticle !== null &&
         isEdgeActive
       ) {
-        // For hover mode, only connect the hovered particle to its two nearest neighbors
-        const nearestNeighbors = findNearestNeighbors(hoveredParticle);
-        
-        nearestNeighbors.forEach(neighborIndex => {
-          vertices.push(
-            positions[hoveredParticle * 3],
-            positions[hoveredParticle * 3 + 1],
-            positions[hoveredParticle * 3 + 2],
-            positions[neighborIndex * 3],
-            positions[neighborIndex * 3 + 1],
-            positions[neighborIndex * 3 + 2]
-          );
+        const hoveredArticle = articles[hoveredParticle];
+        // Create connections between hovered article and all other matching articles
+        articles.forEach((article, index) => {
+          if (
+            index !== hoveredParticle &&
+            matchesFilter(hoveredArticle, edgeOptions) &&
+            matchesFilter(article, edgeOptions)
+          ) {
+            // Add vertex pairs for line segments
+            vertices.push(
+              positions[hoveredParticle * 3],     // x1
+              positions[hoveredParticle * 3 + 1], // y1
+              positions[hoveredParticle * 3 + 2], // z1
+              positions[index * 3],               // x2
+              positions[index * 3 + 1],           // y2
+              positions[index * 3 + 2]            // z2
+            );
+          }
         });
       }
 

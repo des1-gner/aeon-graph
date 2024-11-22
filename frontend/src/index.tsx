@@ -14,9 +14,6 @@ import reportWebVitals from './reportWebVitals';
 // Import context provider for managing article data state
 import { ArticlesProvider } from './pages/graph/contexts/ArticlesContext';
 
-// Import assets
-import logo from 'frontend/zone.jpg'
-
 // Create a root container for React to render into
 // TypeScript notation ensures the element exists and is of correct type
 const root = ReactDOM.createRoot(

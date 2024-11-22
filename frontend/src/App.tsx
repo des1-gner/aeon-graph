@@ -11,7 +11,7 @@ import { dummyArticles } from './pages/graph/three.js/types/article';
 
 function App() {
     // State for controlling UI visibility
-    const [showSideControls, setShowSideControls] = useState(true);
+    const [showSideControls, setShowSideControls] = useState(false);
     const [showBottomControls, setShowBottomControls] = useState(true);
     const [initialShowSearchQueryModal, setInitialShowSearchQueryModal] =
         useState(true);
@@ -83,7 +83,7 @@ function App() {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().catch((err) => {
                 console.error(
-                    `Error attempting to enable full-screen mode: ${err.message} (${err.name})`
+                    `Error attempting to enable full-screen mode: <span class="math-inline">\{err\.message\} \(</span>{err.name})`
                 );
             });
         } else {
@@ -106,34 +106,23 @@ function App() {
 
     // Effect to handle mouse movement for UI controls visibility
     useEffect(() => {
-        // Show side controls when mouse is in top-right corner
-        const handleSidePanelMouseMove = (e: MouseEvent) => {
-            if (e.clientX > window.innerWidth - 100 && e.clientY < 100) {
-                setShowSideControls(true);
-            }
-
-            if (e.clientY > window.innerHeight - 50) {
-                setShowBottomControls(true);
-            }
-        };
-
-        // Show bottom controls when mouse leaves the window
-        const handleMouseLeave = (e: MouseEvent) => {
-            if (e.clientY < window.innerHeight - 50) {
-                setShowBottomControls(true);
-            }
-        };
-
-        // Add event listeners
-        window.addEventListener('mousemove', handleSidePanelMouseMove);
-        window.addEventListener('mouseleave', handleMouseLeave);
-
-        // Cleanup event listeners
-        return () => {
-            window.removeEventListener('mousemove', handleSidePanelMouseMove);
-            window.removeEventListener('mouseleave', handleMouseLeave);
-        };
-    }, []);
+    // Show side controls when mouse is in top-right corner
+    const handleSidePanelMouseMove = (e: MouseEvent) => {
+      if (e.clientX > window.innerWidth * 0.25) {
+        setShowSideControls(true);
+      } else {
+        setShowSideControls(false);
+      }
+    };
+  
+    // Add event listener
+    window.addEventListener('mousemove', handleSidePanelMouseMove);
+  
+    // Cleanup event listener
+    return () => {
+      window.removeEventListener('mousemove', handleSidePanelMouseMove);
+    };
+  }, []);
 
     // Show loading screen
     if (isLoading) {
@@ -226,12 +215,11 @@ function App() {
                             initial={{ opacity: 0, x: '100%' }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: '100%' }}
-                            transition={{ duration: 0.8 }}
+                            transition={{ duration: 1 }}
                             className='fixed top-0 right-0 z-20'
                         >
                             <div className='p-4'>
                                 <FilterControl
-                                    onClose={() => setShowSideControls(false)}
                                     initialShowSearchQueryModal={
                                         initialShowSearchQueryModal
                                     }
@@ -240,7 +228,7 @@ function App() {
                                     }
                                 />
                             </div>
-                        </motion.div>
+                            </motion.div>
                     )}
                 </AnimatePresence>
 
