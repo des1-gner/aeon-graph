@@ -193,19 +193,34 @@ export const FilterControl: React.FC<FilterControlProps> = ({
      * @param newState - New visibility state
      */
     const handleEdgeVisibilityChange = (newState: VisibilityState) => {
-        if (newState.mode !== 'off') {
-            setEdgeColor(prevEdgeColor);
+        // Safely check modes, defaulting to 'off' if undefined
+        const newMode = newState.mode ?? 'off';
+        const currentMode = edgeVisibility.mode ?? 'off';
+    
+        // Check if switching between 'hover' and 'on' modes
+        const isSameColorGroup = ['hover', 'on'].includes(newMode) && 
+                                  ['hover', 'on'].includes(currentMode);
+    
+        if (newMode !== 'off') {
+            // If switching between hover and on, keep the current color
+            if (isSameColorGroup) {
+                setEdgeColor(edgeColor);
+            } else {
+                // Otherwise, use the previous color
+                setEdgeColor(prevEdgeColor);
+            }
         } else {
+            // When turning off, store the current color as previous
             setPrevEdgeColor(edgeColor);
             setEdgeColor(INACTIVE_COLOR);
         }
+    
         setEdgeVisibility(newState);
         
         // Ensure visibility is always set to a valid VisibilityType
-        const newVisibility: VisibilityType = newState.mode ?? 'off';
         setEdgeOptions(prev => ({
             ...prev,
-            visibility: newVisibility
+            visibility: newMode
         }));
     };
 
@@ -359,16 +374,16 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                         className='fixed inset-0 z-50 flex items-center justify-center'
                     >
                         <QuerySummaryModal
-                            startDate={startDate}
-                            endDate={endDate}
-                            publishedBy={searchQuery}
-                            containing={searchQuery}
-                            nodeLimit={nodeQty}
-                            onClose={() => setShowQuerySummaryModal(false)}
-                            highlightOptions={highlightOptions}
-                            clusterOptions={clusterOptions}
-                            edgeOptions={edgeOptions}
-                        />
+    startDate={startDate || ''} // Add fallback to empty string
+    endDate={endDate || ''} // Add fallback to empty string
+    publishedBy={searchQuery}
+    containing={searchQuery}
+    nodeLimit={nodeQty}
+    onClose={() => setShowQuerySummaryModal(false)}
+    highlightOptions={highlightOptions}
+    clusterOptions={clusterOptions}
+    edgeOptions={edgeOptions}
+/>
                     </motion.div>
                 )}
             </AnimatePresence>
