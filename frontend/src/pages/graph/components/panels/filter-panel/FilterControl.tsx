@@ -25,59 +25,57 @@ import {
     CircleStackIcon,
     PaintBrushIcon,
     MagnifyingGlassIcon,
-    XMarkIcon,
     DocumentTextIcon,
 } from '@heroicons/react/24/solid';
 
-/**
- * Props interface for the FilterControl component
- */
 interface FilterControlProps {
-    onClose?: () => void;                                          // Optional callback for closing the filter control
-    initialShowSearchQueryModal: boolean;                          // Flag to show search query modal on initial render
-    setInitialShowSearchQueryModal: (value: boolean) => void;      // Setter for initialShowSearchQueryModal
+    initialShowSearchQueryModal: boolean;
+    setInitialShowSearchQueryModal: (value: boolean) => void;
 }
 
-/**
- * FilterControl Component
- * 
- * A comprehensive control panel for managing article filtering, visualization options,
- * and data source selection. Provides interfaces for highlighting, clustering, and edge
- * manipulation in the visualization.
- */
 export const FilterControl: React.FC<FilterControlProps> = ({
-    onClose,
     initialShowSearchQueryModal,
     setInitialShowSearchQueryModal,
 }) => {
     // ====================== State Management ======================
     
-    // Data source related states
-    const [dataSourceIndex, setDataSourceIndex] = useState(0);                     // 0: Database, 1: Demo
-    const [showArticleSearchModal, setShowArticleSearchModal] = useState(false);   // Controls article search modal visibility
-    const [visualisationOption, setVisualisationOption] = useState(0);            // Current visualization option index
+    const [dataSourceIndex, setDataSourceIndex] = useState(0);
+    const [showArticleSearchModal, setShowArticleSearchModal] = useState(false);
+    const [visualisationOption, setVisualisationOption] = useState(0);
     
-    // Search parameters states
-    const [startDate, setStartDate] = useState('');                               // Start date for article search
-    const [endDate, setEndDate] = useState('');                                   // End date for article search
-    const [searchQuery, setSearchQuery] = useState('');                           // Search query string
-    const [nodeQty, setNodeQty] = useState<number>(0);                           // Number of nodes to display
-    const [showQuerySummaryModal, setShowQuerySummaryModal] = useState(false);    // Controls query summary modal visibility
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [nodeQty, setNodeQty] = useState<number>(0);
+    const [showQuerySummaryModal, setShowQuerySummaryModal] = useState(false);
 
-    // Color management states
-    const [prevHighlightColor, setPrevHighlightColor] = useState(DEFAULT_HIGHLIGHT_COLOR);  // Previous highlight color
-    const [prevClusterColor, setPrevClusterColor] = useState(DEFAULT_CLUSTER_COLOR);        // Previous cluster color
-    const [prevEdgeColor, setPrevEdgeColor] = useState(DEFAULT_EDGE_COLOR);                 // Previous edge color
+    // Initialize with default or stored values
+    const [prevHighlightColor, setPrevHighlightColor] = useState(() => 
+        localStorage.getItem('prevHighlightColor') || DEFAULT_HIGHLIGHT_COLOR
+    );
+    const [prevClusterColor, setPrevClusterColor] = useState(() => 
+        localStorage.getItem('prevClusterColor') || DEFAULT_CLUSTER_COLOR
+    );
+    const [prevEdgeColor, setPrevEdgeColor] = useState(() => 
+        localStorage.getItem('prevEdgeColor') || DEFAULT_EDGE_COLOR
+    );
 
-    // Visibility management states
-    const [highlightVisibility, setHighlightVisibility] = useState<VisibilityState>({ isActive: false });
-    const [clusterVisibility, setClusterVisibility] = useState<VisibilityState>({ isActive: false });
-    const [edgeVisibility, setEdgeVisibility] = useState<VisibilityState>({
-        isActive: false,
-        mode: 'off',
+    // Initialize visibility states with stored values if they exist
+    const [highlightVisibility, setHighlightVisibility] = useState<VisibilityState>(() => {
+        const stored = localStorage.getItem('highlightVisibility');
+        return stored ? JSON.parse(stored) : { isActive: false };
+    });
+    
+    const [clusterVisibility, setClusterVisibility] = useState<VisibilityState>(() => {
+        const stored = localStorage.getItem('clusterVisibility');
+        return stored ? JSON.parse(stored) : { isActive: false };
+    });
+    
+    const [edgeVisibility, setEdgeVisibility] = useState<VisibilityState>(() => {
+        const stored = localStorage.getItem('edgeVisibility');
+        return stored ? JSON.parse(stored) : { isActive: false, mode: 'off' };
     });
 
-    // Context and custom hooks
     const {
         articles,
         setArticles,
@@ -95,13 +93,10 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         setEdgeOptions,
     } = useArticles();
 
-    const colorPicker = useColorPicker();  // Custom hook for color picking functionality
+    const colorPicker = useColorPicker();
 
     // ====================== Effects ======================
 
-    /**
-     * Effect to handle initial search query modal display
-     */
     useEffect(() => {
         if (initialShowSearchQueryModal) {
             setShowArticleSearchModal(true);
@@ -109,45 +104,58 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         }
     }, [initialShowSearchQueryModal, setInitialShowSearchQueryModal]);
 
-    /**
-     * Effect to reset all options on component mount
-     */
+    // Save states to localStorage when they change
     useEffect(() => {
-        resetHighlightOptions();
-        resetClusterOptions();
-        resetEdgeOptions();
-    }, []);
+        localStorage.setItem('prevHighlightColor', prevHighlightColor);
+    }, [prevHighlightColor]);
+
+    useEffect(() => {
+        localStorage.setItem('prevClusterColor', prevClusterColor);
+    }, [prevClusterColor]);
+
+    useEffect(() => {
+        localStorage.setItem('prevEdgeColor', prevEdgeColor);
+    }, [prevEdgeColor]);
+
+    useEffect(() => {
+        localStorage.setItem('highlightVisibility', JSON.stringify(highlightVisibility));
+    }, [highlightVisibility]);
+
+    useEffect(() => {
+        localStorage.setItem('clusterVisibility', JSON.stringify(clusterVisibility));
+    }, [clusterVisibility]);
+
+    useEffect(() => {
+        localStorage.setItem('edgeVisibility', JSON.stringify(edgeVisibility));
+    }, [edgeVisibility]);
 
     // ====================== Reset Handlers ======================
 
-    /**
-     * Resets highlight options to their default values
-     */
     const resetHighlightOptions = () => {
         setHighlightOptions(defaultOptions);
         setPrevHighlightColor(DEFAULT_HIGHLIGHT_COLOR);
         setHighlightColor(highlightVisibility.isActive ? DEFAULT_HIGHLIGHT_COLOR : INACTIVE_COLOR);
         setHighlightVisibility({ isActive: false });
+        localStorage.removeItem('prevHighlightColor');
+        localStorage.removeItem('highlightVisibility');
     };
 
-    /**
-     * Resets cluster options to their default values
-     */
     const resetClusterOptions = () => {
         setClusterOptions(defaultOptions);
         setPrevClusterColor(DEFAULT_CLUSTER_COLOR);
         setClusterColor(clusterVisibility.isActive ? DEFAULT_CLUSTER_COLOR : INACTIVE_COLOR);
         setClusterVisibility({ isActive: false });
+        localStorage.removeItem('prevClusterColor');
+        localStorage.removeItem('clusterVisibility');
     };
 
-    /**
-     * Resets edge options to their default values
-     */
     const resetEdgeOptions = () => {
         setEdgeOptions(defaultEdgeOptions);
         setPrevEdgeColor(DEFAULT_EDGE_COLOR);
         setEdgeColor(edgeVisibility.mode !== 'off' ? DEFAULT_EDGE_COLOR : INACTIVE_COLOR);
         setEdgeVisibility({ isActive: false, mode: 'off' });
+        localStorage.removeItem('prevEdgeColor');
+        localStorage.removeItem('edgeVisibility');
     };
 
     // ====================== Visibility Handlers ======================
@@ -215,14 +223,10 @@ export const FilterControl: React.FC<FilterControlProps> = ({
     // ====================== Render Component ======================
     return (
         <>
-            {/* Main Filter Control Panel */}
             <div className='backdrop-blur-xl border-neutral-700 border p-4 space-y-6 rounded-lg z-10 w-96'>
                 {/* Header Section */}
                 <div className='flex items-center justify-between'>
-                    <XMarkIcon
-                        className='size-5 text-light cursor-pointer flex justify-start'
-                        onClick={onClose}
-                    />
+                    {/* Removed the XMarkIcon and onClose handler */}
                     <h1 className='flex gap-2 items-center font-semibold text-lg justify-center text-light'>
                         <AdjustmentsHorizontalIcon className='size-5' />
                         Data controls
@@ -231,28 +235,29 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                 </div>
 
                 {/* Data Source Toggle */}
-                <Toggle
-                    header={[
-                        'Data source',
-                        <CircleStackIcon className='size-4' key='data-source-icon' />,
-                    ]}
-                    toggleLabels={['Database', 'Demo']}
-                    selectedIndex={dataSourceIndex}
-                    onClick={handleDataSourceChange}
-                >
-                    {dataSourceIndex === 0 && (
-                        <div className='p-2'>
-                            <Button
-                                variant='secondary'
-                                className='flex items-center gap-2 justify-center w-full'
-                                onClick={() => setShowArticleSearchModal(true)}
-                            >
-                                <MagnifyingGlassIcon className='size-4' />
-                                Search
-                            </Button>
-                        </div>
-                    )}
-                </Toggle>
+                {/* Modified Data Source Section */}
+                {/* Modified Data Source Section */}
+<Toggle
+    header={[
+        'Start New Dataset',
+        <CircleStackIcon className='size-4' key='data-source-icon' />,
+    ]}
+    // Remove toggleLabels prop entirely if not using toggles
+    noToggle={true} // Add this prop to your Toggle component type
+    selectedIndex={0}
+    onClick={() => {}}
+>
+    <div className='p-2'>
+        <Button
+            variant='secondary'
+            className='flex items-center gap-2 justify-center w-full'
+            onClick={() => setShowArticleSearchModal(true)}
+        >
+            <MagnifyingGlassIcon className='size-4' />
+            Search
+        </Button>
+    </div>
+</Toggle>
 
                 {/* Visualization Options Toggle */}
                 <Toggle

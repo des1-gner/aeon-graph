@@ -47,32 +47,31 @@ export const sources = [
   'washingtontimes.com',
 ] as const;
 
-// Claims - using the actual broad claims and sub claims from the data
 export const broadClaims = {
-  gw_not_happening: 'global warming is not happening',
-  not_caused_by_human: 'climate change is not caused by human activities',
-  impacts_not_bad: 'climate change impacts are not that bad',
-  solutions_wont_work: "climate solutions won't work",
-  science_movement_unrel: 'climate science or movement is unreliable',
-  individual_action: 'individual action is pointless',
+  gw_not_happening: 'Global warming is not happening',
+  not_caused_by_human: 'Climate change is not caused by human activities',
+  impacts_not_bad: 'Climate change impacts are not that bad',
+  solutions_wont_work: "Climate solutions won't work",
+  science_movement_unrel: 'Climate science or movement is unreliable',
+  individual_action: 'Individual action is pointless',
 } as const;
 
 export const subClaims = {
-  sc_cold_event_denial: 'cold weather event disproves global warming',
-  sc_deny_extreme_weather: 'extreme weather events are not increasing',
-  sc_natural_variations: 'climate change is due to natural variations',
-  sc_past_climate_reference: 'past climate changes prove current changes are natural',
-  sc_species_adapt: 'species can adapt to climate change',
-  sc_downplay_warming: 'warming is not as bad as predicted',
-  sc_policies_negative: 'climate policies have negative consequences',
-  sc_policies_ineffective: 'climate policies are ineffective',
-  sc_policies_difficult: 'climate policies are too difficult to implement',
-  sc_low_support_policies: 'there is low public support for climate policies',
-  sc_clean_energy_unreliable: 'clean energy sources are unreliable',
-  sc_climate_science_unrel: 'climate science is unreliable',
-  sc_no_consensus: 'there is no scientific consensus on climate change',
-  sc_movement_unreliable: 'the climate movement is unreliable',
-  sc_hoax_conspiracy: 'climate change is a hoax or conspiracy',
+  sc_cold_event_denial: 'Cold weather event disproves global warming',
+  sc_deny_extreme_weather: 'Extreme weather events are not increasing',
+  sc_natural_variations: 'Climate change is due to natural variations',
+  sc_past_climate_reference: 'Past climate changes prove current changes are natural',
+  sc_species_adapt: 'Species can adapt to climate change',
+  sc_downplay_warming: 'Warming is not as bad as predicted',
+  sc_policies_negative: 'Climate policies have negative consequences',
+  sc_policies_ineffective: 'Climate policies are ineffective',
+  sc_policies_difficult: 'Climate policies are too difficult to implement',
+  sc_low_support_policies: 'There is low public support for climate policies',
+  sc_clean_energy_unreliable: 'Clean energy sources are unreliable',
+  sc_climate_science_unrel: 'Climate science is unreliable',
+  sc_no_consensus: 'There is no scientific consensus on climate change',
+  sc_movement_unreliable: 'The climate movement is unreliable',
+  sc_hoax_conspiracy: 'Climate change is a hoax or conspiracy',
 } as const;
 
 // Default Options

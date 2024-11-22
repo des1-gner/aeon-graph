@@ -4,7 +4,7 @@ import { ResetButton } from '../ResetButton';
 import { VisibilityToggle } from '../VisibilityToggle';
 import { ColorPicker } from '../ColorPicker';
 import { CommonDropdowns } from '../CommonDropdowns';
-import { ClusterOptionsProps } from '../../types/interfaces';
+import { ClusterOptionsProps, VisibilityState } from '../../types/interfaces';
 
 /**
  * ClusterOptions Component
@@ -31,6 +31,17 @@ export const ClusterOptions: React.FC<ClusterOptionsProps> = ({
     colorPickerState,
     onReset,
 }) => {
+    // Enhanced visibility change handler to reset fields when toggled off
+    const handleVisibilityChange = (newVisibilityState: VisibilityState) => {
+        if (!newVisibilityState.isActive) {
+            // Reset fields when toggled off
+            onReset();
+        }
+
+        // Update the visibility state
+        onVisibilityChange(newVisibilityState);
+    };
+
     return (
         // Main container with vertical spacing
         <div className='space-y-3'>
@@ -48,7 +59,7 @@ export const ClusterOptions: React.FC<ClusterOptionsProps> = ({
             <VisibilityToggle
                 label='Cluster'
                 state={highlightVisibility}
-                onChange={onVisibilityChange}
+                onChange={handleVisibilityChange} // Use enhanced handler here
             />
 
             {/* Additional options shown only when cluster is visible */}
@@ -75,3 +86,4 @@ export const ClusterOptions: React.FC<ClusterOptionsProps> = ({
         </div>
     );
 };
+
