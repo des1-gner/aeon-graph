@@ -97,12 +97,20 @@ export const FilterControl: React.FC<FilterControlProps> = ({
 
     // ====================== Effects ======================
 
+    // Effect for initial search query modal
     useEffect(() => {
         if (initialShowSearchQueryModal) {
             setShowArticleSearchModal(true);
             setInitialShowSearchQueryModal(false);
         }
     }, [initialShowSearchQueryModal, setInitialShowSearchQueryModal]);
+
+    // Effect to reset all options on component mount
+    useEffect(() => {
+        resetHighlightOptions();
+        resetClusterOptions();
+        resetEdgeOptions();
+    }, []);
 
     // Save states to localStorage when they change
     useEffect(() => {
@@ -160,10 +168,6 @@ export const FilterControl: React.FC<FilterControlProps> = ({
 
     // ====================== Visibility Handlers ======================
 
-    /**
-     * Handles changes in highlight visibility state
-     * @param newState - New visibility state
-     */
     const handleHighlightVisibilityChange = (newState: VisibilityState) => {
         if (newState.isActive) {
             setHighlightColor(prevHighlightColor);
@@ -174,10 +178,6 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         setHighlightVisibility(newState);
     };
 
-    /**
-     * Handles changes in cluster visibility state
-     * @param newState - New visibility state
-     */
     const handleClusterVisibilityChange = (newState: VisibilityState) => {
         if (newState.isActive) {
             setClusterColor(prevClusterColor);
@@ -188,46 +188,32 @@ export const FilterControl: React.FC<FilterControlProps> = ({
         setClusterVisibility(newState);
     };
 
-    /**
-     * Handles changes in edge visibility state
-     * @param newState - New visibility state
-     */
     const handleEdgeVisibilityChange = (newState: VisibilityState) => {
-        // Safely check modes, defaulting to 'off' if undefined
         const newMode = newState.mode ?? 'off';
         const currentMode = edgeVisibility.mode ?? 'off';
     
-        // Check if switching between 'hover' and 'on' modes
         const isSameColorGroup = ['hover', 'on'].includes(newMode) && 
-                                  ['hover', 'on'].includes(currentMode);
+                               ['hover', 'on'].includes(currentMode);
     
         if (newMode !== 'off') {
-            // If switching between hover and on, keep the current color
             if (isSameColorGroup) {
                 setEdgeColor(edgeColor);
             } else {
-                // Otherwise, use the previous color
                 setEdgeColor(prevEdgeColor);
             }
         } else {
-            // When turning off, store the current color as previous
             setPrevEdgeColor(edgeColor);
             setEdgeColor(INACTIVE_COLOR);
         }
     
         setEdgeVisibility(newState);
         
-        // Ensure visibility is always set to a valid VisibilityType
         setEdgeOptions(prev => ({
             ...prev,
             visibility: newMode
         }));
     };
 
-    /**
-     * Handles changes in data source selection
-     * @param index - Index of selected data source (0: Database, 1: Demo)
-     */
     const handleDataSourceChange = (index: number) => {
         setDataSourceIndex(index);
         if (index === 1) {
@@ -239,9 +225,7 @@ export const FilterControl: React.FC<FilterControlProps> = ({
     return (
         <>
             <div className='backdrop-blur-xl border-neutral-700 border p-4 space-y-6 rounded-lg z-10 w-96'>
-                {/* Header Section */}
                 <div className='flex items-center justify-between'>
-                    {/* Removed the XMarkIcon and onClose handler */}
                     <h1 className='flex gap-2 items-center font-semibold text-lg justify-center text-light'>
                         <AdjustmentsHorizontalIcon className='size-5' />
                         Data controls
@@ -249,32 +233,27 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                     <div />
                 </div>
 
-                {/* Data Source Toggle */}
-                {/* Modified Data Source Section */}
-                {/* Modified Data Source Section */}
-<Toggle
-    header={[
-        'Start New Dataset',
-        <CircleStackIcon className='size-4' key='data-source-icon' />,
-    ]}
-    // Remove toggleLabels prop entirely if not using toggles
-    noToggle={true} // Add this prop to your Toggle component type
-    selectedIndex={0}
-    onClick={() => {}}
->
-    <div className='p-2'>
-        <Button
-            variant='secondary'
-            className='flex items-center gap-2 justify-center w-full'
-            onClick={() => setShowArticleSearchModal(true)}
-        >
-            <MagnifyingGlassIcon className='size-4' />
-            Search
-        </Button>
-    </div>
-</Toggle>
+                <Toggle
+                    header={[
+                        'Start New Dataset',
+                        <CircleStackIcon className='size-4' key='data-source-icon' />,
+                    ]}
+                    noToggle={true}
+                    selectedIndex={0}
+                    onClick={() => {}}
+                >
+                    <div className='p-2'>
+                        <Button
+                            variant='secondary'
+                            className='flex items-center gap-2 justify-center w-full'
+                            onClick={() => setShowArticleSearchModal(true)}
+                        >
+                            <MagnifyingGlassIcon className='size-4' />
+                            Search
+                        </Button>
+                    </div>
+                </Toggle>
 
-                {/* Visualization Options Toggle */}
                 <Toggle
                     header={[
                         'Visualisation options',
@@ -285,7 +264,6 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                     onClick={setVisualisationOption}
                 />
 
-                {/* Visualization Options Content */}
                 <div className='dark-card p-3'>
                     {visualisationOption === 0 && (
                         <HighlightOptions
@@ -327,7 +305,6 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                     )}
                 </div>
 
-                {/* Query Summary Button */}
                 <Button
                     variant='primary'
                     className='flex items-center gap-2 justify-center w-full'
@@ -338,7 +315,6 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                 </Button>
             </div>
 
-            {/* Article Search Modal */}
             <AnimatePresence>
                 {showArticleSearchModal && (
                     <motion.div
@@ -363,7 +339,6 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                 )}
             </AnimatePresence>
 
-            {/* Query Summary Modal */}
             <AnimatePresence>
                 {showQuerySummaryModal && (
                     <motion.div
@@ -374,16 +349,16 @@ export const FilterControl: React.FC<FilterControlProps> = ({
                         className='fixed inset-0 z-50 flex items-center justify-center'
                     >
                         <QuerySummaryModal
-    startDate={startDate || ''} // Add fallback to empty string
-    endDate={endDate || ''} // Add fallback to empty string
-    publishedBy={searchQuery}
-    containing={searchQuery}
-    nodeLimit={nodeQty}
-    onClose={() => setShowQuerySummaryModal(false)}
-    highlightOptions={highlightOptions}
-    clusterOptions={clusterOptions}
-    edgeOptions={edgeOptions}
-/>
+                            startDate={startDate || ''}
+                            endDate={endDate || ''}
+                            publishedBy={searchQuery}
+                            containing={searchQuery}
+                            nodeLimit={nodeQty}
+                            onClose={() => setShowQuerySummaryModal(false)}
+                            highlightOptions={highlightOptions}
+                            clusterOptions={clusterOptions}
+                            edgeOptions={edgeOptions}
+                        />
                     </motion.div>
                 )}
             </AnimatePresence>
