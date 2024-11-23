@@ -5,7 +5,6 @@ import { Article } from '../../types/article';
 import { EdgeOptions } from '../../types/filters';
 import { hasActiveFilters, matchesFilter } from '../../utils/filters';
 
-// Add the missing Distance interface
 interface Distance {
   index: number;
   distance: number;
@@ -19,10 +18,6 @@ interface ConnectionLinesProps {
   hoveredParticle: number | null;
 }
 
-/**
- * ConnectionLines component creates visual connections between articles in 3D space
- * Connects each article to its two nearest neighbors that match the filter criteria
- */
 export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
   articles,
   positions,
@@ -30,11 +25,9 @@ export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
   edgeColor,
   hoveredParticle,
 }) => {
-  // Refs for Three.js objects
   const lineRef = useRef<THREE.LineSegments | null>(null);
   const materialRef = useRef<THREE.LineBasicMaterial | null>(null);
 
-  // Calculate distance between two 3D points
   const calculateDistance = (index1: number, index2: number): number => {
     const x1 = positions[index1 * 3];
     const y1 = positions[index1 * 3 + 1];
@@ -48,7 +41,6 @@ export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
     );
   };
 
-  // Find two nearest neighbors for an article that match the filter
   const findNearestNeighbors = (
     articleIndex: number,
     excludeIndices: Set<number> = new Set()
@@ -70,35 +62,29 @@ export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
       }
     });
 
-    // Sort by distance and take the two nearest
     return distances
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 2)
       .map(d => d.index);
   };
 
-  // Update line connections every frame
   useFrame(() => {
     if (lineRef.current && materialRef.current) {
       const geometry = lineRef.current.geometry as THREE.BufferGeometry;
       const vertices: number[] = [];
       
-      // Check if any filters are active
       const isEdgeActive = hasActiveFilters(edgeOptions);
 
-      // Two nearest neighbors logic for 'on' visibility
-      if (edgeOptions.visibility === 'on' && isEdgeActive) {
-        // Track connected pairs to avoid duplicates
+      // Show connections when either in 'on' mode or when hovering in 'hover' mode
+      if ((edgeOptions.visibility === 'on' || (edgeOptions.visibility === 'hover' && hoveredParticle !== null)) && isEdgeActive) {
         const connectedPairs = new Set<string>();
 
         articles.forEach((_, i) => {
           const nearestNeighbors = findNearestNeighbors(i);
           
           nearestNeighbors.forEach(neighborIndex => {
-            // Create a unique key for this pair
             const pairKey = [Math.min(i, neighborIndex), Math.max(i, neighborIndex)].join('-');
             
-            // Only add if we haven't already connected these articles
             if (!connectedPairs.has(pairKey)) {
               connectedPairs.add(pairKey);
               vertices.push(
@@ -113,41 +99,13 @@ export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
           });
         });
       }
-      // All connections for hovered particle
-      else if (
-        edgeOptions.visibility === 'hover' &&
-        hoveredParticle !== null &&
-        isEdgeActive
-      ) {
-        const hoveredArticle = articles[hoveredParticle];
-        // Create connections between hovered article and all other matching articles
-        articles.forEach((article, index) => {
-          if (
-            index !== hoveredParticle &&
-            matchesFilter(hoveredArticle, edgeOptions) &&
-            matchesFilter(article, edgeOptions)
-          ) {
-            // Add vertex pairs for line segments
-            vertices.push(
-              positions[hoveredParticle * 3],     // x1
-              positions[hoveredParticle * 3 + 1], // y1
-              positions[hoveredParticle * 3 + 2], // z1
-              positions[index * 3],               // x2
-              positions[index * 3 + 1],           // y2
-              positions[index * 3 + 2]            // z2
-            );
-          }
-        });
-      }
 
-      // Update geometry with new vertices
       geometry.setAttribute(
         'position',
         new THREE.Float32BufferAttribute(vertices, 3)
       );
       geometry.attributes.position.needsUpdate = true;
 
-      // Update material properties
       materialRef.current.color = new THREE.Color(edgeColor);
       materialRef.current.visible = edgeOptions.visibility !== 'off';
       materialRef.current.opacity = edgeOptions.visibility === 'hover' ? 0.5 : 1;
