@@ -1,11 +1,17 @@
-import { InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import {
+    InformationCircleIcon,
+    XMarkIcon,
+} from '@heroicons/react/24/outline';
 import { Article } from '../../three.js/types/article';
 import { useState } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/24/solid';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ReactNode } from 'react';
-
-// Authors: Chris Partridge, and Oisin Aeonn
+import {
+    broadClaims,
+    subClaims,
+} from './filter-panel/constants/default';
+import React from 'react';
 
 /**
  * Props interface for the DetailedArticlePanel component
@@ -40,27 +46,13 @@ interface CollapsibleSectionProps {
  * Features collapsible sections for metadata, claims, and content with animated transitions.
  *
  * @component
- * @example
- * ```tsx
- * <DetailedArticlePanel
- *   article={articleData}
- *   onClose={() => setShowPanel(false)}
- * />
- * ```
- * 
- * @changelog
- * - Removed formatStringYesNo function as it's no longer needed
- * - Modified think_tank_ref display to only show when value exists
- * - Updated think_tank_ref to display actual reference text instead of Yes/No conversion
- * - Maintained all existing functionality for other sections
  */
 export const DetailedArticlePanel = ({
     article,
     onClose,
 }: DetailedArticlePanelProps) => {
     // State for controlling dropdown sections visibility
-    const [showFullArticleDropdown, setShowFullArticleDropdown] =
-        useState(false);
+    const [showFullArticleDropdown, setShowFullArticleDropdown] = useState(false);
     const [showBroadClaimDropdown, setShowBroadClaimDropdown] = useState(false);
     const [showSubClaimDropdown, setShowSubClaimDropdown] = useState(false);
     const [showMetadataDropdown, setShowMetadataDropdown] = useState(false);
@@ -96,21 +88,21 @@ export const DetailedArticlePanel = ({
         children,
     }) => (
         <div>
-            <div className='flex justify-between'>
+            <div className="flex justify-between">
                 <strong>{title}</strong>
                 <ChevronDownIcon
-                    className='size-4 fill-white cursor-pointer'
+                    className="size-4 fill-white cursor-pointer"
                     onClick={toggleOpen}
                 />
             </div>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial='collapsed'
-                        animate='open'
-                        exit='collapsed'
+                        initial="collapsed"
+                        animate="open"
+                        exit="collapsed"
                         variants={dropdownAnimationVariants}
-                        className='max-h-[300px] overflow-y-auto'
+                        className="max-h-[300px] overflow-y-auto"
                     >
                         {children}
                     </motion.div>
@@ -120,23 +112,24 @@ export const DetailedArticlePanel = ({
     );
 
     return (
-        <div className='fixed left-4 top-4 transform backdrop-blur-xl border-neutral-700 border p-4 space-y-6 rounded-lg z-10 w-96 text-white'>
+        <div className="fixed left-4 top-4 transform backdrop-blur-xl border-neutral-700 border p-4 space-y-6 rounded-lg z-10 w-96 text-white">
             {/* Header section with title and close button */}
-            <div className='flex items-center justify-between'>
+            <div className="flex items-center justify-between">
                 <XMarkIcon
-                    className='size-5 text-light cursor-pointer justify-self-start'
+                    className="size-5 text-light cursor-pointer justify-self-start"
                     onClick={onClose}
                 />
-                <h1 className='flex gap-2 items-center font-semibold text-lg justify-center text-light'>
-                    <InformationCircleIcon className='size-5' />
+                <h1 className="flex gap-2 items-center font-semibold text-lg justify-center text-light">
+                    <InformationCircleIcon className="size-5" />
                     More info
                 </h1>
                 <div /> {/* Spacer for layout balance */}
             </div>
+
             {/* Main content section */}
-            <div className='space-y-4'>
+            <div className="space-y-4">
                 {/* Basic article information */}
-                <h2 className='text-2xl font-bold capitalize'>
+                <h2 className="text-2xl font-bold capitalize">
                     {article.title || 'Untitled'}
                 </h2>
 
@@ -146,9 +139,9 @@ export const DetailedArticlePanel = ({
                         <strong>URL:</strong>{' '}
                         <a
                             href={article.url}
-                            target='_blank'
-                            rel='noopener noreferrer'
-                            className='text-blue-300 hover:underline'
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-300 hover:underline"
                         >
                             {article.url}
                         </a>
@@ -156,7 +149,7 @@ export const DetailedArticlePanel = ({
                 )}
 
                 {/* Author and source information */}
-                <p className='capitalize'>
+                <p className="capitalize">
                     <strong>Author:</strong> {article.authors || 'Unknown'}
                 </p>
                 <p>
@@ -167,63 +160,74 @@ export const DetailedArticlePanel = ({
                     {new Date(article.dateTime).toLocaleDateString()}
                 </p>
 
+                {/* Broad Claims */}
                 <CollapsibleSection
-                    title='Broad Claims'
+                    title="Broad Claims"
                     isOpen={showBroadClaimDropdown}
                     toggleOpen={() =>
                         setShowBroadClaimDropdown(!showBroadClaimDropdown)
                     }
                 >
-                    <ul className='list-disc pl-5 space-y-1 mt-2'>
+                    <ul className="list-disc pl-5 space-y-1 mt-2">
                         {article.broadClaims &&
                             Object.entries(article.broadClaims).map(
                                 ([key, value]) =>
                                     value && (
                                         <li key={key}>
-                                            <strong>{key}:</strong> {value}
+                                            <strong>
+                                                {broadClaims[key as keyof typeof broadClaims]}:
+                                            </strong>{' '}
+                                            {value}
                                         </li>
                                     )
                             )}
                     </ul>
                 </CollapsibleSection>
+
+                {/* Sub Claims */}
                 <CollapsibleSection
-                    title='Sub Claims'
+                    title="Sub Claims"
                     isOpen={showSubClaimDropdown}
                     toggleOpen={() =>
                         setShowSubClaimDropdown(!showSubClaimDropdown)
                     }
                 >
-                    <ul className='list-disc pl-5 space-y-1 mt-2'>
+                    <ul className="list-disc pl-5 space-y-1 mt-2">
                         {article.subClaims &&
                             Object.entries(article.subClaims).map(
                                 ([key, value]) =>
                                     value && (
                                         <li key={key}>
-                                            <strong>{key}:</strong> {value}
+                                            <strong>
+                                                {subClaims[key as keyof typeof subClaims]}:
+                                            </strong>{' '}
+                                            {value}
                                         </li>
                                     )
                             )}
                     </ul>
                 </CollapsibleSection>
+
+                {/* Content */}
                 <CollapsibleSection
-                    title='Content'
+                    title="Content"
                     isOpen={showFullArticleDropdown}
                     toggleOpen={() =>
                         setShowFullArticleDropdown(!showFullArticleDropdown)
                     }
                 >
-                    <p className='mt-2'>{article.body}</p>
+                    <p className="mt-2">{article.body}</p>
                 </CollapsibleSection>
 
-                {/* Collapsible sections */}
+                {/* Metadata */}
                 <CollapsibleSection
-                    title='Additional Metadata'
+                    title="Additional Metadata"
                     isOpen={showMetadataDropdown}
                     toggleOpen={() =>
                         setShowMetadataDropdown(!showMetadataDropdown)
                     }
                 >
-                    <div className='space-y-2 mt-2'>
+                    <div className="space-y-2 mt-2">
                         {article.think_tank_ref && (
                             <p>
                                 <strong>Think Tank Reference:</strong>{' '}
@@ -248,8 +252,8 @@ export const DetailedArticlePanel = ({
                         <strong>Image</strong>
                         <img
                             src={article.image}
-                            alt='Article'
-                            className='mt-2 w-full h-auto rounded'
+                            alt="Article"
+                            className="mt-2 w-full h-auto rounded"
                         />
                     </div>
                 )}

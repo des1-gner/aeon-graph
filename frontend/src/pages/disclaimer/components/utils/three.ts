@@ -120,7 +120,8 @@ export const createParticles = (scene: THREE.Scene): ParticleSystem => {
     ctx.font = 'Bold 768px Arial';
     ctx.fillStyle = 'white';
     ctx.textAlign = 'center';
-    ctx.fillText('La Zona', canvas.width / 2, canvas.height / 2 + 100);
+    ctx.fillText('.', canvas.width / 2, canvas.height / 2 + 100);
+    // ctx.fillText('La Zona', canvas.width / 2, canvas.height / 2 + 100);
 
     // Get image data for particle positioning
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -159,7 +160,7 @@ export const createParticles = (scene: THREE.Scene): ParticleSystem => {
       colors[i * 3 + 2] = Math.random();
 
       // Set random particle sizes
-      sizes[i] = Math.random() * 10 + 20;
+      sizes[i] = Math.random() * 0 + 0; // just changed to 0
     }
   }
 
@@ -246,49 +247,50 @@ export const animate = ({
       backgroundParticles.geometry.attributes.size.needsUpdate = true;
     }
 
-    // Animate text particles
-    if (particles) {
-      const positions = particles.geometry.attributes.position.array as Float32Array;
-      const sizes = particles.geometry.attributes.size.array as Float32Array;
+    // Modify this section in the animate function where it handles text particles
+if (particles) {
+  const positions = particles.geometry.attributes.position.array as Float32Array;
+  const sizes = particles.geometry.attributes.size.array as Float32Array;
 
-      for (let i = 0; i < positions.length; i += 3) {
-        if (!isExploding) {
-          // Normal state: Update positions and apply spring force to return to initial positions
-          positions[i] += velocities[i];
-          positions[i + 1] += velocities[i + 1];
-          positions[i + 2] += velocities[i + 2];
+  for (let i = 0; i < positions.length; i += 3) {
+    // Keep only the normal state code, comment out the explosion state
+    // if (!isExploding) {  // Remove this condition
+      // Normal state: Update positions and apply spring force
+      positions[i] += velocities[i];
+      positions[i + 1] += velocities[i + 1];
+      positions[i + 2] += velocities[i + 2];
 
-          // Calculate distance from initial position
-          const dx = initialPositions[i] - positions[i];
-          const dy = initialPositions[i + 1] - positions[i + 1];
-          const dz = initialPositions[i + 2] - positions[i + 2];
-          
-          // Apply spring force
-          velocities[i] += dx * 0.0001;
-          velocities[i + 1] += dy * 0.0001;
-          velocities[i + 2] += dz * 0.0001;
+      // Calculate distance from initial position
+      const dx = initialPositions[i] - positions[i];
+      const dy = initialPositions[i + 1] - positions[i + 1];
+      const dz = initialPositions[i + 2] - positions[i + 2];
+      
+      // Apply spring force
+      velocities[i] += dx * 0.0001;
+      velocities[i + 1] += dy * 0.0001;
+      velocities[i + 2] += dz * 0.0001;
 
-          // Apply damping
-          velocities[i] *= 0.99;
-          velocities[i + 1] *= 0.99;
-          velocities[i + 2] *= 0.99;
-        } else {
-          // Explosion state: Add random velocities and update positions
-          velocities[i] += (Math.random() - 0.5) * 0.2;
-          velocities[i + 1] += (Math.random() - 0.5) * 0.2;
-          velocities[i + 2] += (Math.random() - 0.5) * 0.2;
+      // Apply damping
+      velocities[i] *= 0.99;
+      velocities[i + 1] *= 0.99;
+      velocities[i + 2] *= 0.99;
+    /* } else {
+      // Comment out the entire explosion state block
+      velocities[i] += (Math.random() - 0.5) * 0.2;
+      velocities[i + 1] += (Math.random() - 0.5) * 0.2;
+      velocities[i + 2] += (Math.random() - 0.5) * 0.2;
 
-          positions[i] += velocities[i];
-          positions[i + 1] += velocities[i + 1];
-          positions[i + 2] += velocities[i + 2];
+      positions[i] += velocities[i];
+      positions[i + 1] += velocities[i + 1];
+      positions[i + 2] += velocities[i + 2];
 
-          sizes[i / 3] *= 1;
-        }
-      }
-      // Mark attributes for update
-      particles.geometry.attributes.position.needsUpdate = true;
-      particles.geometry.attributes.size.needsUpdate = true;
-    }
+      sizes[i / 3] *= 1;
+    } */
+  }
+  
+  particles.geometry.attributes.position.needsUpdate = true;
+  particles.geometry.attributes.size.needsUpdate = true;
+}
 
     renderer.render(scene, camera);
   };

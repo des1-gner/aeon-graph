@@ -34,7 +34,7 @@ export const fetchArticle = async (
     // Make GET request to the API endpoint with constructed parameters
     return axios
         .get(
-            'https://ynicn27cgg.execute-api.ap-southeast-2.amazonaws.com/prod',
+            'https://ic9fse3mh8.execute-api.ap-southeast-2.amazonaws.com/prod/lazone',
             { params }
         )
         .then((res) => res.data)                   // Extract data from successful response

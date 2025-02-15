@@ -5,20 +5,19 @@ import { Article } from '../../types/article';
 import { EdgeOptions } from '../../types/filters';
 import { hasActiveFilters, matchesFilter } from '../../utils/filters';
 
-interface ConnectionLinesProps {
-  articles: Article[];           // Array of articles to connect
-  positions: Float32Array;       // Array of 3D positions for each article
-  edgeOptions: EdgeOptions;      // Options controlling edge visibility and filtering
-  edgeColor: string;            // Color of the connection lines
-  hoveredParticle: number | null; // Index of currently hovered particle, if any
+interface Distance {
+  index: number;
+  distance: number;
 }
 
-// Authors Oisin Aeonn, and Chris Partridge
+interface ConnectionLinesProps {
+  articles: Article[];
+  positions: Float32Array;
+  edgeOptions: EdgeOptions;
+  edgeColor: string;
+  hoveredParticle: number | null;
+}
 
-/**
- * ConnectionLines component creates visual connections between articles in 3D space
- * It supports different visibility modes (always on, hover-only, off) and filtering options
- */
 export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
   articles,
   positions,
@@ -26,78 +25,87 @@ export const ConnectionLines: React.FC<ConnectionLinesProps> = ({
   edgeColor,
   hoveredParticle,
 }) => {
-  // Refs for Three.js objects
   const lineRef = useRef<THREE.LineSegments | null>(null);
   const materialRef = useRef<THREE.LineBasicMaterial | null>(null);
 
-  // Update line connections every frame
+  const calculateDistance = (index1: number, index2: number): number => {
+    const x1 = positions[index1 * 3];
+    const y1 = positions[index1 * 3 + 1];
+    const z1 = positions[index1 * 3 + 2];
+    const x2 = positions[index2 * 3];
+    const y2 = positions[index2 * 3 + 1];
+    const z2 = positions[index2 * 3 + 2];
+
+    return Math.sqrt(
+      Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) + Math.pow(z2 - z1, 2)
+    );
+  };
+
+  const findNearestNeighbors = (
+    articleIndex: number,
+    excludeIndices: Set<number> = new Set()
+  ): number[] => {
+    const distances: Distance[] = [];
+    const article = articles[articleIndex];
+
+    articles.forEach((neighbor, index) => {
+      if (
+        index !== articleIndex &&
+        !excludeIndices.has(index) &&
+        matchesFilter(article, edgeOptions) &&
+        matchesFilter(neighbor, edgeOptions)
+      ) {
+        distances.push({
+          index,
+          distance: calculateDistance(articleIndex, index),
+        });
+      }
+    });
+
+    return distances
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, 2)
+      .map(d => d.index);
+  };
+
   useFrame(() => {
     if (lineRef.current && materialRef.current) {
       const geometry = lineRef.current.geometry as THREE.BufferGeometry;
       const vertices: number[] = [];
-
-      // Check if any filters are active
+      
       const isEdgeActive = hasActiveFilters(edgeOptions);
 
-      // Handle 'always on' visibility mode
-      if (edgeOptions.visibility === 'on' && isEdgeActive) {
-        // Create connections between all pairs of articles that match the filter
-        articles.forEach((article1, i) => {
-          articles.forEach((article2, j) => {
-            // Only process each pair once (i < j) and check filter matches
-            if (
-              i < j &&
-              matchesFilter(article1, edgeOptions) &&
-              matchesFilter(article2, edgeOptions)
-            ) {
-              // Add vertex pairs for line segments
+      // Show connections when either in 'on' mode or when hovering in 'hover' mode
+      if ((edgeOptions.visibility === 'on' || (edgeOptions.visibility === 'hover' && hoveredParticle !== null)) && isEdgeActive) {
+        const connectedPairs = new Set<string>();
+
+        articles.forEach((_, i) => {
+          const nearestNeighbors = findNearestNeighbors(i);
+          
+          nearestNeighbors.forEach(neighborIndex => {
+            const pairKey = [Math.min(i, neighborIndex), Math.max(i, neighborIndex)].join('-');
+            
+            if (!connectedPairs.has(pairKey)) {
+              connectedPairs.add(pairKey);
               vertices.push(
-                positions[i * 3],     // x1
-                positions[i * 3 + 1], // y1
-                positions[i * 3 + 2], // z1
-                positions[j * 3],     // x2
-                positions[j * 3 + 1], // y2
-                positions[j * 3 + 2]  // z2
+                positions[i * 3],
+                positions[i * 3 + 1],
+                positions[i * 3 + 2],
+                positions[neighborIndex * 3],
+                positions[neighborIndex * 3 + 1],
+                positions[neighborIndex * 3 + 2]
               );
             }
           });
         });
       }
-      // Handle 'hover only' visibility mode
-      else if (
-        edgeOptions.visibility === 'hover' &&
-        hoveredParticle !== null &&
-        isEdgeActive
-      ) {
-        const hoveredArticle = articles[hoveredParticle];
-        // Create connections between hovered article and all other matching articles
-        articles.forEach((article, index) => {
-          if (
-            index !== hoveredParticle &&
-            matchesFilter(hoveredArticle, edgeOptions) &&
-            matchesFilter(article, edgeOptions)
-          ) {
-            // Add vertex pairs for line segments
-            vertices.push(
-              positions[hoveredParticle * 3],     // x1
-              positions[hoveredParticle * 3 + 1], // y1
-              positions[hoveredParticle * 3 + 2], // z1
-              positions[index * 3],               // x2
-              positions[index * 3 + 1],           // y2
-              positions[index * 3 + 2]            // z2
-            );
-          }
-        });
-      }
 
-      // Update geometry with new vertices
       geometry.setAttribute(
         'position',
         new THREE.Float32BufferAttribute(vertices, 3)
       );
       geometry.attributes.position.needsUpdate = true;
 
-      // Update material properties
       materialRef.current.color = new THREE.Color(edgeColor);
       materialRef.current.visible = edgeOptions.visibility !== 'off';
       materialRef.current.opacity = edgeOptions.visibility === 'hover' ? 0.5 : 1;

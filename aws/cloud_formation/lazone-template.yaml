@@ -1,0 +1,351 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for LaZone API with DynamoDB, Lambda, API Gateway, S3, and CloudFront'
+
+Resources:
+  LaZoneTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: 'lazone'
+      AttributeDefinitions:
+        - AttributeName: articleId
+          AttributeType: N
+      KeySchema:
+        - AttributeName: articleId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      TableClass: STANDARD
+      DeletionProtectionEnabled: false
+      Tags:
+        - Key: Project
+          Value: LaZone
+        - Key: Environment
+          Value: Production
+
+  LaZoneLambdaRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: 'LaZoneLambdaRole'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+        - 'arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess'
+      Policies:
+        - PolicyName: DAXScanAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'dax:Scan'
+                Resource: '*'
+      Tags:
+        - Key: Project
+          Value: LaZone
+        - Key: Environment
+          Value: Production
+
+  LaZoneLambda:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: 'lazone'
+      Handler: 'index.lambda_handler'
+      Role: !GetAtt LaZoneLambdaRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import traceback
+          from boto3.dynamodb.conditions import Attr, And, Or
+          from botocore.exceptions import ClientError
+          from datetime import datetime
+          from decimal import Decimal
+
+          # Initialize DynamoDB resource and table
+          dynamodb = boto3.resource('dynamodb')
+          table_name = 'lazone'
+          table = dynamodb.Table(table_name)
+          MAX_ITEMS = 128  # Maximum number of items to return in a single request
+
+          class DecimalEncoder(json.JSONEncoder):
+              def default(self, obj):
+                  if isinstance(obj, Decimal):
+                      return float(obj)
+                  return super(DecimalEncoder, self).default(obj)
+
+          def create_response(status_code, body):
+              return {
+                  'statusCode': status_code,
+                  'headers': {
+                      'Content-Type': 'application/json',
+                      'Access-Control-Allow-Origin': '*',
+                      'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
+                      'Access-Control-Allow-Methods': 'OPTIONS,GET,POST'
+                  },
+                  'body': json.dumps(body, cls=DecimalEncoder)
+              }
+
+          def scan_all():
+              items = []
+              response = table.scan(Limit=MAX_ITEMS)
+              items.extend(response.get('Items', []))
+              while 'LastEvaluatedKey' in response and len(items) < MAX_ITEMS:
+                  response = table.scan(
+                      ExclusiveStartKey=response['LastEvaluatedKey'],
+                      Limit=MAX_ITEMS - len(items)
+                  )
+                  items.extend(response.get('Items', []))
+              return items[:MAX_ITEMS]
+
+          def scan_specific(filter_expression):
+              items = []
+              response = table.scan(FilterExpression=filter_expression, Limit=MAX_ITEMS)
+              items.extend(response.get('Items', []))
+              while 'LastEvaluatedKey' in response and len(items) < MAX_ITEMS:
+                  response = table.scan(
+                      FilterExpression=filter_expression,
+                      ExclusiveStartKey=response['LastEvaluatedKey'],
+                      Limit=MAX_ITEMS - len(items)
+                  )
+                  items.extend(response.get('Items', []))
+              return items[:MAX_ITEMS]
+
+          def get_filter_expression(filter_expression_list):
+              filter_expression = None
+              first = True
+              for filter in filter_expression_list:
+                  if first:
+                      filter_expression = filter
+                      first = False
+                  else:
+                      filter_expression = filter_expression & filter
+              return filter_expression
+
+          def filter_by_publisher(publisher):
+              if publisher == 'murdoch media':
+                  return [
+                      'theaustralian.com.au',
+                      'news.com.au',
+                      'heraldsun.com.au',
+                      'skynews.com.au',
+                      'dailytelegraph.com.au',
+                      'couriermail.com.au',
+                      'nypost.com',
+                      'wsj.com',
+                      'foxnews.com'
+                  ]
+
+          def lambda_handler(event, context):
+              print(f"Received event: {event}")
+              if event.get('requestContext', {}).get('http', {}).get('method') == 'OPTIONS':
+                  return create_response(200, {})
+
+              query_params = event.get('queryStringParameters', {}) or {}
+              
+              start_date = query_params.get('startDate')
+              end_date = query_params.get('endDate')
+              search = query_params.get('search')
+              sources = query_params.get('sources')
+              publisher = query_params.get('publisher')
+              think_tank_ref = query_params.get('thinkTankRef')
+              broad_claims = query_params.get('broadClaims')
+
+              try:
+                  filter_expressions = []
+                  if start_date:
+                      datetime.strptime(start_date, "%Y-%m-%dT%H:%M:%SZ")
+                      filter_expressions.append(Attr('dateTime').gte(start_date))
+                  if end_date:
+                      datetime.strptime(end_date, "%Y-%m-%dT%H:%M:%SZ")
+                      filter_expressions.append(Attr('dateTime').lte(end_date))
+                      
+                  if search:
+                      filter_expressions.append(Attr('body').contains(search))
+                      
+                  if publisher and not sources:
+                      publisher_source_list = filter_by_publisher(publisher)
+                      filter_expressions.append(Attr('source').is_in(publisher_source_list))
+                      
+                  if sources and not publisher:
+                      source_list = [s.strip() for s in sources.split(',')]
+                      filter_expressions.append(Attr('source').is_in(source_list))
+                      
+                  if think_tank_ref == 'true':
+                      filter_expressions.append(Attr('think_tank_ref').exists())
+                  if think_tank_ref == 'false':
+                      filter_expressions.append(Attr('think_tank_ref').not_exists())
+                      
+                  if broad_claims:
+                      claims_list = [claim.strip() for claim in broad_claims.split(',')]
+                      if len(claims_list) > 1:
+                          conditions = [Attr(f'broadClaims.{claim}').exists() for claim in claims_list]
+                          if conditions:
+                              filter_expressions.append(Or(*conditions))
+                      else:
+                          filter_expressions.append(Attr(f'broadClaims.{claims_list[0]}').exists())
+
+                  if filter_expressions:
+                      if len(filter_expressions) > 1:
+                          filter_expression = get_filter_expression(filter_expressions)
+                      else:
+                          filter_expression = filter_expressions[0]
+                      items = scan_specific(filter_expression)
+                  else:
+                      items = scan_all()
+                      
+                  return create_response(200, items)
+                  
+              except ValueError as e:
+                  return create_response(400, {'error': 'Invalid date format. Use ISO 8601 format: YYYY-MM-DDTHH:MM:SSZ'})
+              except ClientError as e:
+                  return create_response(500, {'error': 'Database operation failed', 'details': str(e)})
+              except Exception as e:
+                  return create_response(500, {'error': 'An unexpected error occurred', 'details': str(e), 'traceback': traceback.format_exc()})
+      Runtime: 'python3.9'
+      Timeout: 20
+      Tags:
+        - Key: Project
+          Value: LaZone
+        - Key: Environment
+          Value: Production
+
+  LaZoneApi:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties:
+      Name: 'lazone'
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Tags:
+        - Key: Project
+          Value: LaZone
+        - Key: Environment
+          Value: Production
+
+  LaZoneApiResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties:
+      RestApiId: !Ref LaZoneApi
+      ParentId: !GetAtt LaZoneApi.RootResourceId
+      PathPart: 'lazone'
+
+  LaZoneApiMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties:
+      RestApiId: !Ref LaZoneApi
+      ResourceId: !Ref LaZoneApiResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      RequestParameters:
+        method.request.querystring.endDate: true
+        method.request.querystring.search: true
+        method.request.querystring.source: true
+        method.request.querystring.startDate: true
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub 
+          - 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations'
+          - lambdaArn: !GetAtt LaZoneLambda.Arn
+
+  LaZoneApiDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    DependsOn:
+      - LaZoneApiMethod
+    Properties:
+      RestApiId: !Ref LaZoneApi
+
+  LaZoneApiStage:
+    Type: 'AWS::ApiGateway::Stage'
+    Properties:
+      DeploymentId: !Ref LaZoneApiDeployment
+      RestApiId: !Ref LaZoneApi
+      StageName: 'prod'
+
+  LambdaApiGatewayPermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref LaZoneLambda
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${LaZoneApi}/*'
+
+  LaZoneBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub "lazone-${AWS::AccountId}-${AWS::Region}"
+      WebsiteConfiguration:
+        IndexDocument: 'index.html'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      Tags:
+        - Key: Project
+          Value: LaZone
+        - Key: Environment
+          Value: Production
+
+
+  LaZoneBucketPolicy:
+    Type: 'AWS::S3::BucketPolicy'
+    Properties:
+      Bucket: !Ref LaZoneBucket
+      PolicyDocument:
+        Version: '2008-10-17'
+        Id: 'PolicyForPublicAccess'
+        Statement:
+          - Sid: 'AllowPublicAccess'
+            Effect: 'Allow'
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub 'arn:aws:s3:::${LaZoneBucket}/*'
+
+  LaZoneCloudFront:
+    Type: 'AWS::CloudFront::Distribution'
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: 'index.html'
+        Origins:
+          - DomainName: !Select [2, !Split ['/', !GetAtt LaZoneBucket.WebsiteURL]]
+            Id: 'S3Origin'
+            CustomOriginConfig:
+              OriginProtocolPolicy: 'http-only'
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginSSLProtocols: ['TLSv1.2']
+        DefaultCacheBehavior:
+          TargetOriginId: 'S3Origin'
+          ViewerProtocolPolicy: 'redirect-to-https'
+          CachePolicyId: '658327ea-f89d-4fab-a63d-7e88639e58f6' # CacheOptimized
+          OriginRequestPolicyId: '88a5eaf4-2fd4-4709-b370-b4c650ea3fcf' # CORS-S3Origin
+        PriceClass: 'PriceClass_All'  # All edge locations
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+      Tags:
+        - Key: Project
+          Value: LaZone
+        - Key: Environment
+          Value: Production
+
+Outputs:
+  ApiEndpoint:
+    Description: 'API Gateway endpoint URL for prod stage'
+    Value: !Sub 'https://${LaZoneApi}.execute-api.${AWS::Region}.amazonaws.com/prod/lazone'
+  
+  BucketWebsiteURL:
+    Description: 'URL for website hosted on S3'
+    Value: !GetAtt LaZoneBucket.WebsiteURL
+  
+  CloudFrontDomainName:
+    Description: 'CloudFront Distribution Domain Name'
+    Value: !GetAtt LaZoneCloudFront.DomainName
